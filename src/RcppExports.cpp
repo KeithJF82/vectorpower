@@ -5,6 +5,18 @@
 
 using namespace Rcpp;
 
+// rcpp_cohort
+int rcpp_cohort(List params, List cohort_params);
+RcppExport SEXP _vectorpower_rcpp_cohort(SEXP paramsSEXP, SEXP cohort_paramsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type params(paramsSEXP);
+    Rcpp::traits::input_parameter< List >::type cohort_params(cohort_paramsSEXP);
+    rcpp_result_gen = Rcpp::wrap(rcpp_cohort(params, cohort_params));
+    return rcpp_result_gen;
+END_RCPP
+}
 // dummy1_cpp
 Rcpp::List dummy1_cpp(Rcpp::List args);
 RcppExport SEXP _vectorpower_dummy1_cpp(SEXP argsSEXP) {
@@ -16,9 +28,23 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// rcpp_mainpop
+int rcpp_mainpop(List params, List trial_params);
+RcppExport SEXP _vectorpower_rcpp_mainpop(SEXP paramsSEXP, SEXP trial_paramsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type params(paramsSEXP);
+    Rcpp::traits::input_parameter< List >::type trial_params(trial_paramsSEXP);
+    rcpp_result_gen = Rcpp::wrap(rcpp_mainpop(params, trial_params));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_vectorpower_rcpp_cohort", (DL_FUNC) &_vectorpower_rcpp_cohort, 2},
     {"_vectorpower_dummy1_cpp", (DL_FUNC) &_vectorpower_dummy1_cpp, 1},
+    {"_vectorpower_rcpp_mainpop", (DL_FUNC) &_vectorpower_rcpp_mainpop, 2},
     {NULL, NULL, 0}
 };
 

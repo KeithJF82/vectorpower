@@ -1,26 +1,8 @@
 // CPP file for simulation of malaria intervention trial - main population portion
 #include <Rcpp.h>
+#include "main.h"
 using namespace Rcpp;
 using namespace std;
-
-//Global variables-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-double dy = 365.0;			// Days in a year
-double tinterval1 = 1.0;	// Interval between calculations of current prevalence / incidence values
-int na = 145;				// Number of age categories in main population
-int num_het = 9;			// Number of heterogeneity categories
-double het_x[] = { -4.5127459, -3.2054291, -2.076848, -1.0232557, 0.0, 1.0232557, 2.076848, 3.2054291, 4.5127459 }; // Biting heterogeneity
-double het_wt[] = { 0.00002235, 0.00278914, 0.04991641, 0.2440975, 0.40634921, 0.2440975, 0.04991641, 0.00278914, 0.00002235 }; // Fractions in each heterogeneity category
-double KMIN = 0.0005;		// Minimum value of larval birth rate coefficient K0 to prevent zero or negative mosquito numbers
-
-//Additional functions----------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-double arraysum(double* V, int dim1);
-int intdiv(double x, double y);
-int rcpp_to_int(SEXP x);
-double rcpp_to_double(SEXP x);
-string rcpp_to_string(SEXP x);
-NumericVector rcpp_to_vector(SEXP x);
 
 // Main program------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -40,6 +22,15 @@ int rcpp_mainpop(List params, List trial_params)
 	FILE* input = NULL;
 	FILE* frain = NULL;
 	int flag_error = 0;
+
+	//Constants (TODO: Make global)----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	double dy = 365.0;			// Days in a year
+	double tinterval1 = 1.0;	// Interval between calculations of current prevalence / incidence values
+	int na = 145;				// Number of age categories in main population
+	int num_het = 9;			// Number of heterogeneity categories
+	double het_x[] = { -4.5127459, -3.2054291, -2.076848, -1.0232557, 0.0, 1.0232557, 2.076848, 3.2054291, 4.5127459 }; // Biting heterogeneity
+	double het_wt[] = { 0.00002235, 0.00278914, 0.04991641, 0.2440975, 0.40634921, 0.2440975, 0.04991641, 0.00278914, 0.00002235 }; // Fractions in each heterogeneity category
+	double KMIN = 0.0005;		// Minimum value of larval birth rate coefficient K0 to prevent zero or negative mosquito numbers
 
 	// Load environment/vector/parasite/etc. parameters from R------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -908,33 +899,3 @@ finish:
 	Rcout << "\nMain population computations complete.\n";
 	return 0;
 }
-
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-double arraysum(double* V, int dim1)// Outputs sum of first dim1 entries in array
-{
-	int i;
-	double sum = 0.0;
-	for (i = 0; i < dim1; i++) { sum += V[i]; }
-	return sum;
-}
-
-int intdiv(double x, double y)// Outputs product of two doubles, rounding down, as an integer
-{
-	int i;
-	double z = x / y;
-	i = z - fmod(z, 1.0);
-	return i;
-}
-
-// converts input from List format to int format.
-int rcpp_to_int(SEXP x) { return as<int>(x); }
-
-// converts input from List format to double format.
-double rcpp_to_double(SEXP x) { return as<double>(x); }
-
-// converts input from List format to string format.
-string rcpp_to_string(SEXP x) { return as<string>(x); }
-
-// converts input from List format to vector format.
-NumericVector rcpp_to_vector(SEXP x) { return as<NumericVector>(x); }

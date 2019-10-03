@@ -1,4 +1,5 @@
 #include <Rcpp.h>
+#include "main.h"
 using namespace Rcpp;
 using namespace std;
 
@@ -11,23 +12,6 @@ struct patients //Structure containing individual patient data for cohort
 	double delay; //Infection delay time
 }
 patient[1000];
-
-//Global variables-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-double dy = 365.0;			//Days in a year
-double tinterval1 = 1.0;	//Interval between calculations of current prevalence/incidence values
-int na = 145;				//Number of age categories in main population
-int num_het = 9;			//Number of heterogeneity categories
-double het_x[] = { -4.5127459, -3.2054291, -2.076848, -1.0232557, 0.0, 1.0232557, 2.076848, 3.2054291, 4.5127459 }; // Biting heterogeneity
-double het_wt[] = { 0.00002235, 0.00278914, 0.04991641, 0.2440975, 0.40634921, 0.2440975, 0.04991641, 0.00278914, 0.00002235 }; // Fractions in each heterogeneity category
-
-//Additional functions----------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-int intdiv(double x, double y);
-double randgen(int n);	//Generate random number between 0 and 1 to n decimal places
-int rcpp_to_int(SEXP x);
-double rcpp_to_double(SEXP x);
-string rcpp_to_string(SEXP x);
 
 // [[Rcpp::export]]
 int rcpp_cohort(List params, List cohort_params)
@@ -47,7 +31,16 @@ int rcpp_cohort(List params, List cohort_params)
 	input_EIR = NULL; 
 	input_immunity = NULL; 
 	input_clusters = NULL;
- 
+
+	//Constants (TODO: Make global)----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	double dy = 365.0;			// Days in a year
+	double tinterval1 = 1.0;	// Interval between calculations of current prevalence / incidence values
+	int na = 145;				// Number of age categories in main population
+	int num_het = 9;			// Number of heterogeneity categories
+	double het_x[] = { -4.5127459, -3.2054291, -2.076848, -1.0232557, 0.0, 1.0232557, 2.076848, 3.2054291, 4.5127459 }; // Biting heterogeneity
+	double het_wt[] = { 0.00002235, 0.00278914, 0.04991641, 0.2440975, 0.40634921, 0.2440975, 0.04991641, 0.00278914, 0.00002235 }; // Fractions in each heterogeneity category
+	double KMIN = 0.0005;		// Minimum value of larval birth rate coefficient K0 to prevent zero or negative mosquito numbers
+
 	//Load input parameter data from R------------------------------------------------------------------------------------------------------------------------------------------
  	
 	Rcout << "\nLoading input parameter data from R\n";
@@ -635,30 +628,3 @@ start_run:
 	Rcout << "\nProgram complete\n";
 	return 0;
 }
-
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-int intdiv(double x,double y) //Outputs product of two doubles, rounding down, as an integer
-{
-	int i;
-	double z = x / y;
-	i = z - fmod(z, 1.0);
-	return i;
-}
-
-double randgen(int n)
-{
-	int m;
-	double value = 0.0;
-	for (m = 1; m <= n; m++) { value += (rand() % 10)*pow(10.0, -m); }
-	return value;
-}
-
-// converts input from List format to int format.
-int rcpp_to_int(SEXP x) { return as<int>(x); }
-
-// converts input from List format to double format.
-double rcpp_to_double(SEXP x) { return as<double>(x); }
-
-// converts input from List format to string format.
-string rcpp_to_string(SEXP x) { return as<string>(x); }
