@@ -6,7 +6,7 @@
 using namespace Rcpp;
 
 // rcpp_cohort
-int rcpp_cohort(List params, List cohort_params);
+Rcpp::List rcpp_cohort(List params, List cohort_params);
 RcppExport SEXP _vectorpower_rcpp_cohort(SEXP paramsSEXP, SEXP cohort_paramsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -29,7 +29,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // rcpp_mainpop
-int rcpp_mainpop(List params, List trial_params);
+Rcpp::List rcpp_mainpop(List params, List trial_params);
 RcppExport SEXP _vectorpower_rcpp_mainpop(SEXP paramsSEXP, SEXP trial_paramsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;

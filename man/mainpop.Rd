@@ -4,29 +4,23 @@
 \alias{mainpop}
 \title{Main population evaluation}
 \usage{
-mainpop(rain_file = "Rainfall parameters.txt",
-  parameter_file = "Simulation parameters.txt",
-  input_file = "Starting data.txt", n_mv0_values = 600,
-  n_mv0_start = 25, n_mv0_end = 50, int_v_varied = 1,
-  n_int_values = 5, int_v_min = 0.05, int_v_max = 0.25,
-  date_start = 180, date_int = 211, time_interval = 7, n_pts = 13,
+mainpop(input_folder = "inst/extdata/Constant/", n_mv_values = 25,
+  n_mv_start = 0, n_mv_end = 0, int_v_varied = 1, n_int_values = 1,
+  int_v_min = 0.15, int_v_max = 0.15, date_start = 180,
+  date_int = 211, time_interval = 7, n_pts = 2,
   file_summary = "Benchmark_summary.txt",
   file_benchmarks = "Benchmark_details.txt",
   file_endpoints = "endpoints.txt", file_EIRd = "EIR.txt",
   file_imm_start = "imm.txt")
 }
 \arguments{
-\item{rain_file}{File containing rainfall parameter values}
+\item{input_folder}{Folder containing rainfall, model parameter and starting data}
 
-\item{parameter_file}{File containing simulation parameter values}
+\item{n_mv_values}{Number of lines of data in input file}
 
-\item{input_file}{File containing mosquito and human input data}
+\item{n_mv_start}{Number of first set of data to use in input file}
 
-\item{n_mv0_values}{Number of lines of data in input file}
-
-\item{n_mv0_start}{Number of first set of data to use in input file}
-
-\item{n_mv0_end}{Number of last set of data to use in input file (must be less than n_lines)}
+\item{n_mv_end}{Number of last set of data to use in input file (must be less than n_lines)}
 
 \item{int_v_varied}{Intervention parameter given variable value (0= None, 1=ATSB kill rate, 2=bednet coverage, 3=IRS coverage)}
 
@@ -52,10 +46,13 @@ mainpop(rain_file = "Rainfall parameters.txt",
 
 \item{file_EIRd}{Daily EIR data during intervention period for each run}
 
-\item{file_imm_start}{Immunity data at start of intervention for each mv_num value}
+\item{file_imm_start}{Immunity data at start of intervention for each n_mv value}
 }
 \description{
-Function which takes in trial parameters, sends to C++ for computation, then collects and organizes results
+Function which takes in trial parameters for one or more populations, sends to C++ for computation 
+of changes over time using deterministic continuum model, then collects and organizes results (EIR over time + 
+starting immunity data for intervention computation or endpoint population data for control population, 
+benchmark values for both)
 }
 \details{
 Takes a list of parameters, returns a list of raw data (data also saved to files as backup).

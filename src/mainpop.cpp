@@ -7,7 +7,7 @@ using namespace std;
 // Main program------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 // [[Rcpp::export]]
-int rcpp_mainpop(List params, List trial_params)
+Rcpp::List rcpp_mainpop(List params, List trial_params)
 {
 	int n_run, mv_num, int_num, i, j, ij, n, nt, nt_E, div, nt_latgam, nt_latmosq, pos, pos2, ntmax, dur_Ei, latgami, latmosqi, tflag, interval, increment, data_saved, flag_int, np;
 	double mv0, t, t_int, mu_net_irs, prevent_net_irs, prop_T_rev, av0, muv1, K0, year_day, rain, KL, beta, Surv1, EIRd, mv, incv, incv0, FOIv, FOIv0, age0, age1, t_mark1, t_mark2, EIR_sum, dt2;
@@ -36,7 +36,7 @@ int rcpp_mainpop(List params, List trial_params)
 
 	string input_filename = rcpp_to_string(trial_params["input_file"]);				// Name of file containing mosquito and human input data
 	string rain_filename = rcpp_to_string(trial_params["rain_file"]);				// Name of file containing rainfall parameter values
-	int n_mv0_values = rcpp_to_int(trial_params["n_mv0_values"]);								// Number of lines of data in input file
+	int n_mv0_values = rcpp_to_int(trial_params["n_mv_values"]);								// Number of lines of data in input file
 
 	double mu_atsb_def = rcpp_to_double(params["mu_atsb_def"]);						// Attractive targeted sugar bait (ATSB) killing rate associated with data
 	double cov_nets_def = rcpp_to_double(params["cov_nets_def"]);					// Proportion of people protected by bednets associated with data
@@ -114,8 +114,8 @@ int rcpp_mainpop(List params, List trial_params)
 
 	// Load trial parameter data from R--------------------------------------------------------------------------------------------------------------------------------------------
 
-	int n_mv0_start = rcpp_to_int(trial_params["n_mv0_start"]);								// Number of first set of data to use in input file (must be less than or equal to n_mv0_end)
-	int n_mv0_end = rcpp_to_int(trial_params["n_mv0_end"]);									// Number of last set of data to use in input file (must be less than n_mv0_values)
+	int n_mv0_start = rcpp_to_int(trial_params["n_mv_start"]);								// Number of first set of data to use in input file (must be less than or equal to n_mv0_end)
+	int n_mv0_end = rcpp_to_int(trial_params["n_mv_end"]);									// Number of last set of data to use in input file (must be less than n_mv0_values)
 	if (n_mv0_start > n_mv0_end || n_mv0_end >= n_mv0_values)
 	{
 		Rcout << "\nData set number values error: n_mv0_values=" << n_mv0_values << " n_mv0_start=" << n_mv0_start << " n_mv0_end=" << n_mv0_end << "\n";
@@ -889,6 +889,9 @@ end_run:
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 finish:
+
+	vector<double> dummy(1, 0.0);
+
 	if (input != NULL) { fclose(input); }
 	if (frain != NULL) { fclose(frain); }
 	if (benchmark_summary != NULL) { fclose(benchmark_summary); }
@@ -897,5 +900,7 @@ finish:
 	if (data_EIR != NULL) { fclose(data_EIR); }
 	if (data_immunity != NULL) { fclose(data_immunity); }
 	Rcout << "\nMain population computations complete.\n";
-	return 0;
+
+	// Return list
+	return List::create(Named("dummy") = dummy);
 }

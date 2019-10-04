@@ -14,7 +14,7 @@ struct patients //Structure containing individual patient data for cohort
 patient[1000];
 
 // [[Rcpp::export]]
-int rcpp_cohort(List params, List cohort_params)
+Rcpp::List rcpp_cohort(List params, List cohort_params)
 { 
 	int num = 0; 
 	int na_c0, na_c1, na_c2, n_c, mvn, int_num, data_num, i, j, ij, n, nt, div, pos, ntmax, tflag, interval, infected; 
@@ -49,7 +49,7 @@ int rcpp_cohort(List params, List cohort_params)
  	string input_filename2 = rcpp_to_string(cohort_params["input_file2"]);
  	string input_filename3 = rcpp_to_string(cohort_params["input_file3"]);
  	string output_filename1 = rcpp_to_string(cohort_params["file_summary"]);	//Individual data (fraction in each category) every tinterval2 days over intervention period for each iteration (single run) or average cohort prevalence/indidence/PCR test positivity rate every tinterval2 days after intervention start (multi-run)
- 	string output_filename2 = rcpp_to_string(cohort_params["file_endpoints"]);	//Positive PCR test frequency data for each iteration (single run) or average across all iterations (multi-run)
+ 	string output_filename2 = rcpp_to_string(cohort_params["file_frequency"]);	//Positive PCR test frequency data for each iteration (single run) or average across all iterations (multi-run)
  	//string output_filename3 = rcpp_to_string(cohort_params["output_file3"]);	//PCR test results (0/1) for each individual every tinterval2 days over intervention period for each iteration (single run)
  	int n_mv_values = rcpp_to_int(cohort_params["n_mv_values"]);				//Number of lines in immunity data input file (
  	int n_EIR_values = rcpp_to_int(cohort_params["n_EIR_values"]);				//Number of lines in EIR data input file (number of unique runs)
@@ -619,12 +619,17 @@ start_run:
 
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-	finish:
+finish:
+
+	vector<double> dummy(1, 0.0);
+
 	if (input_EIR != NULL) { fclose(input_EIR); }
 	if (input_immunity != NULL) { fclose(input_immunity); }
 	if (input_clusters != NULL) { fclose(input_clusters); }
 	if (output1 != NULL) { fclose(output1); }
 	if (output2 != NULL) { fclose(output2); }
 	Rcout << "\nProgram complete\n";
-	return 0;
+
+	// Return list
+	return List::create(Named("dummy") = dummy);
 }
