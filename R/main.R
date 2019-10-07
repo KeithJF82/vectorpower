@@ -93,14 +93,14 @@ mainpop <- function (input_folder = "inst/extdata/Constant/",n_mv_values = 25, n
 }
 
 #------------------------------------------------
-#' @title Cluster benchmark input setup
+#' @title Cluster input setup
 #'
 #' @description Function for taking benchmark data output by mainpop() and selecting the desired benchmark
 #'              (EIR, slide prevalence, PCR prevalence, clinical incidence) data to use for input in
-#'              setting up clusters
+#'              setting up clusters, plus creating list of intervention parameter values
 #'
-#' @details Takes in detailed benchmark data as a list (currently from a file) and outputs list of chosen 
-#'          values (currently as a file)
+#' @details Takes in detailed benchmark data as a list (currently from a file) and outputs lists of chosen 
+#'          benchmark values and intervention parameter values (currently as files)
 #'
 #' @param benchmark_file      File containing benchmark data
 #' @param age_file            File containing age distribution data
@@ -111,13 +111,13 @@ mainpop <- function (input_folder = "inst/extdata/Constant/",n_mv_values = 25, n
 #'
 #' @export
 
-cluster_benchmark_input_setup <- function(benchmark_file = "inst/extdata/Constant/results_example/Benchmark_details.txt",
-                                          age_file="inst/extdata/Constant/age_data.txt",
+cluster_input_setup <- function(age_file="inst/extdata/Constant/age_data.txt",
+                                          benchmark_file = "inst/extdata/Constant/results_example/Benchmark_details.txt",
                                           set_npt = 1,benchmark = "EIR",age_start = 0,age_end = 65.0){
   
   benchmark_data = utils::read.table(benchmark_file,header=TRUE,sep="\t")
   col_length = length(benchmark_data$run)
-  n_mv_values = (max(benchmark_data$run)+1)/(max(benchmark_data$int_num)+1)
+  n_mv_values = max(benchmark_data$n_mv)+1
   n_int_values = max(benchmark_data$int_num)+1
   n_pts = max(benchmark_data$npt)
     
@@ -128,14 +128,14 @@ cluster_benchmark_input_setup <- function(benchmark_file = "inst/extdata/Constan
   density_sum = 0
   benchmark_value = 0
   
-  EIR = benchmark_data[[5]]
+  EIR = benchmark_data[[7]]
   slide_prev_by_age = list(rep(c(1:col_length),n_age_cats))
   pcr_prev_by_age = slide_prev_by_age
   clin_inc_by_age = slide_prev_by_age
   for(i in 1:n_age_cats){
-    slide_prev_by_age[[i]] = benchmark_data[[5+i]]
-    pcr_prev_by_age[[i]] = benchmark_data[[n_age_cats+5+i]]
-    clin_inc_by_age[[i]] = benchmark_data[[(2*n_age_cats)+5+i]]
+    slide_prev_by_age[[i]] = benchmark_data[[7+i]]
+    pcr_prev_by_age[[i]] = benchmark_data[[n_age_cats+7+i]]
+    clin_inc_by_age[[i]] = benchmark_data[[(2*n_age_cats)+7+i]]
   }
   j = (c(0:(n_mv_values-1))*n_int_values*n_pts)+set_npt
   
@@ -153,10 +153,11 @@ cluster_benchmark_input_setup <- function(benchmark_file = "inst/extdata/Constan
     benchmark_value = benchmark_value/density_sum
   }
   
-  write.table(data.frame(n_mv=c(1:length(benchmark_value))-1,Benchmark=benchmark_value),file="inst/extdata/Constant/results_example/test_benchmark_list.txt",sep="\t",row.names=FALSE,col.names=TRUE)
+  utils::write.table(data.frame(n_mv=c(1:length(benchmark_value))-1,Benchmark=benchmark_value),file="inst/extdata/Constant/results_example/test_benchmark_list.txt",sep="\t",row.names=FALSE,col.names=TRUE)
+  
+  int_values=min(benchmark_data$param_int)+(c(0:(n_int_values-1))*((max(benchmark_data$param_int)-min(benchmark_data$param_int))/(n_int_values-1)))
+  utils::write.table(data.frame(n_int=c(0:(n_int_values-1)),param_int=int_values),file="inst/extdata/Constant/results_example/test_benchmark_list.txt",sep="\t",row.names=FALSE,col.names=TRUE)
 }
-
-# TODO: Add function for creating intervention data
 
 #------------------------------------------------
 #' @title Create clusters
@@ -178,13 +179,13 @@ cluster_benchmark_input_setup <- function(benchmark_file = "inst/extdata/Constan
 clusters_create <- function(benchmark_file="test_benchmark_list.txt",int_file="test_int_list.txt",
                             benchmark_mean=0.25, benchmark_stdev=0.025, int_mean=0.15, int_stdev=0.05){
   
-  data_bm <- read.table(benchmark_file,header=TRUE,sep="\t")
-  data_int <- read.table(int_file,header=TRUE,sep="\t")
-  nv_b=length(data_bm$mv_num)
-  nv_i=length(data_int$int_num)
-  par(mfrow=c(1,2))
-  plot(data_bm$Benchmark,data_bm$mv_num)
-  plot(data_int$param_int,data_int$int_num)
+  data_bm <- utils::read.table(benchmark_file,header=TRUE,sep="\t")
+  data_int <- utils::read.table(int_file,header=TRUE,sep="\t")
+  nv_B=length(data_bm$mv_num)
+  nv_I=length(data_int$int_num)
+  graphics::par(mfrow=c(1,2))
+  graphics::plot(data_bm$Benchmark,data_bm$mv_num)
+  graphics::plot(data_int$param_int,data_int$int_num)
   
   nprobs=10000
   mid=nprobs/2
@@ -210,18 +211,18 @@ clusters_create <- function(benchmark_file="test_benchmark_list.txt",int_file="t
   
   for(i in 1:nprobs){
     j=findInterval(v_bm1[i],data_bm$Benchmark)+1
-    if(j>nv_b){j=nv_b}
+    if(j>nv_B){j=nv_B}
     mvn_index[i]=j
     v_bm2[i]=data_bm$Benchmark[j]
     j=findInterval(v_i1[i],data_int$param_int)+1
-    if(j>nv_i){j=nv_i}
+    if(j>nv_I){j=nv_I}
     int_index[i]=j
     v_i2[i]=data_int$param_int[j]
   }
   
   nclusters=100
-  clusters <- data.frame(Cluster=c(1:nclusters),CP_B=runif(nclusters,0,1),n_B=rep(0,nclusters),B=rep(0,nclusters),
-                         CP_I=runif(nclusters,0,1),n_I=rep(0,nclusters),I=rep(0,nclusters),n_run=rep(0,nclusters))
+  clusters <- data.frame(Cluster=c(1:nclusters),CP_B=stats::runif(nclusters,0,1),n_B=rep(0,nclusters),B=rep(0,nclusters),
+                         CP_I=stats::runif(nclusters,0,1),n_I=rep(0,nclusters),I=rep(0,nclusters),n_run=rep(0,nclusters))
   for(i in 1:nclusters){
     j=findInterval(clusters$CP_B[i],cprob)+1
     clusters$B[i]=v_bm2[j]
@@ -230,17 +231,17 @@ clusters_create <- function(benchmark_file="test_benchmark_list.txt",int_file="t
     clusters$I[i]=v_i2[j]
     clusters$n_I[i]=int_index[j]-1
   }
-  clusters$n_run=((clusters$n_B)*trial_params$n_int_values)+clusters$n_I
+  clusters$n_run=((clusters$n_B)*nv_I)+clusters$n_I
   
-  par(mfrow=c(1,2))
-  matplot(cprob,v_bm1,type="l",col=1)
-  matplot(cprob,v_bm2,type="l",col=2,add=TRUE)
-  matplot(clusters$CP_B,clusters$B,type="p",pch=1,col=3,add=TRUE)
-  matplot(cprob,v_i1,type="l",col=1)
-  matplot(cprob,v_i2,type="l",col=2,add=TRUE)
-  matplot(clusters$CP_I,clusters$I,type="p",pch=1,col=3,add=TRUE)
+  graphics::par(mfrow=c(1,2))
+  graphics::matplot(cprob,v_bm1,type="l",col=1)
+  graphics::matplot(cprob,v_bm2,type="l",col=2,add=TRUE)
+  graphics::matplot(clusters$CP_B,clusters$B,type="p",pch=1,col=3,add=TRUE)
+  graphics::matplot(cprob,v_i1,type="l",col=1)
+  graphics::matplot(cprob,v_i2,type="l",col=2,add=TRUE)
+  graphics::matplot(clusters$CP_I,clusters$I,type="p",pch=1,col=3,add=TRUE)
   
-  write.table(clusters,file="cluster_test.txt",sep="\t",row.names=FALSE,col.names=TRUE)
+  utils::write.table(clusters,file="cluster_test.txt",sep="\t",row.names=FALSE,col.names=TRUE)
   
 }
 
