@@ -4,14 +4,14 @@
 \alias{cluster_input_setup}
 \title{Cluster input setup}
 \usage{
-cluster_input_setup(age_file = "inst/extdata/Constant/age_data.txt",
-  benchmark_file = "inst/extdata/Constant/results_example/Benchmark_details.txt",
+cluster_input_setup(input_folder1 = "inst/extdata/Constant/",
+  input_folder2 = "inst/extdata/Constant/results_example/",
   set_npt = 1, benchmark = "EIR", age_start = 0, age_end = 65)
 }
 \arguments{
-\item{age_file}{File containing age distribution data}
+\item{input_folder1}{Folder containing age distribution data}
 
-\item{benchmark_file}{File containing benchmark data}
+\item{input_folder2}{Folder containing benchmark data}
 
 \item{set_npt}{Data point to use (1-max)}
 

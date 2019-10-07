@@ -4,25 +4,25 @@
 \alias{mainpop}
 \title{Main population evaluation}
 \usage{
-mainpop(input_folder = "inst/extdata/Constant/", n_mv_values = 25,
-  n_mv_start = 0, n_mv_end = 0, int_v_varied = 1, n_int_values = 1,
-  int_v_min = 0.15, int_v_max = 0.15, date_start = 180,
-  date_int = 211, time_interval = 7, n_pts = 2,
-  file_summary = "Benchmark_summary.txt",
-  file_benchmarks = "Benchmark_details.txt",
-  file_endpoints = "endpoints.txt", file_EIRd = "EIR.txt",
-  file_imm_start = "imm.txt")
+mainpop(input_folder = "inst/extdata/Constant/",
+  output_folder = "inst/extdata/Constant/results_example/",
+  n_lines = 1, n_mv_start = 0, n_mv_end = 0, int_v_varied = 1,
+  n_int_values = 0, int_v_min = 0, int_v_max = 0, date_start = 0,
+  date_int = 31, time_interval = 7, n_pts = 2)
 }
 \arguments{
 \item{input_folder}{Folder containing rainfall, model parameter and starting data}
 
-\item{n_mv_values}{Number of lines of data in input file}
+\item{output_folder}{Folder to send output files}
+
+\item{n_lines}{Number of lines of data in input file}
 
 \item{n_mv_start}{Number of first set of data to use in input file}
 
 \item{n_mv_end}{Number of last set of data to use in input file (must be less than n_lines)}
 
-\item{int_v_varied}{Intervention parameter given variable value (0= None, 1=ATSB kill rate, 2=bednet coverage, 3=IRS coverage)}
+\item{int_v_varied}{Intervention parameter given variable value 
+(0= None, 1=ATSB kill rate, 2=bednet coverage, 3=IRS coverage)}
 
 \item{n_int_values}{Number of values of varied intervention parameter to use (will be reset to 1 if int_v_varied=0)}
 
@@ -32,21 +32,13 @@ mainpop(input_folder = "inst/extdata/Constant/", n_mv_values = 25,
 
 \item{date_start}{Day of the year when simulation starts (should be set based on input_file)}
 
-\item{date_int}{Day of the year when intervention trial starts (period from date_start to date_int used to equilibrate lagged FOI data)}
+\item{date_int}{Day of the year when intervention trial starts 
+(period from date_start to date_int used to equilibrate lagged FOI data)}
 
 \item{time_interval}{Length of time (in days) between measurements of benchmarks}
 
-\item{n_pts}{Number of data points to take (one taken at date_int, so end time = date_int + ((n_pts-1)*time_interval))}
-
-\item{file_summary}{Benchmark values at data capture points (sum over ages/heterogeneity categories where applicable)}
-
-\item{file_benchmarks}{Benchmark values at data capture points (sum over heterogeneity categories where applicable)}
-
-\item{file_endpoints}{Detailed endpoint data (only used if int_v_varied=0)}
-
-\item{file_EIRd}{Daily EIR data during intervention period for each run}
-
-\item{file_imm_start}{Immunity data at start of intervention for each n_mv value}
+\item{n_pts}{Number of data points to take 
+(one taken at date_int, so end time = date_int + ((n_pts-1)*time_interval))}
 }
 \description{
 Function which takes in trial parameters for one or more populations, sends to C++ for computation 

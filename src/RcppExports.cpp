@@ -17,17 +17,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// dummy1_cpp
-Rcpp::List dummy1_cpp(Rcpp::List args);
-RcppExport SEXP _vectorpower_dummy1_cpp(SEXP argsSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::List >::type args(argsSEXP);
-    rcpp_result_gen = Rcpp::wrap(dummy1_cpp(args));
-    return rcpp_result_gen;
-END_RCPP
-}
 // rcpp_mainpop
 Rcpp::List rcpp_mainpop(List params, List trial_params);
 RcppExport SEXP _vectorpower_rcpp_mainpop(SEXP paramsSEXP, SEXP trial_paramsSEXP) {
@@ -43,7 +32,6 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_vectorpower_rcpp_cohort", (DL_FUNC) &_vectorpower_rcpp_cohort, 2},
-    {"_vectorpower_dummy1_cpp", (DL_FUNC) &_vectorpower_dummy1_cpp, 1},
     {"_vectorpower_rcpp_mainpop", (DL_FUNC) &_vectorpower_rcpp_mainpop, 2},
     {NULL, NULL, 0}
 };

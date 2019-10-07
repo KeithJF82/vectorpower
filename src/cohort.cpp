@@ -39,7 +39,6 @@ Rcpp::List rcpp_cohort(List params, List cohort_params)
 	int num_het = 9;			// Number of heterogeneity categories
 	double het_x[] = { -4.5127459, -3.2054291, -2.076848, -1.0232557, 0.0, 1.0232557, 2.076848, 3.2054291, 4.5127459 }; // Biting heterogeneity
 	double het_wt[] = { 0.00002235, 0.00278914, 0.04991641, 0.2440975, 0.40634921, 0.2440975, 0.04991641, 0.00278914, 0.00002235 }; // Fractions in each heterogeneity category
-	double KMIN = 0.0005;		// Minimum value of larval birth rate coefficient K0 to prevent zero or negative mosquito numbers
 
 	//Load input parameter data from R------------------------------------------------------------------------------------------------------------------------------------------
  	
@@ -213,9 +212,9 @@ Rcpp::List rcpp_cohort(List params, List cohort_params)
 	int *patients_status = (int *)malloc(6 * sizeof(int));						//Tally of number of patients in each status category (S,T,D,A,U,P)
 	int *pcr_test_results = (int *)malloc(n_divs*n_patients * sizeof(int));		//PCR test results for individual patients at tinterval2 checkpoints
 	double *pcr_distribution = (double *)malloc((n_divs + 1) * sizeof(double)); //Frequency distribution of number of positive PCR test results over entire trial
-	double *slide_prev_coh_values = (double *)malloc(n_divs * sizeof(double));	//Values of slide prevalence (cohort) at tinterval2 checkpoints
-	double *clin_inc_coh_values = (double *)malloc(n_divs * sizeof(double));	//Values of clinical incidence (cohort) at tinterval2 checkpoints
-	double *pcr_fraction_values = (double *)malloc(n_divs * sizeof(double));	//Values of proportion of patients in cohort giving positive PCR test results at tinterval2 checkpoints
+	double *slide_prev_values = (double *)malloc(n_divs * sizeof(double));	//Values of slide prevalence (cohort) at tinterval2 checkpoints
+	double *clin_inc_values = (double *)malloc(n_divs * sizeof(double));	//Values of clinical incidence (cohort) at tinterval2 checkpoints
+	double *pcr_prev_values = (double *)malloc(n_divs * sizeof(double));	//Values of proportion of patients in cohort giving positive PCR test results at tinterval2 checkpoints
 
 	//Load data from file------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -289,9 +288,9 @@ Rcpp::List rcpp_cohort(List params, List cohort_params)
 	{
 		output1 = fopen(output_filename1.c_str(), "w");//fopen_s(&output1, output_filename1.c_str(), "w"); //
 		fprintf(output1, "n_patients\t%i\nCluster\tmvn\tint_num", n_patients);
-		for (div = 1; div <= n_divs; div++) { fprintf(output1, "\tprev_c%i", div); }
-		for (div = 1; div <= n_divs; div++) { fprintf(output1, "\tinc_c%i", div); }
+		for (div = 1; div <= n_divs; div++) { fprintf(output1, "\tslide_prev%i", div); }
 		for (div = 1; div <= n_divs; div++) { fprintf(output1, "\tpcr_p%i", div); }
+		for (div = 1; div <= n_divs; div++) { fprintf(output1, "\tclin_incinc_%i", div); }
 		fclose(output1);
 		output2 = fopen(output_filename2.c_str(), "w");//fopen_s(&output2, output_filename2.c_str(), "w"); //
 		fprintf(output2, "n_patients\t%i\nCluster\tmvn\tint_num", n_patients);
@@ -362,12 +361,12 @@ start_run:
 		patient[n].num_het = j;
 	}
 
-	restart_coh:
+	restart:
 	for (div = 0; div < n_divs; div++)
 	{
-		clin_inc_coh_values[div] = 0.0;
-		slide_prev_coh_values[div] = 0.0;
-		pcr_fraction_values[div] = 0.0;
+		clin_inc_values[div] = 0.0;
+		slide_prev_values[div] = 0.0;
+		pcr_prev_values[div] = 0.0;
 		pcr_distribution[div] = 0.0;
 	}
 	pcr_distribution[n_divs] = 0.0;
@@ -376,7 +375,7 @@ start_run:
 	{
 		output1 = fopen(output_filename1.c_str(), "w");//fopen_s(&output1, output_filename1.c_str(), "w"); //
 		output2 = fopen(output_filename2.c_str(), "w");//fopen_s(&output2, output_filename2.c_str(), "w"); //
-		fprintf(output1, "\n\nCluster:\t%i\tmvn:\t%i\tint_num\t%i\nt\tS\tT\tD\tA\tU\tP\tEIR\tprev\tclin_inc\tpcr_fraction", n_c, mvn, int_num);
+		fprintf(output1, "\n\nCluster:\t%i\tmvn:\t%i\tint_num\t%i\nt\tS\tT\tD\tA\tU\tP\tEIR\tprev\tclin_inc\tpcr_prev", n_c, mvn, int_num);
 		fprintf(output2, "\n\nCluster:\t%i\tmvn:\t%i\tint_num\t%i\npatient", n_c, mvn, int_num);
 		for (i = 0; i < n_divs; i++) { fprintf(output2, "\tPCR_test_%i", i); }
 		fclose(output1);
@@ -425,9 +424,9 @@ start_run:
 			if (tflag > 0)
 			{
 				tflag = 0;
-				if (dt <= 0.0025) { goto end_coh; }
+				if (dt <= 0.0025) { goto end; }
 				dt = max(0.0025, dt*0.5);
-				goto restart_coh;
+				goto restart;
 			}
 			if (randgen(4) <= p_inf_bite)
 			{
@@ -451,7 +450,7 @@ start_run:
 					p_clin_inf = phi0 * ((phi1_rev / (1.0 + pow(IC_cur * inv_IC0, kc))) + phi1); //Probability of a clinical infection
 					if (randgen(4) <= p_clin_inf)
 					{/*clinical infection*/
-						clin_inc_coh_values[div] += dv_p2;
+						clin_inc_values[div] += dv_p2;
 						if (randgen(2) <= prop_T_c) {/*to T*/ patient[n].status = 1; }
 						else {/*to D*/ patient[n].status = 2; }
 					}
@@ -540,28 +539,28 @@ start_run:
 				case 1: //T
 				{
 					pcr_test_results[pos] = 1;
-					pcr_fraction_values[div] += dv_p1;
-					slide_prev_coh_values[div] += dv_p1;
+					pcr_prev_values[div] += dv_p1;
+					slide_prev_values[div] += dv_p1;
 				}
 					break;
 				case 2: //D
 				{
 					pcr_test_results[pos] = 1;
-					pcr_fraction_values[div] += dv_p1;
-					slide_prev_coh_values[div] += dv_p1;
+					pcr_prev_values[div] += dv_p1;
+					slide_prev_values[div] += dv_p1;
 				}
 					break;
 				case 3: //A
 				{
 					pcr_test_results[pos] = 1;
-					pcr_fraction_values[div] += dv_p1;
-					if (randgen(4) <= dmin + (dmin_rev / (1.0 + (fd[patient[n].na] * pow(patient[n].ID * inv_ID0, kd))))) { slide_prev_coh_values[div] += dv_p1; }
+					pcr_prev_values[div] += dv_p1;
+					if (randgen(4) <= dmin + (dmin_rev / (1.0 + (fd[patient[n].na] * pow(patient[n].ID * inv_ID0, kd))))) { slide_prev_values[div] += dv_p1; }
 				}
 					break;
 				case 4: //U
 				{
 					pcr_test_results[pos] = 1;
-					pcr_fraction_values[div] += dv_p1;
+					pcr_prev_values[div] += dv_p1;
 				}
 					break;
 				default: {pcr_test_results[pos] = 0; }
@@ -574,11 +573,11 @@ start_run:
 				output1 = fopen(output_filename1.c_str(), "a");//fopen_s(&output1, output_filename1.c_str(), "a"); //
 				fprintf(output1, "\n%.0f", t);
 				for (i = 0; i < 6; i++) { fprintf(output1, "\t%i", patients_status[i]); }
-				fprintf(output1, "\t%.3e\t%.3e\t%.3e\t%.3e", EIRd, slide_prev_coh_values[div], clin_inc_coh_values[div], pcr_fraction_values[div]);
-				Rcout << "\n\tt = " << t << " EIR = " << EIRd << " prev = " << slide_prev_coh_values[div] << " inc = " << clin_inc_coh_values[div] << " pcr = " << pcr_fraction_values[div];	
+				fprintf(output1, "\t%.3e\t%.3e\t%.3e\t%.3e", EIRd, slide_prev_values[div], clin_inc_values[div], pcr_prev_values[div]);
+				Rcout << "\n\tt = " << t << " EIR = " << EIRd << " prev = " << slide_prev_values[div] << " inc = " << clin_inc_values[div] << " pcr = " << pcr_prev_values[div];	
 				fclose(output1);
 			}
-			//Rcout << "\nt = " << t << "\tEIR = " << EIRd << "\tprev = " << slide_prev_coh_values[div];
+			//Rcout << "\nt = " << t << "\tEIR = " << EIRd << "\tprev = " << slide_prev_values[div];
 			t_mark2 += tinterval2;
 			div++;
 			for (n = 0; n < n_patients; n++)
@@ -596,9 +595,9 @@ start_run:
 	{
 		output1 = fopen(output_filename1.c_str(), "a");//fopen_s(&output1, output_filename1.c_str(), "a"); //
 		fprintf(output1, "\n%i\t%i\t%i", n_c, mvn, int_num);
-		for (div = 0; div < n_divs; div++) { fprintf(output1, "\t%.3e", slide_prev_coh_values[div]); }
-		for (div = 0; div < n_divs; div++) { fprintf(output1, "\t%.3e", clin_inc_coh_values[div]); }
-		for (div = 0; div < n_divs; div++) { fprintf(output1, "\t%.3e", pcr_fraction_values[div]); }
+		for (div = 0; div < n_divs; div++) { fprintf(output1, "\t%.3e", slide_prev_values[div]); }
+		for (div = 0; div < n_divs; div++) { fprintf(output1, "\t%.3e", pcr_prev_values[div]); }
+		for (div = 0; div < n_divs; div++) { fprintf(output1, "\t%.3e", clin_inc_values[div]); }
 		fclose(output1);	
 		fprintf(output2, "\n%i\t%i\t%i", n_c, mvn, int_num);
 		for (div = 0; div <= n_divs; div++) { fprintf(output2, "\t%.3e", pcr_distribution[div] / n_divs); }
@@ -613,7 +612,7 @@ start_run:
 	}
 	fclose(output2);
 
-	end_coh:
+	end:
 
 	goto run_complete;
 

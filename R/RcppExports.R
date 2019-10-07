@@ -5,10 +5,6 @@ rcpp_cohort <- function(params, cohort_params) {
     .Call(`_vectorpower_rcpp_cohort`, params, cohort_params)
 }
 
-dummy1_cpp <- function(args) {
-    .Call(`_vectorpower_dummy1_cpp`, args)
-}
-
 rcpp_mainpop <- function(params, trial_params) {
     .Call(`_vectorpower_rcpp_mainpop`, params, trial_params)
 }

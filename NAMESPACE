@@ -3,7 +3,6 @@
 export(cluster_input_setup)
 export(clusters_create)
 export(cohort)
-export(dummy1)
 export(mainpop)
 importFrom(Rcpp,sourceCpp)
 useDynLib(vectorpower, .registration = TRUE)

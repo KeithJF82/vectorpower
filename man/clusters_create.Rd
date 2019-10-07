@@ -4,14 +4,14 @@
 \alias{clusters_create}
 \title{Create clusters}
 \usage{
-clusters_create(benchmark_file = "test_benchmark_list.txt",
-  int_file = "test_int_list.txt", benchmark_mean = 0.25,
-  benchmark_stdev = 0.025, int_mean = 0.15, int_stdev = 0.05)
+clusters_create(input_folder = "inst/extdata/Constant/results_example/",
+  nclusters = 100, benchmark_mean = 0.25, benchmark_stdev = 0.025,
+  int_mean = 0.15, int_stdev = 0.05)
 }
 \arguments{
-\item{benchmark_file}{File containing benchmark data}
+\item{input_folder}{Folder containing input files}
 
-\item{int_file}{File containing intervention data}
+\item{nclusters}{Number of clusters to create}
 
 \item{benchmark_mean}{Mean of benchmark value distribution}
 

@@ -1,38 +1,4 @@
 #------------------------------------------------
-#' @title Dummy function
-#'
-#' @description Simple test function that demonstrates some of the features of
-#'   this package.
-#'
-#' @details Takes a vector of values, returns the square.
-#'
-#' @param x vector of values
-#'
-#' @export
-#' @examples
-#' # Find square of first 100 values
-#' dummy1(1:100)
-
-dummy1 <- function(x = 1:5) {
-  
-  # print message to console
-  message("running R dummy1 function")
-  
-  # get arguments in list form
-  args <- list(x = x)
-  
-  # run C++ function with these arguments
-  output_raw <- dummy1_cpp(args)
-  
-  # some optional processing of output
-  message("processing output")
-  ret <- output_raw$x_squared
-  
-  # return
-  return(ret)
-}
-
-#------------------------------------------------
 #' @title Main population evaluation
 #'
 #' @description Function which takes in trial parameters for one or more populations, sends to C++ for computation 
@@ -43,31 +9,29 @@ dummy1 <- function(x = 1:5) {
 #' @details Takes a list of parameters, returns a list of raw data (data also saved to files as backup). 
 #'
 #' @param input_folder    Folder containing rainfall, model parameter and starting data
-#' @param n_mv_values     Number of lines of data in input file	
+#' @param output_folder   Folder to send output files
+#' @param n_lines         Number of lines of data in input file	
 #' @param n_mv_start      Number of first set of data to use in input file
 #' @param n_mv_end        Number of last set of data to use in input file (must be less than n_lines)
-#' @param int_v_varied    Intervention parameter given variable value (0= None, 1=ATSB kill rate, 2=bednet coverage, 3=IRS coverage)
+#' @param int_v_varied    Intervention parameter given variable value 
+#'                        (0= None, 1=ATSB kill rate, 2=bednet coverage, 3=IRS coverage)
 #' @param n_int_values    Number of values of varied intervention parameter to use (will be reset to 1 if int_v_varied=0)
-#' @param int_v_min       Minimum intervention parameter value (sole value used if n_int_values=1; unused if int_v_varied=0)			
+#' @param int_v_min       Minimum intervention parameter value (sole value used if n_int_values=1; unused if int_v_varied=0)
 #' @param int_v_max       Maximum intervention parameter value (unused if n_int_values=1 or int_v_varied=0)			
 #' @param date_start      Day of the year when simulation starts (should be set based on input_file)		
-#' @param date_int        Day of the year when intervention trial starts (period from date_start to date_int used to equilibrate lagged FOI data)
+#' @param date_int        Day of the year when intervention trial starts 
+#'                        (period from date_start to date_int used to equilibrate lagged FOI data)
 #' @param time_interval   Length of time (in days) between measurements of benchmarks
-#' @param n_pts           Number of data points to take (one taken at date_int, so end time = date_int + ((n_pts-1)*time_interval)) 
-#' @param file_summary    Benchmark values at data capture points (sum over ages/heterogeneity categories where applicable)
-#' @param file_benchmarks Benchmark values at data capture points (sum over heterogeneity categories where applicable)
-#' @param file_endpoints  Detailed endpoint data (only used if int_v_varied=0)
-#' @param file_EIRd       Daily EIR data during intervention period for each run
-#' @param file_imm_start  Immunity data at start of intervention for each n_mv value
+#' @param n_pts           Number of data points to take 
+#'                        (one taken at date_int, so end time = date_int + ((n_pts-1)*time_interval)) 
 #'
 #' @export
 
-mainpop <- function (input_folder = "inst/extdata/Constant/",n_mv_values = 25, n_mv_start = 0, n_mv_end = 0, int_v_varied = 1, 
-                     n_int_values = 1, int_v_min = 0.15, int_v_max = 0.15, date_start = 180.0, date_int = 211.0, time_interval = 7.0,
-                     n_pts = 2, file_summary = "Benchmark_summary.txt", file_benchmarks = "Benchmark_details.txt",
-                     file_endpoints = "endpoints.txt", file_EIRd = "EIR.txt", file_imm_start = "imm.txt") {
+mainpop <- function (input_folder = "inst/extdata/Constant/",output_folder = "inst/extdata/Constant/results_example/",
+                     n_lines = 1, n_mv_start = 0, n_mv_end = 0, int_v_varied = 1, n_int_values = 0, int_v_min = 0.0, 
+                     int_v_max = 0.0, date_start = 0.0, date_int = 31.0, time_interval = 7.0, n_pts = 2)
+  {
   
-  rain_file = paste(input_folder,"rain_parameters.txt",sep="")
   parameter_file = paste(input_folder,"model_parameters.txt",sep="")
   input_file = paste(input_folder,"start_data.txt",sep="")
   params <- utils::read.table(parameter_file, header=TRUE)
@@ -77,7 +41,13 @@ mainpop <- function (input_folder = "inst/extdata/Constant/",n_mv_values = 25, n
   # TODO - Take in list of mv values as vector so they don't need to be consecutive
   # TODO - Take in list of data collection dates as vector as well?
   
-  trial_params <- list(rain_file=rain_file, input_file=input_file, n_mv_values=n_mv_values, 
+  file_benchmarks = paste(output_folder,"Benchmark_details.txt",sep="")
+  file_summary = paste(output_folder,"Benchmark_summary.txt",sep="")
+  file_EIRd = paste(output_folder,"EIR.txt",sep="")
+  file_imm_start = paste(output_folder,"imm.txt",sep="")
+  file_endpoints = paste(output_folder,"endpoints.txt",sep="")
+  
+  trial_params <- list(input_file=input_file, n_lines=n_lines, 
                        n_mv_start=n_mv_start, n_mv_end=n_mv_end, int_v_varied=int_v_varied, n_int_values=n_int_values, 
                        int_v_min=int_v_min, int_v_max=int_v_max, date_start=date_start, date_int=date_int, 
                        time_interval=time_interval, n_pts=n_pts, file_summary=file_summary, file_benchmarks=file_benchmarks,
@@ -86,7 +56,7 @@ mainpop <- function (input_folder = "inst/extdata/Constant/",n_mv_values = 25, n
   # Run simulation of main population
   raw_data <- rcpp_mainpop(params,trial_params)
   
-  # placeholder
+  # placeholder; TODO - Once export of data in R list format added to mainpop.cpp, add processing here
   results_data <- data.frame(raw_data)
   
   return(results_data)
@@ -102,8 +72,8 @@ mainpop <- function (input_folder = "inst/extdata/Constant/",n_mv_values = 25, n
 #' @details Takes in detailed benchmark data as a list (currently from a file) and outputs lists of chosen 
 #'          benchmark values and intervention parameter values (currently as files)
 #'
-#' @param benchmark_file      File containing benchmark data
-#' @param age_file            File containing age distribution data
+#' @param input_folder1       Folder containing age distribution data
+#' @param input_folder2       Folder containing benchmark data
 #' @param set_npt             Data point to use (1-max)
 #' @param benchmark           Benchmark type to use in choosing clusters ("EIR", "slide_prev", "pcr_prev", or "clin_inc")
 #' @param age_start           Starting age to use when calculating prevalence or incidence over age range (not used with EIR)
@@ -111,9 +81,13 @@ mainpop <- function (input_folder = "inst/extdata/Constant/",n_mv_values = 25, n
 #'
 #' @export
 
-cluster_input_setup <- function(age_file="inst/extdata/Constant/age_data.txt",
-                                          benchmark_file = "inst/extdata/Constant/results_example/Benchmark_details.txt",
-                                          set_npt = 1,benchmark = "EIR",age_start = 0,age_end = 65.0){
+cluster_input_setup <- function(input_folder1 = "inst/extdata/Constant/",
+                                input_folder2 = "inst/extdata/Constant/results_example/",
+                                set_npt = 1,benchmark = "EIR",age_start = 0,age_end = 65.0){
+  # TODO - Change input settings so that settings under different intervention conditions can be used
+  
+  age_file=paste(input_folder1,"age_data.txt",sep="")
+  benchmark_file = paste(input_folder2,"Benchmark_details.txt",sep="")
   
   benchmark_data = utils::read.table(benchmark_file,header=TRUE,sep="\t")
   col_length = length(benchmark_data$run)
@@ -147,16 +121,23 @@ cluster_input_setup <- function(age_file="inst/extdata/Constant/age_data.txt",
     if(benchmark == "clin_inc"){ benchmark_data = clin_inc_by_age }
     
     for(i in n_age_start:n_age_end){
-      density_sum = density_sum+age_data$density[i]
-      benchmark_value = benchmark_value+benchmark_data[[i]][j]
+      density_sum = density_sum + age_data$density[i]
+      benchmark_value = benchmark_value + benchmark_data[[i]][j]
     }
     benchmark_value = benchmark_value/density_sum
   }
   
-  utils::write.table(data.frame(n_mv=c(1:length(benchmark_value))-1,Benchmark=benchmark_value),file="inst/extdata/Constant/results_example/test_benchmark_list.txt",sep="\t",row.names=FALSE,col.names=TRUE)
+  utils::write.table(data.frame(n_mv=c(1:length(benchmark_value))-1,Benchmark=benchmark_value),
+                     file=paste(input_folder2,"benchmark_list.txt",sep=""),sep="\t",
+                     row.names=FALSE,col.names=TRUE)
   
-  int_values=min(benchmark_data$param_int)+(c(0:(n_int_values-1))*((max(benchmark_data$param_int)-min(benchmark_data$param_int))/(n_int_values-1)))
-  utils::write.table(data.frame(n_int=c(0:(n_int_values-1)),param_int=int_values),file="inst/extdata/Constant/results_example/test_benchmark_list.txt",sep="\t",row.names=FALSE,col.names=TRUE)
+  if(n_int_values==1){int_values=benchmark_data$param_int[1]}else{
+    int_values=min(benchmark_data$param_int)+
+      (c(1:(n_int_values)-1)*((max(benchmark_data$param_int)-min(benchmark_data$param_int))/(n_int_values-1)))
+  }
+  utils::write.table(data.frame(n_int=c(0:(n_int_values-1)),param_int=int_values),
+                     file=paste(input_folder2,"int_list.txt",sep=""),sep="\t",
+                     row.names=FALSE,col.names=TRUE)
 }
 
 #------------------------------------------------
@@ -167,8 +148,8 @@ cluster_input_setup <- function(age_file="inst/extdata/Constant/age_data.txt",
 #' @details Takes in previously generated benchmark and intervention data (currently in files) and outputs cluster data
 #'          (currently as files)
 #'
-#' @param benchmark_file      File containing benchmark data
-#' @param int_file            File containing intervention data
+#' @param input_folder        Folder containing input files
+#' @param nclusters           Number of clusters to create
 #' @param benchmark_mean      Mean of benchmark value distribution
 #' @param benchmark_stdev     Standard deviation of benchmark value distribution
 #' @param int_mean            Mean of intervention parameter value distribution
@@ -176,13 +157,16 @@ cluster_input_setup <- function(age_file="inst/extdata/Constant/age_data.txt",
 #'
 #' @export
 
-clusters_create <- function(benchmark_file="test_benchmark_list.txt",int_file="test_int_list.txt",
+clusters_create <- function(input_folder = "inst/extdata/Constant/results_example/",nclusters=100,
                             benchmark_mean=0.25, benchmark_stdev=0.025, int_mean=0.15, int_stdev=0.05){
+  
+  benchmark_file=paste(input_folder,"benchmark_list.txt",sep="")
+  int_file=paste(input_folder,"int_list.txt",sep="")
   
   data_bm <- utils::read.table(benchmark_file,header=TRUE,sep="\t")
   data_int <- utils::read.table(int_file,header=TRUE,sep="\t")
-  nv_B=length(data_bm$mv_num)
-  nv_I=length(data_int$int_num)
+  nv_B=length(data_bm$n_mv)
+  nv_I=length(data_int$n_int)
   graphics::par(mfrow=c(1,2))
   graphics::plot(data_bm$Benchmark,data_bm$mv_num)
   graphics::plot(data_int$param_int,data_int$int_num)
@@ -220,7 +204,6 @@ clusters_create <- function(benchmark_file="test_benchmark_list.txt",int_file="t
     v_i2[i]=data_int$param_int[j]
   }
   
-  nclusters=100
   clusters <- data.frame(Cluster=c(1:nclusters),CP_B=stats::runif(nclusters,0,1),n_B=rep(0,nclusters),B=rep(0,nclusters),
                          CP_I=stats::runif(nclusters,0,1),n_I=rep(0,nclusters),I=rep(0,nclusters),n_run=rep(0,nclusters))
   for(i in 1:nclusters){
@@ -241,7 +224,7 @@ clusters_create <- function(benchmark_file="test_benchmark_list.txt",int_file="t
   graphics::matplot(cprob,v_i2,type="l",col=2,add=TRUE)
   graphics::matplot(clusters$CP_I,clusters$I,type="p",pch=1,col=3,add=TRUE)
   
-  utils::write.table(clusters,file="cluster_test.txt",sep="\t",row.names=FALSE,col.names=TRUE)
+  utils::write.table(clusters,file=paste(input_folder,"cluster_list.txt",sep=""),sep="\t",row.names=FALSE,col.names=TRUE)
   
 }
 
@@ -267,8 +250,8 @@ clusters_create <- function(benchmark_file="test_benchmark_list.txt",int_file="t
 #' @export
 
 cohort <- function(input_folder1 = "inst/extdata/Constant/",input_folder2 = "inst/extdata/Constant/results_example/",
-                   n_mv_values = 1,n_EIR_values = 1,time_interval = 7.0,n_divs = 13,n_clusters = 1,prop_T_c = 0.9,n_patients = 100,
-                   age_c0 = 0.5,age_c1 = 10.0){
+                   n_mv_values = 1,n_EIR_values = 1,time_interval = 7.0,n_divs = 13,n_clusters = 1,prop_T_c = 0.9,
+                   n_patients = 100,age_c0 = 0.5,age_c1 = 10.0){
   
   # TODO - 1) Reduce use of files
   #        2) Take some parameters directly from input data (n_mv_values, n_EIR_values, time_interval)
@@ -276,7 +259,7 @@ cohort <- function(input_folder1 = "inst/extdata/Constant/",input_folder2 = "ins
   parameter_file = paste(input_folder1,"model_parameters.txt",sep="")
   input_file1 = paste(input_folder2,"EIR.txt",sep="")
   input_file2 = paste(input_folder2,"imm.txt",sep="")
-  input_file3 = paste(input_folder2,"cluster_test.txt",sep="")
+  input_file3 = paste(input_folder2,"cluster_list.txt",sep="")
   file_summary = paste(input_folder2,"summary.txt",sep="")
   file_frequency = paste(input_folder2,"frequency.txt",sep="")
   params <- utils::read.table(parameter_file, header=TRUE)
@@ -288,7 +271,7 @@ cohort <- function(input_folder1 = "inst/extdata/Constant/",input_folder2 = "ins
   
   raw_data <- rcpp_cohort(params,cohort_params)
   
-  # placeholder
+  # placeholder; TODO - Once export of data in R list format added to cohort.cpp, add processing here
   results_data <- data.frame(raw_data)
   
   return(results_data)
