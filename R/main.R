@@ -57,9 +57,9 @@ mainpop <- function (input_folder = "inst/extdata/Constant/",output_folder = "in
   raw_data <- rcpp_mainpop(params,trial_params)
   
   # placeholder; TODO - Once export of data in R list format added to mainpop.cpp, add processing here
-  results_data <- data.frame(raw_data)
+  EIR_output_values <- raw_data$EIR_output_values
   
-  return(results_data)
+  return(EIR_output_values)
 }
 
 #------------------------------------------------
