@@ -11,4 +11,4 @@ int intdiv(double x, double y);
 int rcpp_to_int(SEXP x);
 double rcpp_to_double(SEXP x);
 std::string rcpp_to_string(SEXP x);
-double randgen(int n);	//Generate random number between 0 and 1 to n decimal places
+double runif1(double a = 0.0, double b = 1.0);

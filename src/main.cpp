@@ -40,10 +40,7 @@ string rcpp_to_string(SEXP x) { return Rcpp::as<string>(x); }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-double randgen(int n)
-{
-	int m;
-	double value = 0.0;
-	for (m = 1; m <= n; m++) { value += (rand() % 10) * pow(10.0, -m); }
-	return value;
+double runif1(double a, double b) {
+  return R::runif(a,b);
 }
+

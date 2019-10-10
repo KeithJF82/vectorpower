@@ -24,7 +24,7 @@ Rcpp::List rcpp_cohort(List params, List cohort_params)
 	FILE *input_EIR; 
 	FILE *input_immunity; 
 	FILE *input_clusters; 
-	srand(time(NULL));
+	//srand(time(NULL));
  
 	output1 = NULL; 
 	output2 = NULL; 
@@ -348,7 +348,7 @@ start_run:
 
 	for (n = 0; n < n_patients; n++) //Randomly determine patient's age and heterogeneity category using cprob
 	{
-		prob = randgen(4);		
+		prob = runif1();
 		for (i = na_c0; i <= na_c1; i++)
 		{
 			for (j = 0; j < num_het; j++)
@@ -428,11 +428,11 @@ start_run:
 				dt = max(0.0025, dt*0.5);
 				goto restart;
 			}
-			if (randgen(4) <= p_inf_bite)
+			if (runif1() <= p_inf_bite)
 			{
 				patient[n].IB += IB_boost;
 				p_inf_from_bite = bh*(IB_cur > 0.0 ? ((bmin_rev / (1.0 + pow(IB_cur * inv_IB0, kb))) + bmin) : 1.0); //Probability of an infection from an infectious bite
-				if (randgen(4) <= p_inf_from_bite)
+				if (runif1() <= p_inf_from_bite)
 				{
 					infected = 1;
 					patient[n].IC += IC_boost;
@@ -448,10 +448,10 @@ start_run:
 					patient[n].infected = 0;
 					patient[n].delay = 0.0;
 					p_clin_inf = phi0 * ((phi1_rev / (1.0 + pow(IC_cur * inv_IC0, kc))) + phi1); //Probability of a clinical infection
-					if (randgen(4) <= p_clin_inf)
+					if (runif1() <= p_clin_inf)
 					{/*clinical infection*/
 						clin_inc_values[div] += dv_p2;
-						if (randgen(2) <= prop_T_c) {/*to T*/ patient[n].status = 1; }
+						if (runif1() <= prop_T_c) {/*to T*/ patient[n].status = 1; }
 						else {/*to D*/ patient[n].status = 2; }
 					}
 					else {/*to A*/ patient[n].status = 3; }
@@ -472,12 +472,12 @@ start_run:
 					break;
 				case 1: //T
 				{
-					if (randgen(4)*p_multiplier <= rT) {/*to P*/ patient[n].status = 5; }
+					if (runif1()*p_multiplier <= rT) {/*to P*/ patient[n].status = 5; }
 				}
 					break;
 				case 2: //D
 				{
-					if (randgen(4)*p_multiplier <= rD) {/*to A*/ patient[n].status = 3; }
+					if (runif1()*p_multiplier <= rD) {/*to A*/ patient[n].status = 3; }
 				}
 					break;
 				case 3: //A
@@ -489,7 +489,7 @@ start_run:
 					}
 					else
 					{
-						if (randgen(4)*p_multiplier <= rA0) {/*to U*/ patient[n].status = 4; }
+						if (runif1()*p_multiplier <= rA0) {/*to U*/ patient[n].status = 4; }
 					}
 				}
 					break;
@@ -502,13 +502,13 @@ start_run:
 					}
 					else
 					{
-						if (randgen(4)*p_multiplier <= rU) {/*to S*/ patient[n].status = 0; }
+						if (runif1()*p_multiplier <= rU) {/*to S*/ patient[n].status = 0; }
 					}
 				}
 					break;
 				case 5: //P
 				{
-					if (randgen(4)*p_multiplier <= rP) {/*to S*/ patient[n].status = 0; }
+					if (runif1()*p_multiplier <= rP) {/*to S*/ patient[n].status = 0; }
 				}
 					break;
 				default: { Rcout << "\nError in switch 1!\n"; }
@@ -554,7 +554,7 @@ start_run:
 				{
 					pcr_test_results[pos] = 1;
 					pcr_prev_values[div] += dv_p1;
-					if (randgen(4) <= dmin + (dmin_rev / (1.0 + (fd[patient[n].na] * pow(patient[n].ID * inv_ID0, kd))))) { slide_prev_values[div] += dv_p1; }
+					if (runif1() <= dmin + (dmin_rev / (1.0 + (fd[patient[n].na] * pow(patient[n].ID * inv_ID0, kd))))) { slide_prev_values[div] += dv_p1; }
 				}
 					break;
 				case 4: //U

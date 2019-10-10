@@ -329,7 +329,7 @@ Rcpp::List rcpp_mainpop(List params, List trial_params)
 
 	//Load starting data from file------------------------------------------------------------------------------------------------------------------------------------------
 	
-	fopen_s(&input, input_filename.c_str(), "r");
+	input = fopen(input_filename.c_str(), "r");
 	if (input == NULL)
 	{
 		Rcout << "Input file " << input << " not found.\n";
@@ -387,18 +387,18 @@ Rcpp::List rcpp_mainpop(List params, List trial_params)
 		R_FlushConsole();
 	}
 		
-	fopen_s(&benchmarks_by_age, file_benchmarks.c_str(), "w");
+	benchmarks_by_age = fopen(file_benchmarks.c_str(), "w");
 	fprintf(benchmarks_by_age, "run\tn_mv\tmv0\tint_num\tparam_int\tnpt\tEIR");
 	for (i = 0; i < na; i++) { fprintf(benchmarks_by_age, "\tslide_prev%i",i); }
 	for (i = 0; i < na; i++) { fprintf(benchmarks_by_age, "\tpcr_prev%i", i); }
 	for (i = 0; i < na; i++) { fprintf(benchmarks_by_age, "\tclin_inc%i", i); }
 	fclose(benchmarks_by_age);
 
-	fopen_s(&data_EIR, file_EIRd.c_str(), "w");
+	data_EIR = fopen(file_EIRd.c_str(), "w");
 	fprintf(data_EIR, "n_run");
 	for (t = 0.0; t <= tmax_c; t += tinterval1) { fprintf(data_EIR, "\tEIR%.0f", t); }
 	fclose(data_EIR);
-	fopen_s(&data_immunity, file_imm_start.c_str(), "w");
+	data_immunity = fopen(file_imm_start.c_str(), "w");
 	fprintf(data_immunity, "n_mv");
 	for (i = 0; i < n_cats; i++) { fprintf(data_immunity, "\tIB%i", i); }
 	for (i = 0; i < n_cats; i++) { fprintf(data_immunity, "\tIC%i", i); }
@@ -406,7 +406,7 @@ Rcpp::List rcpp_mainpop(List params, List trial_params)
 	fclose(data_immunity);
 	if (int_v_varied == 0) // Generate header for detailed endpoint data file
 	{
-		fopen_s(&endpoint_data, file_endpoints.c_str(), "w");
+	  endpoint_data = fopen(file_endpoints.c_str(), "w");
 		fprintf(endpoint_data, "n_run\tmv0\tEL\tLL\tPL\tSv1\tEv1\tIv1");
 		for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\tS%i", i); }
 		for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\tT%i", i); }
@@ -801,7 +801,7 @@ restart_run:
 
 			div++;
 			t_mark2 += tinterval2;
-			fopen_s(&benchmarks_by_age, file_benchmarks.c_str(), "a");
+			benchmarks_by_age = fopen(file_benchmarks.c_str(), "a");
 			fprintf(benchmarks_by_age, "\n%i\t%i\t%.3e\t%i\t%.3e\t%i\t%.3e", n_run, n_mv, mv0, int_num, param_int, div, EIRd);
 			for (i = 0; i < na; i++) { fprintf(benchmarks_by_age, "\t%.3e", slide_prev_output_values[ij + i]); }
 			for (i = 0; i < na; i++) { fprintf(benchmarks_by_age, "\t%.3e", pcr_prev_output_values[ij + i]); }
@@ -814,13 +814,13 @@ restart_run:
 end_run:
 	
 	// Output detailed data to use as input for future computation
-	fopen_s(&data_EIR, file_EIRd.c_str(), "a");
+	data_EIR = fopen(file_EIRd.c_str(), "a");
 	fprintf(data_EIR, "\n%i", n_run);
 	for (i = 0; i <= tmax_c_i; i++) { fprintf(data_EIR, "\t%.3e", EIR_data[((tmax_c_i + 1) * n_run) + i]); }
 	fclose(data_EIR);
 	if (int_num == 0)
 	{
-		fopen_s(&data_immunity, file_imm_start.c_str(), "a");
+	  data_immunity = fopen(file_imm_start.c_str(), "a");
 		fprintf(data_immunity, "\n%i", n_mv);
 		for (i = 0; i < n_cats; i++) { fprintf(data_immunity, "\t%.3e", IB_output[i]); }
 		for (i = 0; i < n_cats; i++) { fprintf(data_immunity, "\t%.3e", IC_output[i]); }
@@ -829,7 +829,7 @@ end_run:
 	}
 	if (int_v_varied == 0)
 	{
-		fopen_s(&endpoint_data, file_endpoints.c_str(), "a");
+	  endpoint_data = fopen(file_endpoints.c_str(), "a");
 		fprintf(endpoint_data, "\n%i\t%.3e\t%.3e\t%.3e\t%.3e\t%.3e\t%.3e\t%.3e", n_run, mv0, EL, LL, PL, Sv1, Ev1, Iv1);
 		for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\t%.3e", S[i]); }
 		for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\t%.3e", T[i]); }
