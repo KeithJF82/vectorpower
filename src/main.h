@@ -11,4 +11,6 @@ int intdiv(double x, double y);
 int rcpp_to_int(SEXP x);
 double rcpp_to_double(SEXP x);
 std::string rcpp_to_string(SEXP x);
+vector<int> rcpp_to_vector_int(SEXP x);
+vector<double> rcpp_to_vector_double(SEXP x);
 double runif1(double a = 0.0, double b = 1.0);

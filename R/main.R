@@ -28,13 +28,24 @@
 #' @export
 
 mainpop <- function (input_folder = "inst/extdata/Constant/",output_folder = "inst/extdata/Constant/results_example/",
-                     n_lines = 1, n_mv_start = 0, n_mv_end = 0, int_v_varied = 1, n_int_values = 0, int_v_min = 0.0, 
+                     n_lines = 1, n_mv_set=c(0), int_v_varied = 1, n_int_values = 1, int_v_min = 0.0, 
                      int_v_max = 0.0, date_start = 0.0, date_int = 31.0, time_interval = 7.0, n_pts = 2)
   {
+
+  na=145
+  num_het=9
+  n_cats=na*num_het
+  n_days=((n_pts-1)*time_interval)+1
+  n_mv_values=length(n_mv_set)
+  n_mv_start=n_mv_set[1]
+  n_mv_end=n_mv_set[n_mv_values]
+  n_runs=n_mv_values*max(n_int_values,1)
+  n_pts2=n_runs*n_pts
   
   parameter_file = paste(input_folder,"model_parameters.txt",sep="")
-  input_file = paste(input_folder,"start_data.txt",sep="")
   params <- utils::read.table(parameter_file, header=TRUE)
+  
+  input_file = paste(input_folder,"start_data.txt",sep="")
   
   # TODO - Read in data from files. Automatically determine n_mv_values from no. lines in input_file, check if compatible
   #        with n_mv_start and n_mv_end
@@ -42,24 +53,29 @@ mainpop <- function (input_folder = "inst/extdata/Constant/",output_folder = "in
   # TODO - Take in list of data collection dates as vector as well?
   
   file_benchmarks = paste(output_folder,"Benchmark_details.txt",sep="")
-  file_summary = paste(output_folder,"Benchmark_summary.txt",sep="")
   file_EIRd = paste(output_folder,"EIR.txt",sep="")
   file_imm_start = paste(output_folder,"imm.txt",sep="")
   file_endpoints = paste(output_folder,"endpoints.txt",sep="")
   
-  trial_params <- list(input_file=input_file, n_lines=n_lines, 
+  trial_params <- list(input_file=input_file, n_lines=n_lines, n_mv_set=n_mv_set,
                        n_mv_start=n_mv_start, n_mv_end=n_mv_end, int_v_varied=int_v_varied, n_int_values=n_int_values, 
                        int_v_min=int_v_min, int_v_max=int_v_max, date_start=date_start, date_int=date_int, 
-                       time_interval=time_interval, n_pts=n_pts, file_summary=file_summary, file_benchmarks=file_benchmarks,
+                       time_interval=time_interval, n_pts=n_pts, file_benchmarks=file_benchmarks,
                        file_endpoints=file_endpoints, file_EIRd=file_EIRd, file_imm_start=file_imm_start)
   
   # Run simulation of main population
   raw_data <- rcpp_mainpop(params,trial_params)
   
-  # placeholder; TODO - Once export of data in R list format added to mainpop.cpp, add processing here
-  EIR_output_values <- raw_data$EIR_output_values
+  output_data <- list(EIR_output_values = raw_data$EIR_output_values,
+                      slide_prev_values = matrix(data=raw_data$slide_prev_output_values,nrow=n_pts2,ncol=n_cats,byrow=TRUE), 
+                      pcr_prev_values = matrix(data=raw_data$pcr_prev_output_values,nrow=n_pts2,ncol=na,byrow=TRUE),
+                      clin_inc_values = matrix(data=raw_data$clin_inc_output_values,nrow=n_pts2,ncol=na,byrow=TRUE), 
+                      EIR_daily_data = matrix(data=raw_data$EIR_daily_data,nrow=n_runs,ncol=n_days,byrow=TRUE),
+                      IB_start_data = matrix(data=raw_data$IB_start_data,nrow=n_mv_values,ncol=n_cats,byrow=TRUE),
+                      IC_start_data = matrix(data=raw_data$IC_start_data,nrow=n_mv_values,ncol=n_cats,byrow=TRUE),
+                      ID_start_data = matrix(data=raw_data$ID_start_data,nrow=n_mv_values,ncol=n_cats,byrow=TRUE))
   
-  return(EIR_output_values)
+  return(output_data)
 }
 
 #------------------------------------------------

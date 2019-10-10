@@ -7,7 +7,7 @@
 mainpop(input_folder = "inst/extdata/Constant/",
   output_folder = "inst/extdata/Constant/results_example/",
   n_lines = 1, n_mv_start = 0, n_mv_end = 0, int_v_varied = 1,
-  n_int_values = 0, int_v_min = 0, int_v_max = 0, date_start = 0,
+  n_int_values = 1, int_v_min = 0, int_v_max = 0, date_start = 0,
   date_int = 31, time_interval = 7, n_pts = 2)
 }
 \arguments{
