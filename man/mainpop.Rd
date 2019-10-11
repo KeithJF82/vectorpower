@@ -6,9 +6,9 @@
 \usage{
 mainpop(input_folder = "inst/extdata/Constant/",
   output_folder = "inst/extdata/Constant/results_example/",
-  n_lines = 1, n_mv_start = 0, n_mv_end = 0, int_v_varied = 1,
-  n_int_values = 1, int_v_min = 0, int_v_max = 0, date_start = 0,
-  date_int = 31, time_interval = 7, n_pts = 2)
+  n_lines = 1, n_mv_set = c(0), int_v_varied = 1, n_int_values = 1,
+  int_v_min = 0, int_v_max = 0, date_start = 0, date_int = 31,
+  time_interval = 7, n_pts = 2)
 }
 \arguments{
 \item{input_folder}{Folder containing rainfall, model parameter and starting data}
@@ -17,9 +17,7 @@ mainpop(input_folder = "inst/extdata/Constant/",
 
 \item{n_lines}{Number of lines of data in input file}
 
-\item{n_mv_start}{Number of first set of data to use in input file}
-
-\item{n_mv_end}{Number of last set of data to use in input file (must be less than n_lines)}
+\item{n_mv_set}{Vector of mosquito density number values to use (must be increasing order)}
 
 \item{int_v_varied}{Intervention parameter given variable value 
 (0= None, 1=ATSB kill rate, 2=bednet coverage, 3=IRS coverage)}

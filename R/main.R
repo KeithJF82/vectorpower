@@ -11,8 +11,7 @@
 #' @param input_folder    Folder containing rainfall, model parameter and starting data
 #' @param output_folder   Folder to send output files
 #' @param n_lines         Number of lines of data in input file	
-#' @param n_mv_start      Number of first set of data to use in input file
-#' @param n_mv_end        Number of last set of data to use in input file (must be less than n_lines)
+#' @param n_mv_set        Vector of mosquito density number values to use (must be increasing order)
 #' @param int_v_varied    Intervention parameter given variable value 
 #'                        (0= None, 1=ATSB kill rate, 2=bednet coverage, 3=IRS coverage)
 #' @param n_int_values    Number of values of varied intervention parameter to use (will be reset to 1 if int_v_varied=0)
@@ -32,6 +31,7 @@ mainpop <- function (input_folder = "inst/extdata/Constant/",output_folder = "in
                      int_v_max = 0.0, date_start = 0.0, date_int = 31.0, time_interval = 7.0, n_pts = 2)
   {
 
+  # TODO - Set na and num_het automatically
   na=145
   num_het=9
   n_cats=na*num_het
@@ -40,7 +40,6 @@ mainpop <- function (input_folder = "inst/extdata/Constant/",output_folder = "in
   n_mv_start=n_mv_set[1]
   n_mv_end=n_mv_set[n_mv_values]
   n_runs=n_mv_values*max(n_int_values,1)
-  n_pts2=n_runs*n_pts
   
   parameter_file = paste(input_folder,"model_parameters.txt",sep="")
   params <- utils::read.table(parameter_file, header=TRUE)
@@ -66,14 +65,40 @@ mainpop <- function (input_folder = "inst/extdata/Constant/",output_folder = "in
   # Run simulation of main population
   raw_data <- rcpp_mainpop(params,trial_params)
   
-  output_data <- list(EIR_output_values = raw_data$EIR_output_values,
-                      slide_prev_values = matrix(data=raw_data$slide_prev_output_values,nrow=n_pts2,ncol=n_cats,byrow=TRUE), 
-                      pcr_prev_values = matrix(data=raw_data$pcr_prev_output_values,nrow=n_pts2,ncol=na,byrow=TRUE),
-                      clin_inc_values = matrix(data=raw_data$clin_inc_output_values,nrow=n_pts2,ncol=na,byrow=TRUE), 
-                      EIR_daily_data = matrix(data=raw_data$EIR_daily_data,nrow=n_runs,ncol=n_days,byrow=TRUE),
-                      IB_start_data = matrix(data=raw_data$IB_start_data,nrow=n_mv_values,ncol=n_cats,byrow=TRUE),
-                      IC_start_data = matrix(data=raw_data$IC_start_data,nrow=n_mv_values,ncol=n_cats,byrow=TRUE),
-                      ID_start_data = matrix(data=raw_data$ID_start_data,nrow=n_mv_values,ncol=n_cats,byrow=TRUE))
+  # process raw data
+  
+  n_run_names=paste("n_run",c(1:n_runs),sep="")
+  n_pt_names=paste("n_pt",c(1:n_pts),sep="")
+  na_names=paste("na",c(1:na),sep="")
+  n_cat_names=paste("n_cat",c(1:n_cats),sep="")
+  n_day_names=paste("n_day",c(1:n_days),sep="")
+  n_mv_names=paste("n_mv",c(1:n_mv_values),sep="")
+  n_int_names=paste("n_int",c(1:n_int_values),sep="")
+  slide_prev_names=paste("slide_prev",c(1:na),sep="")
+  pcr_prev_names=paste("pcr_prev",c(1:na),sep="")
+  clin_inc_names=paste("clin_inc",c(1:na),sep="")
+  EIR_daily_names=paste("EIR",c(1:n_cats),sep="")
+  IB_names=paste("IB",c(1:n_cats),sep="")
+  IC_names=paste("IC",c(1:n_cats),sep="")
+  ID_names=paste("ID",c(1:n_cats),sep="")
+  
+  time_values=array(data=c(0:(n_pts-1))*time_interval,dim=c(n_pts),dimnames=list(n_pt_names))
+  int_values=int_v_min+((c(1:n_int_values)*(int_v_max-int_v_min))/n_int_values)
+  EIR_output_values = array(data=raw_data$EIR_output_values,dim=c(n_runs,n_pts),dimnames=list(n_run_names,n_pt_names))
+  slide_prev_values = array(data=raw_data$slide_prev_output_values,dim=c(n_runs,n_pts,na),dimnames=list(n_run_names,n_pt_names,na_names))
+  pcr_prev_values = array(data=raw_data$pcr_prev_output_values,dim=c(n_runs,n_pts,na),dimnames=list(n_run_names,n_pt_names,na_names))
+  clin_inc_values = array(data=raw_data$clin_inc_output_values,dim=c(n_runs,n_pts,na),dimnames=list(n_run_names,n_pt_names,na_names))
+  EIR_daily_data = array(data=raw_data$EIR_daily_data,dim=c(n_runs,n_days),dimnames=list(n_run_names,n_day_names))
+  IB_start_data = array(data=raw_data$IB_start_data,dim=c(n_mv_values,n_cats),dimnames=list(n_mv_names,n_cat_names))
+  IC_start_data = array(data=raw_data$IC_start_data,dim=c(n_mv_values,n_cats),dimnames=list(n_mv_names,n_cat_names))
+  ID_start_data = array(data=raw_data$ID_start_data,dim=c(n_mv_values,n_cats),dimnames=list(n_mv_names,n_cat_names))
+  
+  output_data <- list(na=na,num_het=num_het,n_mv_values=n_mv_values,n_int_values=n_int_values,n_pts=n_pts,
+                      time_values=time_values,int_values=int_values,
+                      EIR_output_values=EIR_output_values,slide_prev_values=slide_prev_values,
+                      pcr_prev_values=pcr_prev_values,clin_inc_values=clin_inc_values, 
+                      EIR_daily_data=EIR_daily_data,IB_start_data=IB_start_data,
+                      IC_start_data=IC_start_data,ID_start_data=ID_start_data)
   
   return(output_data)
 }
@@ -88,8 +113,9 @@ mainpop <- function (input_folder = "inst/extdata/Constant/",output_folder = "in
 #' @details Takes in detailed benchmark data as a list (currently from a file) and outputs lists of chosen 
 #'          benchmark values and intervention parameter values (currently as files)
 #'
-#' @param input_folder1       Folder containing age distribution data
-#' @param input_folder2       Folder containing benchmark data
+#' @param input_folder        Folder containing age distribution data
+#' @param output_folder       Folder to send output file (to be removed)
+#' @param input_list          List containing mainpop output data
 #' @param set_npt             Data point to use (1-max)
 #' @param benchmark           Benchmark type to use in choosing clusters ("EIR", "slide_prev", "pcr_prev", or "clin_inc")
 #' @param age_start           Starting age to use when calculating prevalence or incidence over age range (not used with EIR)
@@ -97,63 +123,44 @@ mainpop <- function (input_folder = "inst/extdata/Constant/",output_folder = "in
 #'
 #' @export
 
-cluster_input_setup <- function(input_folder1 = "inst/extdata/Constant/",
-                                input_folder2 = "inst/extdata/Constant/results_example/",
-                                set_npt = 1,benchmark = "EIR",age_start = 0,age_end = 65.0){
-  # TODO - Change input settings so that settings under different intervention conditions can be used
+cluster_input_setup <- function(input_folder = "inst/extdata/Constant/",output_folder="inst/extdata/Constant/results_example/",
+                                input_list=mainpop_data,benchmark = "EIR",set_n_pt = 1,set_n_int=1,age_start = 0,age_end = 65.0){
   
-  age_file=paste(input_folder1,"age_data.txt",sep="")
-  benchmark_file = paste(input_folder2,"Benchmark_details.txt",sep="")
-  
-  benchmark_data = utils::read.table(benchmark_file,header=TRUE,sep="\t")
-  col_length = length(benchmark_data$run)
-  n_mv_values = max(benchmark_data$n_mv)+1
-  n_int_values = max(benchmark_data$int_num)+1
-  n_pts = max(benchmark_data$npt)
-    
+  age_file=paste(input_folder,"age_data.txt",sep="")
   age_data = utils::read.table(age_file,header=TRUE,sep="\t")
   n_age_cats = length(age_data$age0)
   n_age_start = findInterval(age_start,age_data$age0)
   n_age_end = findInterval(age_end,age_data$age1)
+  
   density_sum = 0
   benchmark_value = 0
-  
-  EIR = benchmark_data[[7]]
-  slide_prev_by_age = list(rep(c(1:col_length),n_age_cats))
-  pcr_prev_by_age = slide_prev_by_age
-  clin_inc_by_age = slide_prev_by_age
-  for(i in 1:n_age_cats){
-    slide_prev_by_age[[i]] = benchmark_data[[7+i]]
-    pcr_prev_by_age[[i]] = benchmark_data[[n_age_cats+7+i]]
-    clin_inc_by_age[[i]] = benchmark_data[[(2*n_age_cats)+7+i]]
-  }
-  j = (c(0:(n_mv_values-1))*n_int_values*n_pts)+set_npt
-  
   if(benchmark == "EIR"){
-    benchmark_value = EIR[j]
+    benchmark_value = input_list$EIR_output_values[input_list$n_int_values*c(1:input_list$n_mv_values),set_n_pt]
   }else{
-    if(benchmark == "slide_prev"){ benchmark_data = slide_prev_by_age}
-    if(benchmark == "pcr_prev"){ benchmark_data = pcr_prev_by_age}
-    if(benchmark == "clin_inc"){ benchmark_data = clin_inc_by_age }
+    j=input_list$n_int_values*c(1:input_list$n_mv_values)
+    if(benchmark == "slide_prev"){ benchmark_data = input_list$slide_prev_values[j,set_n_pt,]}
+    if(benchmark == "pcr_prev"){ benchmark_data = input_list$pcr_prev_values[j,set_n_pt,]}
+    if(benchmark == "clin_inc"){ benchmark_data = input_list$clin_inc_values[j,set_n_pt,] }
     
     for(i in n_age_start:n_age_end){
       density_sum = density_sum + age_data$density[i]
-      benchmark_value = benchmark_value + benchmark_data[[i]][j]
+      benchmark_value = benchmark_value + benchmark_data[,i]
     }
     benchmark_value = benchmark_value/density_sum
   }
   
-  utils::write.table(data.frame(n_mv=c(1:length(benchmark_value))-1,Benchmark=benchmark_value),
-                     file=paste(input_folder2,"benchmark_list.txt",sep=""),sep="\t",
+  utils::write.table(data.frame(n_mv=c(1:input_list$n_mv_values),Benchmark=benchmark_value),
+                     file=paste(output_folder,"benchmark_list.txt",sep=""),sep="\t",
                      row.names=FALSE,col.names=TRUE)
   
-  if(n_int_values==1){int_values=benchmark_data$param_int[1]}else{
-    int_values=min(benchmark_data$param_int)+
-      (c(1:(n_int_values)-1)*((max(benchmark_data$param_int)-min(benchmark_data$param_int))/(n_int_values-1)))
-  }
-  utils::write.table(data.frame(n_int=c(0:(n_int_values-1)),param_int=int_values),
-                     file=paste(input_folder2,"int_list.txt",sep=""),sep="\t",
+  utils::write.table(data.frame(n_int=c(1:input_list$n_int_values),param_int=input_list$int_values),
+                     file=paste(output_folder,"int_list.txt",sep=""),sep="\t",
                      row.names=FALSE,col.names=TRUE)
+  
+  ret <- list(benchmark=benchmark,set_n_pt = set_n_pt,set_n_int=set_n_int,age_start = age_start,age_end = age_end,
+              benchmark_values=benchmark_value)
+  
+  return(ret)
 }
 
 #------------------------------------------------
