@@ -4,18 +4,20 @@
 \alias{cluster_input_setup}
 \title{Cluster input setup}
 \usage{
-cluster_input_setup(input_folder1 = "inst/extdata/Constant/",
-  input_folder2 = "inst/extdata/Constant/results_example/",
-  set_npt = 1, benchmark = "EIR", age_start = 0, age_end = 65)
+cluster_input_setup(input_folder = "inst/extdata/Constant/",
+  input_list = list(), benchmark = "EIR", set_n_pt = 1,
+  set_n_int = 1, age_start = 0, age_end = 65)
 }
 \arguments{
-\item{input_folder1}{Folder containing age distribution data}
+\item{input_folder}{Folder containing age distribution data}
 
-\item{input_folder2}{Folder containing benchmark data}
-
-\item{set_npt}{Data point to use (1-max)}
+\item{input_list}{List containing mainpop output data}
 
 \item{benchmark}{Benchmark type to use in choosing clusters ("EIR", "slide_prev", "pcr_prev", or "clin_inc")}
+
+\item{set_n_pt}{Data point to use (1-max)}
+
+\item{set_n_int}{Intervention number to use (1-max)}
 
 \item{age_start}{Starting age to use when calculating prevalence or incidence over age range (not used with EIR)}
 
@@ -27,6 +29,6 @@ Function for taking benchmark data output by mainpop() and selecting the desired
              setting up clusters, plus creating list of intervention parameter values
 }
 \details{
-Takes in detailed benchmark data as a list (currently from a file) and outputs lists of chosen 
-         benchmark values and intervention parameter values (currently as files)
+Takes in detailed benchmark data as a list and outputs lists of chosen 
+         benchmark values and intervention parameter values (as both list and files)
 }

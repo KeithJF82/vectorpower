@@ -50,6 +50,18 @@ vector<double> rcpp_to_vector_double(SEXP x) { return Rcpp::as<vector<double> >(
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+// converts input from Rcpp::List format to vector<vector<double>> format.
+vector<vector<double>> rcpp_to_matrix_double(Rcpp::List x) {
+	int nrow = int(x.size());
+	vector< vector<double> > x_mat(nrow);
+	for (int i = 0; i < nrow; i++) {
+		x_mat[i] = Rcpp::as<vector<double> >(x[i]);
+	}
+	return x_mat;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 double runif1(double a, double b) {
   return R::runif(a,b);
 }

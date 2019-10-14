@@ -4,20 +4,20 @@
 \alias{cohort}
 \title{Cohort evaluation}
 \usage{
-cohort(input_folder1 = "inst/extdata/Constant/",
-  input_folder2 = "inst/extdata/Constant/results_example/",
-  n_mv_values = 1, n_EIR_values = 1, time_interval = 7,
-  n_divs = 13, n_clusters = 1, prop_T_c = 0.9, n_patients = 100,
-  age_c0 = 0.5, age_c1 = 10)
+cohort(mainpop_data = list(), cluster_data = list(),
+  input_folder = "inst/extdata/Constant/",
+  output_folder = "inst/extdata/Constant/results_example/",
+  time_interval = 7, n_divs = 13, n_clusters = 1, prop_T_c = 0.9,
+  n_patients = 100, age_c0 = 0.5, age_c1 = 10)
 }
 \arguments{
-\item{input_folder1}{Folder containing model parameter data}
+\item{mainpop_data}{List output by mainpop() containing main population data}
 
-\item{input_folder2}{Folder containing cluster data}
+\item{cluster_data}{List output by clusters_create() containing cluster data}
 
-\item{n_mv_values}{Number of mosquito density values in starting immunity data}
+\item{input_folder}{Folder containing model parameter data}
 
-\item{n_EIR_values}{Number of sets of EIR data}
+\item{output_folder}{Folder to send results data}
 
 \item{time_interval}{Time interval between data points}
 
