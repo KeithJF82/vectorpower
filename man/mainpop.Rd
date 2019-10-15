@@ -4,16 +4,14 @@
 \alias{mainpop}
 \title{Main population evaluation}
 \usage{
-mainpop(input_folder = "inst/extdata/Constant/",
-  output_folder = "inst/extdata/Constant/results_example/",
-  n_lines = 1, n_mv_set = c(0), int_v_varied = 1, n_int_values = 1,
-  int_v_min = 0, int_v_max = 0, date_start = 0, date_int = 31,
-  time_interval = 7, n_pts = 2)
+mainpop(input_folder = "inst/extdata/Constant/", output_folder = NA,
+  n_lines = 1, n_mv_set = c(0), int_v_varied = 0,
+  int_values = c(0), start_interval = 31, time_values = c(0, 7))
 }
 \arguments{
 \item{input_folder}{Folder containing rainfall, model parameter and starting data}
 
-\item{output_folder}{Folder to send output files}
+\item{output_folder}{Folder to send output files (no files saved if set to NA)}
 
 \item{n_lines}{Number of lines of data in input file}
 
@@ -22,21 +20,11 @@ mainpop(input_folder = "inst/extdata/Constant/",
 \item{int_v_varied}{Intervention parameter given variable value 
 (0= None, 1=ATSB kill rate, 2=bednet coverage, 3=IRS coverage)}
 
-\item{n_int_values}{Number of values of varied intervention parameter to use (will be reset to 1 if int_v_varied=0)}
+\item{int_values}{Vector of values of varied intervention parameter (will be unused if int_v_varied=0)}
 
-\item{int_v_min}{Minimum intervention parameter value (sole value used if n_int_values=1; unused if int_v_varied=0)}
+\item{start_interval}{Period from start date before intervention starts (used to equilibrate lagged FOI data)}
 
-\item{int_v_max}{Maximum intervention parameter value (unused if n_int_values=1 or int_v_varied=0)}
-
-\item{date_start}{Day of the year when simulation starts (should be set based on input_file)}
-
-\item{date_int}{Day of the year when intervention trial starts 
-(period from date_start to date_int used to equilibrate lagged FOI data)}
-
-\item{time_interval}{Length of time (in days) between measurements of benchmarks}
-
-\item{n_pts}{Number of data points to take 
-(one taken at date_int, so end time = date_int + ((n_pts-1)*time_interval))}
+\item{time_values}{Vector of time checkpoints}
 }
 \description{
 Function which takes in trial parameters for one or more populations, sends to C++ for computation 

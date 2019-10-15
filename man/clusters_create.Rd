@@ -4,17 +4,14 @@
 \alias{clusters_create}
 \title{Create clusters}
 \usage{
-clusters_create(input_list = list(), nclusters = 100,
-  output_folder = "inst/extdata/Constant/results_example/",
+clusters_create(input_list = list(), n_clusters = 100,
   benchmark_mean = 0.25, benchmark_stdev = 0.025, int_mean = 0.15,
   int_stdev = 0.05)
 }
 \arguments{
 \item{input_list}{List containing input_data, produced by cluster_input_setup()}
 
-\item{nclusters}{Number of clusters to create}
-
-\item{output_folder}{Folder to send output data (to be deleted)}
+\item{n_clusters}{Number of clusters to create}
 
 \item{benchmark_mean}{Mean of benchmark value distribution}
 

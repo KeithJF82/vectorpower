@@ -14,7 +14,7 @@ struct patients //Structure containing individual patient data for cohort
 patient[1000];
 
 // [[Rcpp::export]]
-Rcpp::List rcpp_cohort(List params, List cohort_params, List mainpop_data, List cluster_data)
+Rcpp::List rcpp_cohort(List params, List trial_params, List cluster_data)
 {
 	int na_c0, na_c1, na_c2, n_c, mvn, int_num, data_num, i, j, n, nt, div, pos, ntmax, tflag, interval, infected;
 	double dt, t, EIRd, EIRt, t_mark1, t_mark2, p_multiplier, prob, cprobmax, p_inf_bite, p_inf_from_bite, p_clin_inf, IC_cur, IB_cur, ID_cur, rate_db_t, rate_dc_t, rate_dd_t;
@@ -36,22 +36,24 @@ Rcpp::List rcpp_cohort(List params, List cohort_params, List mainpop_data, List 
 
 	Rcout << "\nLoading input parameter data from R\n";
 	R_FlushConsole();
-	string output_filename1 = rcpp_to_string(cohort_params["file_summary"]);	//Individual data (fraction in each category) every tinterval2 days over intervention period for each iteration (single run) or average cohort prevalence/indidence/PCR test positivity rate every tinterval2 days after intervention start (multi-run)
-	string output_filename2 = rcpp_to_string(cohort_params["file_frequency"]);	//Positive PCR test frequency data for each iteration (single run) or average across all iterations (multi-run)
-	double tinterval2 = rcpp_to_double(cohort_params["time_interval"]);			//Interval between calculations of regular test probabilities and averaged prevalence/incidence values
-	int n_divs = rcpp_to_int(cohort_params["n_divs"]);							//Number of tinterval2-length divisions to run after intervention starts
+	string output_filename1 = rcpp_to_string(trial_params["file_summary"]);	//Individual data (fraction in each category) every tinterval2 days over intervention period for each iteration (single run) or average cohort prevalence/indidence/PCR test positivity rate every tinterval2 days after intervention start (multi-run)
+	string output_filename2 = rcpp_to_string(trial_params["file_frequency"]);	//Positive PCR test frequency data for each iteration (single run) or average across all iterations (multi-run)
+	double tinterval2 = rcpp_to_double(trial_params["time_interval"]);			//Interval between calculations of regular test probabilities and averaged prevalence/incidence values
+	int n_divs = rcpp_to_int(trial_params["n_divs"]);							//Number of tinterval2-length divisions to run after intervention starts
 	double tmax = (n_divs - 1) * tinterval2;									//Duration of intervention trial 
-	int n_clusters = rcpp_to_int(cohort_params["n_clusters"]);					//Number of lines in cluster data input file (number of clusters)
-	double prop_T_c = rcpp_to_int(cohort_params["prop_T_c"]);					//Proportion of clinical cases successfully treated in cohort
-	int n_patients = rcpp_to_int(cohort_params["n_patients"]);					//Number of patients in cohort
-	double age_c0 = rcpp_to_int(cohort_params["age_c0"]);						//Minimum age in cohort
-	double age_c1 = rcpp_to_int(cohort_params["age_c1"]);						//Maximum age in cohort
+	int tmax_i = intdiv(tmax, 1.0) + 1;
+	int n_clusters = rcpp_to_int(trial_params["n_clusters"]);					//Number of lines in cluster data input file (number of clusters)
+	double prop_T_c = rcpp_to_int(trial_params["prop_T_c"]);					//Proportion of clinical cases successfully treated in cohort
+	int n_patients = rcpp_to_int(trial_params["n_patients"]);					//Number of patients in cohort
+	double age_c0 = rcpp_to_int(trial_params["age_c0"]);						//Minimum age in cohort
+	double age_c1 = rcpp_to_int(trial_params["age_c1"]);						//Maximum age in cohort
 	double age_c2 = age_c1 + (tmax / dy);										//Maximum age in cohort taking into account ageing during trial
 
 	//Set up constant parameters------------------------------------------------------------------------------------------------------------------------------------------------
 
 	Rcout << "\nInitializing constants.\n";
 	R_FlushConsole();
+	int n_cats = na * num_het; //Total number of age/heterogeneity categories in main population 
 	double inv_dy = 1.0 / dy;
 	double dv_p1 = 1.0 / n_patients;
 	double dv_p2 = dv_p1 * (dy / tinterval2);
@@ -193,10 +195,10 @@ Rcpp::List rcpp_cohort(List params, List cohort_params, List mainpop_data, List 
 
 	//Load input data------------------------------------------------------------------------------------------------------------------------------------------
 
-	vector<vector<double>> EIR_input = rcpp_to_matrix_double(mainpop_data["EIR_daily_data"]);
-	vector<vector<double>> IB_input = rcpp_to_matrix_double(mainpop_data["IB_start_data"]);
-	vector<vector<double>> IC_input = rcpp_to_matrix_double(mainpop_data["IC_start_data"]);
-	vector<vector<double>> ID_input = rcpp_to_matrix_double(mainpop_data["ID_start_data"]);
+	vector<double> EIR_input = rcpp_to_vector_double(trial_params["EIR_daily_data"]);
+	vector<double> IB_input = rcpp_to_vector_double(trial_params["IB_start_data"]);
+	vector<double> IC_input = rcpp_to_vector_double(trial_params["IC_start_data"]);
+	vector<double> ID_input = rcpp_to_vector_double(trial_params["ID_start_data"]);
 	vector<int> run_mvn = rcpp_to_vector_int(cluster_data["n_B"]);
 	vector<int> run_int = rcpp_to_vector_int(cluster_data["n_I"]);
 	vector<int> run_data_num = rcpp_to_vector_int(cluster_data["n_run"]);
@@ -224,7 +226,7 @@ Rcpp::List rcpp_cohort(List params, List cohort_params, List mainpop_data, List 
 		mvn = run_mvn[n_c];
 		int_num = run_int[n_c];
 		data_num = run_data_num[n_c];
-		Rcout << "\nProcessing cluster " << n_c << ":\tmvn=" << mvn << "\tint_num=" << int_num << "\tdata_num=" << data_num << "\tEIR[0]=" << EIR_input[0][data_num];
+		Rcout << "\nProcessing cluster " << n_c << ":\tmvn=" << mvn << "\tint_num=" << int_num << "\tdata_num=" << data_num;
 		goto start_run;
 	run_complete:
 		Rcout << "\nCluster " << n_c << " complete.\n";
@@ -299,10 +301,10 @@ restart:
 	for (n = 0; n < n_patients; n++)
 	{
 		patient[n].status = 0; //All patients start in group S, representing pre-intervention treatment
-		pos = (patient[n].na * num_het) + patient[n].num_het;
-		patient[n].IB = IB_input[pos][mvn];
-		patient[n].IC = IC_input[pos][mvn];
-		patient[n].ID = ID_input[pos][mvn];
+		pos = (mvn * n_cats) + (patient[n].na * num_het) + patient[n].num_het;
+		patient[n].IB = IB_input[pos];
+		patient[n].IC = IC_input[pos];
+		patient[n].ID = ID_input[pos];
 		patient[n].infected = 0;
 		patient[n].delay = 0.0;
 	}
@@ -317,7 +319,7 @@ restart:
 	for (nt = 0; nt <= ntmax; nt++)
 	{
 		t = nt * dt;
-		EIRd = EIR_input[interval][data_num];
+		EIRd = EIR_input[(data_num * tmax_i) + interval];
 		EIRt = EIRd * dt;
 		for (n = 0; n < n_patients; n++)
 		{
@@ -529,7 +531,6 @@ end:
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 finish:
-
 	vector<double> dummy(1, 0.0);
 
 	if (output1 != NULL) { fclose(output1); }
@@ -537,5 +538,6 @@ finish:
 	Rcout << "\nProgram complete\n";
 
 	// Return list
+	//return List::create(Named("slide_prev_values") = slide_prev_values, Named("pcr_prev_values") = pcr_prev_values, Named("clin_inc_values") = clin_inc_values,Named("pcr_distribution") = pcr_distribution);
 	return List::create(Named("dummy") = dummy);
 }

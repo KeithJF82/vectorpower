@@ -7,7 +7,7 @@ using namespace std;
 // [[Rcpp::export]]
 Rcpp::List rcpp_mainpop(List params, List trial_params)
 {
-	int n_run, n_mv, int_num, i, j, ij, line, line_skip, nt, nt_E, div, nt_latgam, nt_latmosq, pos, pos2, ntmax, dur_Ei, latgami, latmosqi, tflag, interval, increment, data_saved, flag_int, np;
+	int n_run, n_mv, n_int, i, j, ij, line, line_skip, nt, nt_E, div, nt_latgam, nt_latmosq, pos, pos2, ntmax, dur_Ei, latgami, latmosqi, tflag, interval, increment, data_saved, flag_int, np;
 	double mv0, param_int, t, t_int, mu_net_irs, prevent_net_irs, prop_T_rev, av0, muv1, K0, year_day, rain, KL, beta, Surv1, EIRd, mv, incv, incv0, FOIv, FOIv0, age0, age1, t_mark1, t_mark2, EIR_sum, dt2;
 	double mu_atsb, cov_nets, cov_irs, prop_T, rN, rNW, dNW, rI, rIW, dIW, dIF, EL, LL, PL, Sv1, Ev1, Iv1, H, H_inv, delS, delT, delD, delA1, delA2, delP, delU1, delU2, inv_x, inv_KL;
 	double S_cur, T_cur, D_cur, A_cur, U_cur, P_cur, FOI_cur, foi_age_cur, clin_inc_cur, ICA_cur, ICM_cur, IB_cur, ID_cur, EIR_cur, delSv1, EL_cur, LL_cur, PL_cur, dEL, dLL, Sv_cur, Ev_cur, Iv_cur;
@@ -30,6 +30,7 @@ Rcpp::List rcpp_mainpop(List params, List trial_params)
 	// Load environment/vector/parasite/etc. parameters from R------------------------------------------------------------------------------------------------------------------------------------------------
 	
 	//Rainfall parameters
+	double date_start = rcpp_to_double(params["date_start"]);
 	double Rnorm = rcpp_to_double(params["Rnorm"]);
 	double rconst = rcpp_to_double(params["rconst"]);
 	double Re0 = rcpp_to_double(params["Re0"]);
@@ -122,6 +123,7 @@ Rcpp::List rcpp_mainpop(List params, List trial_params)
 	vector<int> n_mv_set = rcpp_to_vector_int(trial_params["n_mv_set"]);			// Vector of values of n_mv (mosquito density data sets in input file)
 	string input_filename = rcpp_to_string(trial_params["input_file"]);				// Name of file containing mosquito and human input data
 
+	int flag_file = rcpp_to_int(trial_params["flag_file"]);							// Flag indicating whether results data to be saved to files
 	int int_v_varied = rcpp_to_int(trial_params["int_v_varied"]);					// Intervention parameter given variable value (0=model parameter set, 1=ATSB kill rate, 2=bednet coverage, 3=IRS coverage)
 	if (int_v_varied < 0 || int_v_varied > 3)
 	{
@@ -129,26 +131,15 @@ Rcpp::List rcpp_mainpop(List params, List trial_params)
 		flag_error = 1;
 	}
 	int n_int_values = rcpp_to_int(trial_params["n_int_values"]);					// Number of intervention parameter values to use
-	double int_v_min = rcpp_to_double(trial_params["int_v_min"]);					// Minimum intervention parameter value to use (sole value used if n_int_values=1)
-	double int_v_max = rcpp_to_double(trial_params["int_v_max"]);					// Maximum intervention parameter value to use (unused if n_int_values=1)
-	if (int_v_max < int_v_min || int_v_min < 0.0)
-	{
-		Rcout << "\nError in intervention parameter values: int_v_min=" << int_v_min << " int_v_max=" << int_v_max << "\n";
-		flag_error = 1;
-	}
-	double date_start = rcpp_to_double(trial_params["date_start"]);					// Day of the year when simulation starts (should be set based on input_file)						 
-	double date_int = rcpp_to_double(trial_params["date_int"]);						// Day of the year when intervention trial starts (period from date_start to date_atsb used to equilibrate lagged FOI data)
-	if (date_int < date_start)
-	{
-		Rcout << "\nError in start dates: date_start=" << date_start << " date_int=" << date_int << "\n";
-		flag_error = 1;
-	}
-	double tinterval2 = rcpp_to_double(trial_params["time_interval"]);				// Interval between calculations of regular test probabilities and averaged prevalence/incidence values
-	int n_pts = rcpp_to_int(trial_params["n_pts"]);									// Number of data points to be taken (starting at time 0 after start of intervention and thereafter every tinterval2 days) 
-	string file_benchmarks = rcpp_to_string(trial_params["file_benchmarks"]);
-	string file_endpoints = rcpp_to_string(trial_params["file_endpoints"]);
-	string file_EIRd = rcpp_to_string(trial_params["file_EIRd"]);
-	string file_imm_start = rcpp_to_string(trial_params["file_imm_start"]);
+	vector<double> int_values = rcpp_to_vector_double(trial_params["int_values"]);	// Vector of intervention parameter values
+	double date_int = date_start + rcpp_to_double(trial_params["start_interval"]);	// Day of the year when intervention trial starts (period from date_start to date_int used to equilibrate lagged FOI data)
+	vector<double> time_values = rcpp_to_vector_double(trial_params["time_values"]);// Vector of time benchmark points
+	int n_pts = rcpp_to_int(trial_params["n_pts"]);									// Number of data points to be taken 
+
+	string file_benchmarks = flag_file == 1 ? rcpp_to_string(trial_params["file_benchmarks"]) : "na";
+	string file_endpoints = flag_file == 1 ? rcpp_to_string(trial_params["file_endpoints"]) : "na";
+	string file_EIRd = flag_file == 1 ? rcpp_to_string(trial_params["file_EIRd"]) : "na";
+	string file_imm_start = flag_file == 1 ? rcpp_to_string(trial_params["file_imm_start"]) : "na";
 
 	// Constant derived values--------------------------------------------------------------------------------------------------------------------------
 
@@ -161,7 +152,7 @@ Rcpp::List rcpp_mainpop(List params, List trial_params)
 	int size5 = n_cats * size4;
 	int n_runmax = n_int_values * n_mv_values;								// Total number of simulations to run
 	double int_start_time = date_int - date_start;							// Time after start of run at which ATSB starts being used
-	double tmax_c = (n_pts - 1) * tinterval2;								// Duration of intervention use in days
+	double tmax_c = time_values[n_pts-1];									// Duration of intervention use in days
 	int tmax_c_i = intdiv(tmax_c, 1.0);										// Duration of intervention use as integer
 	double tmax = int_start_time + tmax_c;									// Total duration of run in days
 	double inv_dy = 1.0 / dy;												// Inverse of days in a year (fraction of a year in a day)
@@ -269,7 +260,6 @@ Rcpp::List rcpp_mainpop(List params, List trial_params)
 	double lambda = (-0.5 * b_lambda) + pow((0.25 * pow(b_lambda, 2.0)) + ((gammal * beta_larval * mul * de) / (2.0 * mue * muv0 * dl * (1.0 + (dp * mup)))), 0.5);
 	double term = (lambda / (mue * de)) - (1.0 / (mul * dl)) - 1.0;
 	double dt = 0.1;																			// Time increment (default initial value)
-	double dp_int = n_int_values == 1 ? 0.0 : (int_v_max - int_v_min) / (n_int_values - 1);		// Increment between variable parameter values
 	double rain_coeff = ((dy * Rnorm) / (14.0 * rnyears * ppyear));								// Rainfall coefficient
 	
 	// Set up additional parameters-------------------------------------------------------------------------------------------------------------------------------------
@@ -292,10 +282,10 @@ Rcpp::List rcpp_mainpop(List params, List trial_params)
 	double* FOIv_lag = (double*)malloc(5000 * sizeof(double));							// Time-lagged force of human -> mosquito infection (to account for incubation period)
 	double* incv_lag = (double*)malloc(5000 * sizeof(double));							// Time-lagged incubation of malaria in infected mosquito
 
-	vector<double> EIR_output_values(n_pts* n_runmax, 0.0);								// Values of entomological inoculation rate at tinterval2 checkpoints
-	vector<double> slide_prev_output_values(n_pts* n_runmax* na, 0.0);					// Values of slide prevalence at tinterval2 checkpoints
-	vector<double> pcr_prev_output_values(n_pts* n_runmax* na, 0.0);					// Values of PCR prevalence at tinterval2 checkpoints
-	vector<double> clin_inc_output_values(n_pts* n_runmax* na, 0.0);					// Values of clinical incidence at tinterval2 checkpoints
+	vector<double> EIR_benchmarks(n_pts* n_runmax, 0.0);								// Values of entomological inoculation rate at checkpoints
+	vector<double> slide_prev_benchmarks(n_pts* n_runmax* na, 0.0);						// Values of slide prevalence at checkpoints
+	vector<double> pcr_prev_benchmarks(n_pts* n_runmax* na, 0.0);						// Values of PCR prevalence at checkpoints
+	vector<double> clin_inc_benchmarks(n_pts* n_runmax* na, 0.0);						// Values of clinical incidence at checkpoints
 	vector<double> EIR_daily_data((tmax_c_i + 1)* n_runmax, 0.0);						// Daily entomological inoculation rate values saved for cohort calculations
 	vector<double> IB_start_data(n_mv_values* n_cats, 0.0);								// Starting IB values saved for cohort calculations
 	vector<double> IC_start_data(n_mv_values* n_cats, 0.0);								// Starting IC values saved for cohort calculations
@@ -378,53 +368,55 @@ Rcpp::List rcpp_mainpop(List params, List trial_params)
 	}
 	else
 	{
-		//Rcout << "\ninput file name: " << input_filename << "\nn_mv_start/max: " << n_mv_start << "/" << n_mv_end << "\nint_v_varied: " << int_v_varied << "\nn_int_values: " << n_int_values << "\nint_v_min/max: " << int_v_min << "/" << int_v_max;
 		Rcout << "\nSimulation start date: " << date_start << "\nIntervention start date: " << date_int;
 		Rcout << "\nBenchmark details file: " << file_benchmarks << "\nEndpoints file: " << file_endpoints << "\nDaily EIR file: " << file_EIRd << "\nStarting immunity file: " << file_imm_start;
 		R_FlushConsole();
 	}
-		
-	benchmarks_by_age = fopen(file_benchmarks.c_str(), "w");
-	fprintf(benchmarks_by_age, "run\tn_mv\tmv0\tint_num\tparam_int\tnpt\tEIR");
-	for (i = 0; i < na; i++) { fprintf(benchmarks_by_age, "\tslide_prev%i",i); }
-	for (i = 0; i < na; i++) { fprintf(benchmarks_by_age, "\tpcr_prev%i", i); }
-	for (i = 0; i < na; i++) { fprintf(benchmarks_by_age, "\tclin_inc%i", i); }
-	fclose(benchmarks_by_age);
-
-	data_EIR = fopen(file_EIRd.c_str(), "w");
-	fprintf(data_EIR, "n_run");
-	for (t = 0.0; t <= tmax_c; t += tinterval1) { fprintf(data_EIR, "\tEIR%.0f", t); }
-	fclose(data_EIR);
-	data_immunity = fopen(file_imm_start.c_str(), "w");
-	fprintf(data_immunity, "n_mv");
-	for (i = 0; i < n_cats; i++) { fprintf(data_immunity, "\tIB%i", i); }
-	for (i = 0; i < n_cats; i++) { fprintf(data_immunity, "\tIC%i", i); }
-	for (i = 0; i < n_cats; i++) { fprintf(data_immunity, "\tID%i", i); }
-	fclose(data_immunity);
-	if (int_v_varied == 0) // Generate header for detailed endpoint data file
+	
+	if (flag_file == 1) 
 	{
-	  endpoint_data = fopen(file_endpoints.c_str(), "w");
-		fprintf(endpoint_data, "n_run\tmv0\tEL\tLL\tPL\tSv1\tEv1\tIv1");
-		for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\tS%i", i); }
-		for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\tT%i", i); }
-		for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\tD%i", i); }
-		for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\tA%i", i); }
-		for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\tU%i", i); }
-		for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\tP%i", i); }
-		for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\tICA%i", i); }
-		for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\tICM%i", i); }
-		for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\tIB%i", i); }
-		for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\tID%i", i); }
-		fclose(endpoint_data);
+		benchmarks_by_age = fopen(file_benchmarks.c_str(), "w");
+		fprintf(benchmarks_by_age, "run\tn_mv\tmv0\tn_int\tparam_int\tnpt\tEIR");
+		for (i = 0; i < na; i++) { fprintf(benchmarks_by_age, "\tslide_prev%i", i); }
+		for (i = 0; i < na; i++) { fprintf(benchmarks_by_age, "\tpcr_prev%i", i); }
+		for (i = 0; i < na; i++) { fprintf(benchmarks_by_age, "\tclin_inc%i", i); }
+		fclose(benchmarks_by_age);
+
+		data_EIR = fopen(file_EIRd.c_str(), "w");
+		fprintf(data_EIR, "n_run");
+		for (t = 0.0; t <= tmax_c; t += tinterval1) { fprintf(data_EIR, "\tEIR%.0f", t); }
+		fclose(data_EIR);
+		data_immunity = fopen(file_imm_start.c_str(), "w");
+		fprintf(data_immunity, "n_mv");
+		for (i = 0; i < n_cats; i++) { fprintf(data_immunity, "\tIB%i", i); }
+		for (i = 0; i < n_cats; i++) { fprintf(data_immunity, "\tIC%i", i); }
+		for (i = 0; i < n_cats; i++) { fprintf(data_immunity, "\tID%i", i); }
+		fclose(data_immunity);
+		if (int_v_varied == 0) // Generate header for detailed endpoint data file
+		{
+			endpoint_data = fopen(file_endpoints.c_str(), "w");
+			fprintf(endpoint_data, "n_run\tmv0\tEL\tLL\tPL\tSv1\tEv1\tIv1");
+			for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\tS%i", i); }
+			for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\tT%i", i); }
+			for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\tD%i", i); }
+			for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\tA%i", i); }
+			for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\tU%i", i); }
+			for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\tP%i", i); }
+			for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\tICA%i", i); }
+			for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\tICM%i", i); }
+			for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\tIB%i", i); }
+			for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\tID%i", i); }
+			fclose(endpoint_data);
+		}
 	}
 
 	Rcout << "\n\nDefault trial parameter values:\nCase treatment rate=" << prop_T_def << "\nATSB killing rate=" << mu_atsb_def << "\nBednet coverage=" << cov_nets_def << "\nIRS coverage=" << cov_irs_def;
 	for (n_run = 0; n_run < n_runmax; n_run++)// This for() loop runs all the simulations, jumping to start_run for each one and jumping back to run_complete when it is finished
 	{
-		int_num = n_run % n_int_values;
-		n_mv = (n_run - int_num) / n_int_values;
+		n_int = n_run % n_int_values;
+		n_mv = (n_run - n_int) / n_int_values;
 		mv0 = mv_input[n_mv];
-		if (int_num == 0) { dt = 0.05 / sqrt(mv0); }
+		if (n_int == 0) { dt = 0.05 / sqrt(mv0); }
 
 		mu_atsb = mu_atsb_def;
 		cov_nets = cov_nets_def;
@@ -443,7 +435,7 @@ Rcpp::List rcpp_mainpop(List params, List trial_params)
 
 start_run:
 
-	param_int = int_v_varied == 0 ? 0.0 : (int_v_min + (int_num * dp_int));
+	param_int = int_v_varied == 0 ? 0.0 : int_values[n_int];
 	prop_T_rev = 1.0 - prop_T;											// Probability of treatment not being received by clinical cases		
 	rN = cov_nets * p_repel_net_entry;
 	rNW = cov_nets * p_repel_net_bed;
@@ -459,7 +451,7 @@ start_run:
 		(phi_bite_bed * (1.0 - rI) * (1.0 - rN) * (dIW + ((1.0 - rIW - dIW) * (dNW + ((1.0 - rNW - dNW) * dIF))))));
 	av0 = 0.3333 * Q0 * (1.0 - prevent_net_irs);																																				// Biting rate on humans / mosquito
 	muv1 = muv0 + mu_atsb + mu_net_irs;																																							// Total mosquito death rate
-	Rcout << "\nRun " << n_run << " Mosquito density=" << mv0 << " Intervention number=" << int_num;
+	Rcout << "\nRun " << n_run << " Mosquito density=" << mv0 << " Intervention number=" << n_int;
 
 restart_run:
 	dt2 = dt * 0.1;
@@ -545,7 +537,7 @@ restart_run:
 	interval = 0;
 	increment = 0;
 	t_mark1 = tinterval1;
-	t_mark2 = 0.0;
+	t_mark2 = time_values[0];
 	EIR_sum = 0.0;
 	data_saved = 0;
 	flag_int = 0;
@@ -794,55 +786,62 @@ restart_run:
 					pos++;
 				}
 				pos2 = ij + i;
-				slide_prev_output_values[pos2] = slide_prev_age[i];
-				pcr_prev_output_values[pos2] = pcr_prev_age[i];
-				clin_inc_output_values[pos2] = clin_inc_age[i];
+				slide_prev_benchmarks[pos2] = slide_prev_age[i];
+				pcr_prev_benchmarks[pos2] = pcr_prev_age[i];
+				clin_inc_benchmarks[pos2] = clin_inc_age[i];
 			}
-			EIR_output_values[(n_run * n_pts) + div] = EIRd;
+			EIR_benchmarks[(n_run * n_pts) + div] = EIRd;
 
 			div++;
-			t_mark2 += tinterval2;
-			benchmarks_by_age = fopen(file_benchmarks.c_str(), "a");
-			fprintf(benchmarks_by_age, "\n%i\t%i\t%.3e\t%i\t%.3e\t%i\t%.3e", n_run, n_mv, mv0, int_num, param_int, div, EIRd);
-			for (i = 0; i < na; i++) { fprintf(benchmarks_by_age, "\t%.3e", slide_prev_output_values[ij + i]); }
-			for (i = 0; i < na; i++) { fprintf(benchmarks_by_age, "\t%.3e", pcr_prev_output_values[ij + i]); }
-			for (i = 0; i < na; i++) { fprintf(benchmarks_by_age, "\t%.3e", clin_inc_output_values[ij + i]); }
-			fclose(benchmarks_by_age);
+			if (div < n_pts) { t_mark2 = time_values[div]; }
+			if (flag_file == 1)
+			{
+				benchmarks_by_age = fopen(file_benchmarks.c_str(), "a");
+				fprintf(benchmarks_by_age, "\n%i\t%i\t%.3e\t%i\t%.3e\t%i\t%.3e", n_run, n_mv, mv0, n_int, param_int, div, EIRd);
+				for (i = 0; i < na; i++) { fprintf(benchmarks_by_age, "\t%.3e", slide_prev_benchmarks[ij + i]); }
+				for (i = 0; i < na; i++) { fprintf(benchmarks_by_age, "\t%.3e", pcr_prev_benchmarks[ij + i]); }
+				for (i = 0; i < na; i++) { fprintf(benchmarks_by_age, "\t%.3e", clin_inc_benchmarks[ij + i]); }
+				fclose(benchmarks_by_age);
+			}
 		}
 
 	}
 
 end_run:
 	
-	// Output detailed data to use as input for future computation
-	data_EIR = fopen(file_EIRd.c_str(), "a");
-	fprintf(data_EIR, "\n%i", n_run);
-	for (i = 0; i <= tmax_c_i; i++) { fprintf(data_EIR, "\t%.3e", EIR_daily_data[((tmax_c_i + 1) * n_run) + i]); }
-	fclose(data_EIR);
-	if (int_num == 0)
+	if (flag_file == 1)
 	{
-	  data_immunity = fopen(file_imm_start.c_str(), "a");
-		fprintf(data_immunity, "\n%i", n_mv);
-		for (i = 0; i < n_cats; i++) { fprintf(data_immunity, "\t%.3e", IB_output[i]); }
-		for (i = 0; i < n_cats; i++) { fprintf(data_immunity, "\t%.3e", IC_output[i]); }
-		for (i = 0; i < n_cats; i++) { fprintf(data_immunity, "\t%.3e", ID_output[i]); }
-		fclose(data_immunity);
-	}
-	if (int_v_varied == 0)
-	{
-	  endpoint_data = fopen(file_endpoints.c_str(), "a");
-		fprintf(endpoint_data, "\n%i\t%.3e\t%.3e\t%.3e\t%.3e\t%.3e\t%.3e\t%.3e", n_run, mv0, EL, LL, PL, Sv1, Ev1, Iv1);
-		for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\t%.3e", S[i]); }
-		for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\t%.3e", T[i]); }
-		for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\t%.3e", D[i]); }
-		for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\t%.3e", A[i]); }
-		for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\t%.3e", U[i]); }
-		for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\t%.3e", P[i]); }
-		for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\t%.3e", ICA[i]); }
-		for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\t%.3e", ICM[i]); }
-		for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\t%.3e", IB[i]); }
-		for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\t%.3e", ID[i]); }
-		fclose(endpoint_data);
+		data_EIR = fopen(file_EIRd.c_str(), "a");
+		fprintf(data_EIR, "\n%i", n_run);
+		for (i = 0; i <= tmax_c_i; i++) { fprintf(data_EIR, "\t%.3e", EIR_daily_data[((tmax_c_i + 1) * n_run) + i]); }
+		fclose(data_EIR);
+		if (n_int == 0)
+		{
+			data_immunity = fopen(file_imm_start.c_str(), "a");
+			fprintf(data_immunity, "\n%i", n_mv);
+			for (i = 0; i < n_cats; i++) { fprintf(data_immunity, "\t%.3e", IB_output[i]); }
+			for (i = 0; i < n_cats; i++) { fprintf(data_immunity, "\t%.3e", IC_output[i]); }
+			for (i = 0; i < n_cats; i++) { fprintf(data_immunity, "\t%.3e", ID_output[i]); }
+			fclose(data_immunity);
+		}
+		if (int_v_varied == 0)
+		{
+			// Output detailed data to use as input for future computation
+			endpoint_data = fopen(file_endpoints.c_str(), "a");
+			fprintf(endpoint_data, "\n%i\t%.3e\t%.3e\t%.3e\t%.3e\t%.3e\t%.3e\t%.3e", n_run, mv0, EL, LL, PL, Sv1, Ev1, Iv1);
+			for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\t%.3e", S[i]); }
+			for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\t%.3e", T[i]); }
+			for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\t%.3e", D[i]); }
+			for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\t%.3e", A[i]); }
+			for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\t%.3e", U[i]); }
+			for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\t%.3e", P[i]); }
+			for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\t%.3e", ICA[i]); }
+			for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\t%.3e", ICM[i]); }
+			for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\t%.3e", IB[i]); }
+			for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\t%.3e", ID[i]); }
+			fclose(endpoint_data);
+		}
+
 	}
 
 	goto run_complete;
@@ -850,8 +849,6 @@ end_run:
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 finish:
-
-	//vector<double> dummy(1, 0.0);
 
 	if (input != NULL) { fclose(input); }
 	if (benchmarks_by_age != NULL) { fclose(benchmarks_by_age); }
@@ -861,7 +858,7 @@ finish:
 	Rcout << "\nMain population computations complete.\n";
 
 	// Return list
-	return List::create(Named("EIR_output_values") = EIR_output_values, Named("slide_prev_output_values")= slide_prev_output_values, 
-						Named("pcr_prev_output_values")= pcr_prev_output_values, Named("clin_inc_output_values")= clin_inc_output_values, 
+	return List::create(Named("EIR_benchmarks") = EIR_benchmarks, Named("slide_prev_benchmarks")= slide_prev_benchmarks, 
+						Named("pcr_prev_benchmarks")= pcr_prev_benchmarks, Named("clin_inc_benchmarks")= clin_inc_benchmarks, 
 						Named("EIR_daily_data")= EIR_daily_data, Named("IB_start_data") = IB_start_data, Named("IC_start_data") = IC_start_data, Named("ID_start_data") = ID_start_data);
 }

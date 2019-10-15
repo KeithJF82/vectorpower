@@ -1,4 +1,10 @@
 #------------------------------------------------
+# The following commands ensure that package dependencies are listed in the NAMESPACE file.
+#' @useDynLib vectorpower
+#' @import graphics
+#' @import utils
+NULL
+#------------------------------------------------
 #' @title Main population evaluation
 #'
 #' @description Function which takes in trial parameters for one or more populations, sends to C++ for computation 
@@ -9,58 +15,70 @@
 #' @details Takes a list of parameters, returns a list of raw data (data also saved to files as backup). 
 #'
 #' @param input_folder    Folder containing rainfall, model parameter and starting data
-#' @param output_folder   Folder to send output files
+#' @param output_folder   Folder to send output files (no files saved if set to NA)
 #' @param n_lines         Number of lines of data in input file	
 #' @param n_mv_set        Vector of mosquito density number values to use (must be increasing order)
 #' @param int_v_varied    Intervention parameter given variable value 
 #'                        (0= None, 1=ATSB kill rate, 2=bednet coverage, 3=IRS coverage)
-#' @param n_int_values    Number of values of varied intervention parameter to use (will be reset to 1 if int_v_varied=0)
-#' @param int_v_min       Minimum intervention parameter value (sole value used if n_int_values=1; unused if int_v_varied=0)
-#' @param int_v_max       Maximum intervention parameter value (unused if n_int_values=1 or int_v_varied=0)			
-#' @param date_start      Day of the year when simulation starts (should be set based on input_file)		
-#' @param date_int        Day of the year when intervention trial starts 
-#'                        (period from date_start to date_int used to equilibrate lagged FOI data)
-#' @param time_interval   Length of time (in days) between measurements of benchmarks
-#' @param n_pts           Number of data points to take 
-#'                        (one taken at date_int, so end time = date_int + ((n_pts-1)*time_interval)) 
+#' @param int_values      Vector of values of varied intervention parameter (will be unused if int_v_varied=0)
+#' @param start_interval  Period from start date before intervention starts (used to equilibrate lagged FOI data)
+#' @param time_values     Vector of time checkpoints
 #'
 #' @export
 
-mainpop <- function (input_folder = "inst/extdata/Constant/",output_folder = "inst/extdata/Constant/results_example/",
-                     n_lines = 1, n_mv_set=c(0), int_v_varied = 1, n_int_values = 1, int_v_min = 0.0, 
-                     int_v_max = 0.0, date_start = 0.0, date_int = 31.0, time_interval = 7.0, n_pts = 2)
+mainpop <- function (input_folder = "inst/extdata/Constant/",output_folder = NA,n_lines = 1, n_mv_set=c(0), 
+                     int_v_varied=0, int_values= c(0.0),
+                     start_interval = 31.0, time_values=c(0.0,7.0))
   {
+  # Input error checking (TODO: finish)
+  assert_in(int_v_varied,0:3)
+  assert_vector(n_mv_set)
+  assert_vector(int_values)
+  assert_vector(time_values)
 
   # TODO - Set na and num_het automatically
   na=145
   num_het=9
+  n_pts=length(time_values)
   n_cats=na*num_het
-  n_days=((n_pts-1)*time_interval)+1
+  n_days=max(time_values)+1
   n_mv_values=length(n_mv_set)
   n_mv_start=n_mv_set[1]
   n_mv_end=n_mv_set[n_mv_values]
-  n_runs=n_mv_values*max(n_int_values,1)
+  
+  if(int_v_varied==0) { int_values=c(0.0) }
+  n_int_values=length(int_values)
+  
+  n_runs=n_mv_values*n_int_values
   
   parameter_file = paste(input_folder,"model_parameters.txt",sep="")
-  params <- utils::read.table(parameter_file, header=TRUE)
+  params <- read.table(parameter_file, header=TRUE)
   
   input_file = paste(input_folder,"start_data.txt",sep="")
   
   # TODO - Read in data from files. Automatically determine n_mv_values from no. lines in input_file, check if compatible
   #        with n_mv_start and n_mv_end
-  # TODO - Take in list of mv values as vector so they don't need to be consecutive
   # TODO - Take in list of data collection dates as vector as well?
   
-  file_benchmarks = paste(output_folder,"Benchmark_details.txt",sep="")
-  file_EIRd = paste(output_folder,"EIR.txt",sep="")
-  file_imm_start = paste(output_folder,"imm.txt",sep="")
-  file_endpoints = paste(output_folder,"endpoints.txt",sep="")
+  if(is.na(output_folder)==FALSE){
+    file_benchmarks = paste(output_folder,"Benchmark_details.txt",sep="")
+    file_EIRd = paste(output_folder,"EIR.txt",sep="")
+    file_imm_start = paste(output_folder,"imm.txt",sep="")
+    file_endpoints = paste(output_folder,"endpoints.txt",sep="")
+    flag_file=1
+  } else {
+    file_benchmarks = NA
+    file_EIRd = NA
+    file_imm_start = NA
+    file_endpoints = NA
+    flag_file=0
+  }
   
-  trial_params <- list(input_file=input_file, n_lines=n_lines, n_mv_set=n_mv_set,
-                       n_mv_start=n_mv_start, n_mv_end=n_mv_end, int_v_varied=int_v_varied, n_int_values=n_int_values, 
-                       int_v_min=int_v_min, int_v_max=int_v_max, date_start=date_start, date_int=date_int, 
-                       time_interval=time_interval, n_pts=n_pts, file_benchmarks=file_benchmarks,
-                       file_endpoints=file_endpoints, file_EIRd=file_EIRd, file_imm_start=file_imm_start)
+  trial_params <- list(input_file=input_file, n_lines=n_lines, n_mv_set=n_mv_set,n_mv_start=n_mv_start, n_mv_end=n_mv_end, 
+                       int_v_varied=int_v_varied, n_int_values=n_int_values,int_values=int_values,
+                       start_interval=start_interval, time_values=time_values, n_pts=n_pts, flag_file=flag_file,
+                       file_benchmarks=file_benchmarks,file_endpoints=file_endpoints, file_EIRd=file_EIRd, 
+                       file_imm_start=file_imm_start)
   
   # Run simulation of main population
   raw_data <- rcpp_mainpop(params,trial_params)
@@ -77,14 +95,12 @@ mainpop <- function (input_folder = "inst/extdata/Constant/",output_folder = "in
   slide_prev_names=paste("slide_prev",c(1:na),sep="")
   pcr_prev_names=paste("pcr_prev",c(1:na),sep="")
   clin_inc_names=paste("clin_inc",c(1:na),sep="")
+  dimnames_list=list(na_names,n_pt_names,n_run_names)
   
-  time_values=array(data=c(0:(n_pts-1))*time_interval,dim=c(n_pts),dimnames=list(n_pt_names))
-  if(n_int_values==1){ if(int_v_varied==0){ int_values=c(int_v_min) } else { int_values=c(0) }
-  } else { int_values=int_v_min+((c(0:(n_int_values-1))*(int_v_max-int_v_min))/(n_int_values-1)) }
-  EIR_output_values = array(data=raw_data$EIR_output_values,dim=c(n_pts,n_runs),dimnames=list(n_pt_names,n_run_names))
-  slide_prev_values = array(data=raw_data$slide_prev_output_values,dim=c(na,n_pts,n_runs),dimnames=list(na_names,n_pt_names,n_run_names))
-  pcr_prev_values = array(data=raw_data$pcr_prev_output_values,dim=c(na,n_pts,n_runs),dimnames=list(na_names,n_pt_names,n_run_names))
-  clin_inc_values = array(data=raw_data$clin_inc_output_values,dim=c(na,n_pts,n_runs),dimnames=list(na_names,n_pt_names,n_run_names))
+  EIR_benchmarks = array(data=raw_data$EIR_benchmarks,dim=c(n_pts,n_runs),dimnames=list(n_pt_names,n_run_names))
+  slide_prev_benchmarks = array(data=raw_data$slide_prev_benchmarks,dim=c(na,n_pts,n_runs),dimnames=dimnames_list)
+  pcr_prev_benchmarks = array(data=raw_data$pcr_prev_benchmarks,dim=c(na,n_pts,n_runs),dimnames=dimnames_list)
+  clin_inc_benchmarks = array(data=raw_data$clin_inc_benchmarks,dim=c(na,n_pts,n_runs),dimnames=dimnames_list)
   EIR_daily_data = matrix(data=raw_data$EIR_daily_data,nrow=n_days,ncol=n_runs)
   IB_start_data = matrix(data=raw_data$IB_start_data,nrow=n_cats,ncol=n_mv_values)
   IC_start_data = matrix(data=raw_data$IC_start_data,nrow=n_cats,ncol=n_mv_values)
@@ -92,8 +108,8 @@ mainpop <- function (input_folder = "inst/extdata/Constant/",output_folder = "in
   
   output_data <- list(na=na,num_het=num_het,n_mv_values=n_mv_values,n_int_values=n_int_values,n_pts=n_pts,
                       time_values=time_values,int_values=int_values,
-                      EIR_output_values=EIR_output_values,slide_prev_values=slide_prev_values,
-                      pcr_prev_values=pcr_prev_values,clin_inc_values=clin_inc_values, 
+                      EIR_benchmarks=EIR_benchmarks,slide_prev_benchmarks=slide_prev_benchmarks,
+                      pcr_prev_benchmarks=pcr_prev_benchmarks,clin_inc_benchmarks=clin_inc_benchmarks, 
                       EIR_daily_data=EIR_daily_data,IB_start_data=IB_start_data,
                       IC_start_data=IC_start_data,ID_start_data=ID_start_data)
   
@@ -123,29 +139,34 @@ mainpop <- function (input_folder = "inst/extdata/Constant/",output_folder = "in
 cluster_input_setup <- function(input_folder = "inst/extdata/Constant/", input_list=list(),
                                 benchmark = "EIR",set_n_pt = 1,set_n_int=1,age_start = 0,age_end = 65.0){
   
+  # Input error checking (TODO - finish)
+  assert_in(set_n_pt,1:input_list$n_pts)
+  
   age_file=paste(input_folder,"age_data.txt",sep="")
-  age_data = utils::read.table(age_file,header=TRUE,sep="\t")
+  age_data = read.table(age_file,header=TRUE,sep="\t")
   n_age_cats = length(age_data$age0)
   n_age_start = findInterval(age_start,age_data$age0)
   n_age_end = findInterval(age_end,age_data$age1)
   
   density_sum = 0
-  benchmark_value = 0
+  benchmark_values = 0
   if(benchmark == "EIR"){
-    benchmark_values = input_list$EIR_output_values[set_n_pt,(input_list$n_int_values*c(0:(input_list$n_mv_values-1)))+set_n_int]
+    benchmark_values = input_list$EIR_benchmarks[set_n_pt,(input_list$n_int_values*c(0:(input_list$n_mv_values-1)))+set_n_int]
   }else{
     j=input_list$n_int_values*c(1:input_list$n_mv_values)
-    if(benchmark == "slide_prev"){ benchmark_data = input_list$slide_prev_values[j,set_n_pt,]}
-    if(benchmark == "pcr_prev"){ benchmark_data = input_list$pcr_prev_values[j,set_n_pt,]}
-    if(benchmark == "clin_inc"){ benchmark_data = input_list$clin_inc_values[j,set_n_pt,] }
+    if(benchmark == "slide_prev"){ benchmark_data = input_list$slide_prev_benchmarks[,set_n_pt,]}
+    if(benchmark == "pcr_prev"){ benchmark_data = input_list$pcr_prev_benchmarks[,set_n_pt,]}
+    if(benchmark == "clin_inc"){ benchmark_data = input_list$clin_inc_benchmarks[,set_n_pt,] }
     
     for(i in n_age_start:n_age_end){
       density_sum = density_sum + age_data$density[i]
-      benchmark_values = benchmark_values + benchmark_data[,i]
+      benchmark_values = benchmark_values + benchmark_data[i,]
     }
     benchmark_values = benchmark_values/density_sum
   }
   int_values=input_list$int_values
+  
+  matplot(c(1:input_list$n_mv_values),benchmark_values,type="p",pch=2,col=2,xlab="N_M",ylab=benchmark)
   
   ret <- list(benchmark=benchmark,set_n_pt = set_n_pt,set_n_int=set_n_int,age_start = age_start,age_end = age_end,
               benchmark_values=benchmark_values,int_values=int_values)
@@ -162,8 +183,7 @@ cluster_input_setup <- function(input_folder = "inst/extdata/Constant/", input_l
 #'          (currently as files)
 #'
 #' @param input_list          List containing input_data, produced by cluster_input_setup()
-#' @param nclusters           Number of clusters to create
-#' @param output_folder       Folder to send output data (to be deleted)
+#' @param n_clusters          Number of clusters to create
 #' @param benchmark_mean      Mean of benchmark value distribution
 #' @param benchmark_stdev     Standard deviation of benchmark value distribution
 #' @param int_mean            Mean of intervention parameter value distribution
@@ -171,9 +191,9 @@ cluster_input_setup <- function(input_folder = "inst/extdata/Constant/", input_l
 #'
 #' @export
 
-clusters_create <- function(input_list=list(),nclusters=100,output_folder = "inst/extdata/Constant/results_example/",
-                            benchmark_mean=0.25, benchmark_stdev=0.025,int_mean=0.15, int_stdev=0.05){
-  
+clusters_create <- function(input_list=list(),n_clusters=100,benchmark_mean=0.25, benchmark_stdev=0.025,
+                            int_mean=0.15, int_stdev=0.05){
+  # TODO - Input error checking
   
   nv_B=length(input_list$benchmark_values)
   nv_I=length(input_list$int_values)
@@ -211,9 +231,9 @@ clusters_create <- function(input_list=list(),nclusters=100,output_folder = "ins
     v_i2[i]=input_list$int_values[j]
   }
   
-  clusters <- data.frame(Cluster=c(1:nclusters),CP_B=stats::runif(nclusters,0,1),n_B=rep(0,nclusters),B=rep(0,nclusters),
-                         CP_I=stats::runif(nclusters,0,1),n_I=rep(0,nclusters),I=rep(0,nclusters),n_run=rep(0,nclusters))
-  for(i in 1:nclusters){
+  clusters <- data.frame(CP_B=stats::runif(n_clusters,0,1),n_B=rep(0,n_clusters),B=rep(0,n_clusters),
+                         CP_I=stats::runif(n_clusters,0,1),n_I=rep(0,n_clusters),I=rep(0,n_clusters),n_run=rep(0,n_clusters))
+  for(i in 1:n_clusters){
     j=findInterval(clusters$CP_B[i],cprob)+1
     clusters$B[i]=v_bm2[j]
     clusters$n_B[i]=mvn_index[j]-1
@@ -223,15 +243,13 @@ clusters_create <- function(input_list=list(),nclusters=100,output_folder = "ins
   }
   clusters$n_run=((clusters$n_B)*nv_I)+clusters$n_I
   
-  graphics::par(mfrow=c(1,2))
-  graphics::matplot(cprob,v_bm1,type="l",col=1)
-  graphics::matplot(cprob,v_bm2,type="l",col=2,add=TRUE)
-  graphics::matplot(clusters$CP_B,clusters$B,type="p",pch=1,col=3,add=TRUE)
-  graphics::matplot(cprob,v_i1,type="l",col=1)
-  graphics::matplot(cprob,v_i2,type="l",col=2,add=TRUE)
-  graphics::matplot(clusters$CP_I,clusters$I,type="p",pch=1,col=3,add=TRUE)
-  
-  utils::write.table(clusters,file=paste(output_folder,"cluster_list.txt",sep=""),sep="\t",row.names=FALSE,col.names=TRUE)
+  par(mfrow=c(1,2))
+  matplot(cprob,v_bm1,type="l",col=1,xlab="Cumulative probability",ylab=input_list$benchmark)
+  matplot(cprob,v_bm2,type="l",col=2,add=TRUE)
+  matplot(clusters$CP_B,clusters$B,type="p",pch=1,col=3,add=TRUE)
+  matplot(cprob,v_i1,type="l",col=1,xlab="Cumulative probability",ylab="Intervention parameter")
+  matplot(cprob,v_i2,type="l",col=2,add=TRUE)
+  matplot(clusters$CP_I,clusters$I,type="p",pch=1,col=3,add=TRUE)
   
   return(clusters)
 }
@@ -245,33 +263,36 @@ clusters_create <- function(input_list=list(),nclusters=100,output_folder = "ins
 #'
 #' @param mainpop_data    List output by mainpop() containing main population data
 #' @param cluster_data    List output by clusters_create() containing cluster data
+#' @param n_patients      Number of trial cohort patients per cluster
 #' @param input_folder    Folder containing model parameter data
 #' @param output_folder   Folder to send results data
 #' @param time_interval   Time interval between data points
 #' @param n_divs          Number of data points (including 0)
-#' @param n_clusters      Number of clusters in input data
 #' @param prop_T_c        Treatment probability in trial cohort
-#' @param n_patients      Number of trial cohort patients per cluster
 #' @param age_c0          Minimum age of trial cohort patients
 #' @param age_c1          Maximum age of trial cohort patients
 #'
 #' @export
 
-cohort <- function(mainpop_data = list(), cluster_data=list(),
+cohort <- function(mainpop_data = list(), cluster_data=list(),n_patients = 100,
                    input_folder = "inst/extdata/Constant/",output_folder = "inst/extdata/Constant/results_example/",
-                   time_interval = 7.0,n_divs = 13,n_clusters = 1,prop_T_c = 0.9,
-                   n_patients = 100,age_c0 = 0.5,age_c1 = 10.0){
+                   time_interval = 7.0,n_divs = 13,prop_T_c = 0.9,age_c0 = 0.5,age_c1 = 10.0){
+  # TODO - Input error checking
   
+  n_clusters=length(cluster_data$n_B)
   parameter_file = paste(input_folder,"model_parameters.txt",sep="")
   file_summary = paste(output_folder,"summary.txt",sep="")
   file_frequency = paste(output_folder,"frequency.txt",sep="")
-  params <- utils::read.table(parameter_file, header=TRUE)
+  params <- read.table(parameter_file, header=TRUE)
 
-  cohort_params <- list(file_summary = file_summary,file_frequency = file_frequency,
-                        time_interval = time_interval,n_divs = n_divs,n_clusters = n_clusters,
-                        prop_T_c = prop_T_c,n_patients = n_patients,age_c0 = age_c0,age_c1 = age_c1)
+  trial_params <- list(file_summary = file_summary,file_frequency = file_frequency,n_patients = n_patients,n_clusters=n_clusters,
+                       time_interval = time_interval,n_divs = n_divs,prop_T_c = prop_T_c,age_c0 = age_c0,age_c1 = age_c1,
+                       EIR_daily_data = as.vector(mainpop_data$EIR_daily_data),
+                       IB_start_data = as.vector(mainpop_data$IB_start_data),
+                       IC_start_data = as.vector(mainpop_data$IC_start_data),
+                       ID_start_data = as.vector(mainpop_data$ID_start_data))
 
-  raw_data <- rcpp_cohort(params,cohort_params,mainpop_data,cluster_data)
+  raw_data <- rcpp_cohort(params,trial_params,cluster_data)
 
   # placeholder; TODO - Once export of data in R list format added to cohort.cpp, add processing here
   results_data <- data.frame(raw_data)
