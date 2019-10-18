@@ -369,7 +369,7 @@ Rcpp::List rcpp_mainpop(List params, List trial_params)
 	else
 	{
 		Rcout << "\nSimulation start date: " << date_start << "\nIntervention start date: " << date_int;
-		Rcout << "\nBenchmark details file: " << file_benchmarks << "\nEndpoints file: " << file_endpoints << "\nDaily EIR file: " << file_EIRd << "\nStarting immunity file: " << file_imm_start;
+		if (flag_file == 1) { Rcout << "\nBenchmark details file: " << file_benchmarks << "\nEndpoints file: " << file_endpoints << "\nDaily EIR file: " << file_EIRd << "\nStarting immunity file: " << file_imm_start; }
 		R_FlushConsole();
 	}
 	

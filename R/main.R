@@ -31,10 +31,11 @@ mainpop <- function (input_folder = "inst/extdata/Constant/",output_folder = NA,
                      start_interval = 31.0, time_values=c(0.0,7.0))
   {
   # Input error checking (TODO: finish)
+  assert_string(input_folder)
   assert_in(int_v_varied,0:3)
-  assert_vector(n_mv_set)
-  assert_vector(int_values)
-  assert_vector(time_values)
+  assert_numeric(n_mv_set)
+  assert_numeric(int_values)
+  assert_numeric(time_values)
 
   # TODO - Set na and num_het automatically
   na=145
@@ -101,10 +102,10 @@ mainpop <- function (input_folder = "inst/extdata/Constant/",output_folder = NA,
   slide_prev_benchmarks = array(data=raw_data$slide_prev_benchmarks,dim=c(na,n_pts,n_runs),dimnames=dimnames_list)
   pcr_prev_benchmarks = array(data=raw_data$pcr_prev_benchmarks,dim=c(na,n_pts,n_runs),dimnames=dimnames_list)
   clin_inc_benchmarks = array(data=raw_data$clin_inc_benchmarks,dim=c(na,n_pts,n_runs),dimnames=dimnames_list)
-  EIR_daily_data = matrix(data=raw_data$EIR_daily_data,nrow=n_days,ncol=n_runs)
-  IB_start_data = matrix(data=raw_data$IB_start_data,nrow=n_cats,ncol=n_mv_values)
-  IC_start_data = matrix(data=raw_data$IC_start_data,nrow=n_cats,ncol=n_mv_values)
-  ID_start_data = matrix(data=raw_data$ID_start_data,nrow=n_cats,ncol=n_mv_values)
+  EIR_daily_data = array(data=raw_data$EIR_daily_data,dim=c(n_days,n_runs),dimnames=c(n_days_names,n_run_names))
+  IB_start_data = array(data=raw_data$IB_start_data,dim=c(n_cats,n_mv_values),dimnames=c(n_cat_names,n_mv_names))
+  IC_start_data = array(data=raw_data$IC_start_data,dim=c(n_cats,n_mv_values),dimnames=c(n_cat_names,n_mv_names))
+  ID_start_data = array(data=raw_data$ID_start_data,dim=c(n_cats,n_mv_values),dimnames=c(n_cat_names,n_mv_names))
   
   output_data <- list(na=na,num_het=num_het,n_mv_values=n_mv_values,n_int_values=n_int_values,n_pts=n_pts,
                       time_values=time_values,int_values=int_values,
@@ -141,6 +142,9 @@ cluster_input_setup <- function(input_folder = "inst/extdata/Constant/", input_l
   
   # Input error checking (TODO - finish)
   assert_in(set_n_pt,1:input_list$n_pts)
+  assert_in(benchmark,c("EIR","slide_prev","pcr_prev","clin_inc"))
+  assert_string(input_folder)
+  assert_list(input_list)
   
   age_file=paste(input_folder,"age_data.txt",sep="")
   age_data = read.table(age_file,header=TRUE,sep="\t")
