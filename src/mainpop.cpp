@@ -289,10 +289,6 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 	vector<double> IC_start_data(n_mv_values* n_cats, 0.0);								// Starting IC values saved for cohort calculations
 	vector<double> ID_start_data(n_mv_values* n_cats, 0.0);								// Starting ID values saved for cohort calculations
 
-	double* IB_output = (double*)malloc(size3);
-	double* IC_output = (double*)malloc(size3);
-	double* ID_output = (double*)malloc(size3);
-
 	vector<double> mv_input = rcpp_to_vector_double(inputs["mv_input"]);
 	vector<double> EL_input = rcpp_to_vector_double(inputs["EL_input"]);
 	vector<double> LL_input = rcpp_to_vector_double(inputs["LL_input"]);
@@ -649,9 +645,6 @@ restart_run:
 				ij = n_mv * n_cats;
 				for (pos = 0; pos < n_cats; pos++)
 				{
-					IB_output[pos] = IB[pos];
-					IC_output[pos] = ICA[pos] + ICM[pos];
-					ID_output[pos] = ID[pos];
 					pos2 = ij + pos;
 					IB_start_data[pos2] = IB[pos];
 					IC_start_data[pos2] = ICA[pos] + ICM[pos];
@@ -769,9 +762,10 @@ end_run:
 		{
 			data_immunity = fopen(file_imm_start.c_str(), "a");
 			fprintf(data_immunity, "\n%i", n_mv);
-			for (i = 0; i < n_cats; i++) { fprintf(data_immunity, "\t%.3e", IB_output[i]); }
-			for (i = 0; i < n_cats; i++) { fprintf(data_immunity, "\t%.3e", IC_output[i]); }
-			for (i = 0; i < n_cats; i++) { fprintf(data_immunity, "\t%.3e", ID_output[i]); }
+			ij = n_mv * n_cats;
+			for (i = 0; i < n_cats; i++) { fprintf(data_immunity, "\t%.3e", IB_start_data[ij + i]); }
+			for (i = 0; i < n_cats; i++) { fprintf(data_immunity, "\t%.3e", IC_start_data[ij + i]); }
+			for (i = 0; i < n_cats; i++) { fprintf(data_immunity, "\t%.3e", ID_start_data[ij + i]); }
 			fclose(data_immunity);
 		}
 		if (int_v_varied == 0)

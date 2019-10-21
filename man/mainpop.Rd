@@ -5,15 +5,13 @@
 \title{Main population evaluation}
 \usage{
 mainpop(input_folder = "inst/extdata/Constant/", output_folder = NA,
-  n_lines = 1, n_mv_set = c(0), int_v_varied = 0,
-  int_values = c(0), start_interval = 31, time_values = c(0, 7))
+  n_mv_set = c(1), int_v_varied = 0, int_values = c(0),
+  start_interval = 31, time_values = c(0, 7))
 }
 \arguments{
 \item{input_folder}{Folder containing rainfall, model parameter and starting data}
 
 \item{output_folder}{Folder to send output files (no files saved if set to NA)}
-
-\item{n_lines}{Number of lines of data in input file}
 
 \item{n_mv_set}{Vector of mosquito density number values to use (must be increasing order)}
 
