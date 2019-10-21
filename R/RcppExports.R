@@ -5,7 +5,7 @@ rcpp_cohort <- function(params, trial_params, cluster_data) {
     .Call(`_vectorpower_rcpp_cohort`, params, trial_params, cluster_data)
 }
 
-rcpp_mainpop <- function(params, trial_params) {
-    .Call(`_vectorpower_rcpp_mainpop`, params, trial_params)
+rcpp_mainpop <- function(params, inputs, trial_params) {
+    .Call(`_vectorpower_rcpp_mainpop`, params, inputs, trial_params)
 }
 

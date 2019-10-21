@@ -5,9 +5,9 @@ using namespace Rcpp;
 using namespace std;
 
 // [[Rcpp::export]]
-Rcpp::List rcpp_mainpop(List params, List trial_params)
+Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 {
-	int n_run, n_mv, n_int, i, j, ij, line, line_skip, nt, nt_E, div, nt_latgam, nt_latmosq, pos, pos2, ntmax, dur_Ei, latgami, latmosqi, tflag, interval, increment, data_saved, flag_int, np;
+	int n_run, n_mv, n_int, i, j, ij, nt, nt_E, div, nt_latgam, nt_latmosq, pos, pos2, ntmax, dur_Ei, latgami, latmosqi, tflag, interval, increment, data_saved, flag_int, np;
 	double mv0, param_int, t, t_int, mu_net_irs, prevent_net_irs, prop_T_rev, av0, muv1, K0, year_day, rain, KL, beta, Surv1, EIRd, mv, incv, incv0, FOIv, FOIv0, age0, age1, t_mark1, t_mark2, EIR_sum, dt2;
 	double mu_atsb, cov_nets, cov_irs, prop_T, rN, rNW, dNW, rI, rIW, dIW, dIF, EL, LL, PL, Sv1, Ev1, Iv1, H, H_inv, delS, delT, delD, delA1, delA2, delP, delU1, delU2, inv_x, inv_KL;
 	double S_cur, T_cur, D_cur, A_cur, U_cur, P_cur, FOI_cur, foi_age_cur, clin_inc_cur, ICA_cur, ICM_cur, IB_cur, ID_cur, EIR_cur, delSv1, EL_cur, LL_cur, PL_cur, dEL, dLL, Sv_cur, Ev_cur, Iv_cur;
@@ -148,8 +148,6 @@ Rcpp::List rcpp_mainpop(List params, List trial_params)
 	int size1 = na * sizeof(double);										// Array dimensions
 	int size2 = num_het * sizeof(double);
 	int size3 = n_cats * sizeof(double);
-	int size4 = n_mv_values * sizeof(double);
-	int size5 = n_cats * size4;
 	int n_runmax = n_int_values * n_mv_values;								// Total number of simulations to run
 	double int_start_time = date_int - date_start;							// Time after start of run at which ATSB starts being used
 	double tmax_c = time_values[n_pts-1];									// Duration of intervention use in days
@@ -291,77 +289,31 @@ Rcpp::List rcpp_mainpop(List params, List trial_params)
 	vector<double> IC_start_data(n_mv_values* n_cats, 0.0);								// Starting IC values saved for cohort calculations
 	vector<double> ID_start_data(n_mv_values* n_cats, 0.0);								// Starting ID values saved for cohort calculations
 
-	double* mv_input = (double*)malloc(size4);
-	double* EL_input = (double*)malloc(size4);
-	double* LL_input = (double*)malloc(size4);
-	double* PL_input = (double*)malloc(size4);
-	double* Sv_input = (double*)malloc(size4);
-	double* Ev_input = (double*)malloc(size4);
-	double* Iv_input = (double*)malloc(size4);
-	double* S_input = (double*)malloc(size5);
-	double* T_input = (double*)malloc(size5);
-	double* D_input = (double*)malloc(size5);
-	double* A_input = (double*)malloc(size5);
-	double* U_input = (double*)malloc(size5);
-	double* P_input = (double*)malloc(size5);
-	double* ICA_input = (double*)malloc(size5);
-	double* ICM_input = (double*)malloc(size5);
-	double* IB_input = (double*)malloc(size5);
-	double* ID_input = (double*)malloc(size5);
 	double* IB_output = (double*)malloc(size3);
 	double* IC_output = (double*)malloc(size3);
 	double* ID_output = (double*)malloc(size3);
 
-	//Load starting data from file------------------------------------------------------------------------------------------------------------------------------------------
-	
-	input = fopen(input_filename.c_str(), "r");
-	if (input == NULL)
-	{
-		Rcout << "Input file " << input << " not found.\n";
-		flag_error = 1;
-	}
-	else
-	{
-		fseek(input, 31 + (46 * n_cats) - (10 * (n_cats < 10 ? n_cats : 10)) + (n_cats < 100 ? 0 : (n_cats - 100) * 10) + (n_cats < 1000 ? 0 : (n_cats - 1000) * 10), SEEK_CUR);// Skip over header of input file
-		line_skip = 7 + (10 * n_cats);
-		for (i = 0; i < n_mv_values; i++)
-		{
-			n_mv = n_mv_set[i];
-			nextline:
-			fscanf(input, "%d", &line);
-			if (line < n_mv) 
-			{
-				for (j = 0; j < line_skip; j++) { fscanf(input, "%lf", &t); }
-				goto nextline;
-			}
-			else 
-			{
-				fscanf(input, "%lf", &mv_input[i]);
-				fscanf(input, "%lf", &EL_input[i]);
-				fscanf(input, "%lf", &LL_input[i]);
-				fscanf(input, "%lf", &PL_input[i]);
-				fscanf(input, "%lf", &Sv_input[i]);
-				fscanf(input, "%lf", &Ev_input[i]);
-				fscanf(input, "%lf", &Iv_input[i]);
-				ij = i * n_cats;
-				for (j = 0; j < n_cats; j++) { fscanf(input, "%lf", &S_input[ij + j]); }
-				for (j = 0; j < n_cats; j++) { fscanf(input, "%lf", &T_input[ij + j]); }
-				for (j = 0; j < n_cats; j++) { fscanf(input, "%lf", &D_input[ij + j]); }
-				for (j = 0; j < n_cats; j++) { fscanf(input, "%lf", &A_input[ij + j]); }
-				for (j = 0; j < n_cats; j++) { fscanf(input, "%lf", &U_input[ij + j]); }
-				for (j = 0; j < n_cats; j++) { fscanf(input, "%lf", &P_input[ij + j]); }
-				for (j = 0; j < n_cats; j++) { fscanf(input, "%lf", &ICA_input[ij + j]); }
-				for (j = 0; j < n_cats; j++) { fscanf(input, "%lf", &ICM_input[ij + j]); }
-				for (j = 0; j < n_cats; j++) { fscanf(input, "%lf", &IB_input[ij + j]); }
-				for (j = 0; j < n_cats; j++) { fscanf(input, "%lf", &ID_input[ij + j]); }
-			}
-		}
-		fclose(input);
-	}
+	vector<double> mv_input = rcpp_to_vector_double(inputs["mv_input"]);
+	vector<double> EL_input = rcpp_to_vector_double(inputs["EL_input"]);
+	vector<double> LL_input = rcpp_to_vector_double(inputs["LL_input"]);
+	vector<double> PL_input = rcpp_to_vector_double(inputs["PL_input"]);
+	vector<double> Sv_input = rcpp_to_vector_double(inputs["Sv_input"]);
+	vector<double> Ev_input = rcpp_to_vector_double(inputs["Ev_input"]);
+	vector<double> Iv_input = rcpp_to_vector_double(inputs["Iv_input"]);
+	vector<double> S_input = rcpp_to_vector_double(inputs["S_input"]);
+	vector<double> T_input = rcpp_to_vector_double(inputs["T_input"]);
+	vector<double> D_input = rcpp_to_vector_double(inputs["D_input"]);
+	vector<double> A_input = rcpp_to_vector_double(inputs["A_input"]);
+	vector<double> U_input = rcpp_to_vector_double(inputs["U_input"]);
+	vector<double> P_input = rcpp_to_vector_double(inputs["P_input"]);
+	vector<double> ICA_input = rcpp_to_vector_double(inputs["ICA_input"]);
+	vector<double> ICM_input = rcpp_to_vector_double(inputs["ICM_input"]);
+	vector<double> IB_input = rcpp_to_vector_double(inputs["IB_input"]);
+	vector<double> ID_input = rcpp_to_vector_double(inputs["ID_input"]);
 
 	// Set up conditions for one or more runs-------------------------------------------------------------------------------------------------------------------------------------
 
-		if (flag_error == 1)//If one or more errors were found during setup, skip simulations and go to end.
+	if (flag_error == 1)//If one or more errors were found during setup, skip simulations and go to end.
 	{
 		Rcout << "\nOne or more errors found. Ending program.\n";
 		goto finish;
@@ -477,11 +429,10 @@ restart_run:
 	Sv1 = Sv_input[n_mv];
 	Ev1 = Ev_input[n_mv];
 	Iv1 = Iv_input[n_mv];
-
 	EIRd = av0 * Iv1 * inv_omega;
-	pos = n_mv * n_cats;
 	for (i = 0; i < n_cats; i++)
 	{
+		pos = (i * n_mv_values) + n_mv;
 		S[i] = S_input[pos];
 		T[i] = T_input[pos];
 		D[i] = D_input[pos];
@@ -492,7 +443,6 @@ restart_run:
 		ICM[i] = ICM_input[pos];
 		IB[i] = IB_input[pos];
 		ID[i] = ID_input[pos];
-		pos++;
 	}
 
 	H = arraysum(S, n_cats) + arraysum(T, n_cats) + arraysum(D, n_cats) + arraysum(A, n_cats) + arraysum(U, n_cats) + arraysum(P, n_cats);

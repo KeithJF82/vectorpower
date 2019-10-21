@@ -16,7 +16,6 @@ NULL
 #'
 #' @param input_folder    Folder containing rainfall, model parameter and starting data
 #' @param output_folder   Folder to send output files (no files saved if set to NA)
-#' @param n_lines         Number of lines of data in input file	
 #' @param n_mv_set        Vector of mosquito density number values to use (must be increasing order)
 #' @param int_v_varied    Intervention parameter given variable value 
 #'                        (0= None, 1=ATSB kill rate, 2=bednet coverage, 3=IRS coverage)
@@ -26,7 +25,7 @@ NULL
 #'
 #' @export
 
-mainpop <- function (input_folder = "inst/extdata/Constant/",output_folder = NA,n_lines = 1, n_mv_set=c(0), 
+mainpop <- function (input_folder = "inst/extdata/Constant/",output_folder = NA,n_mv_set=c(1), 
                      int_v_varied=0, int_values= c(0.0),
                      start_interval = 31.0, time_values=c(0.0,7.0))
   {
@@ -37,7 +36,7 @@ mainpop <- function (input_folder = "inst/extdata/Constant/",output_folder = NA,
   assert_numeric(int_values)
   assert_numeric(time_values)
 
-  # TODO - Set na and num_het automatically
+  # Set up key values. TODO - Set na and num_het automatically
   na=145
   num_het=9
   n_pts=length(time_values)
@@ -46,20 +45,31 @@ mainpop <- function (input_folder = "inst/extdata/Constant/",output_folder = NA,
   n_mv_values=length(n_mv_set)
   n_mv_start=n_mv_set[1]
   n_mv_end=n_mv_set[n_mv_values]
-  
   if(int_v_varied==0) { int_values=c(0.0) }
   n_int_values=length(int_values)
-  
   n_runs=n_mv_values*n_int_values
   
-  parameter_file = paste(input_folder,"model_parameters.txt",sep="")
-  params <- read.table(parameter_file, header=TRUE)
+  params <- read.table(paste(input_folder,"model_parameters.txt",sep=""), header=TRUE) # Read in model parameters
   
+  # Read in data from input files
   input_file = paste(input_folder,"start_data.txt",sep="")
-  
-  # TODO - Read in data from files. Automatically determine n_mv_values from no. lines in input_file, check if compatible
-  #        with n_mv_start and n_mv_end
-  # TODO - Take in list of data collection dates as vector as well?
+  input_data <- read.table(input_file,header=TRUE,nrows=n_mv_end)
+  inputs <- list(mv_input=input_data$mv, EL_input=input_data$EL, LL_input=input_data$LL, PL_input=input_data$PL,
+                 Sv_input=input_data$Sv1, Ev_input=input_data$Ev1, Iv_input=input_data$Iv1,
+                 S_input=c(), T_input=c(), D_input=c(), A_input=c(), U_input=c(), P_input=c(),
+                 ICA_input=c(), ICM_input=c(), IB_input=c(), ID_input=c())
+  for(i in 1:n_cats){
+    inputs$S_input <- append(inputs$S_input,input_data[[8+i]][n_mv_set])
+    inputs$T_input <- append(inputs$T_input,input_data[[8+i+n_cats]][n_mv_set])
+    inputs$D_input <- append(inputs$D_input,input_data[[8+i+(2*n_cats)]][n_mv_set])
+    inputs$A_input <- append(inputs$A_input,input_data[[8+i+(3*n_cats)]][n_mv_set])
+    inputs$U_input <- append(inputs$U_input,input_data[[8+i+(4*n_cats)]][n_mv_set])
+    inputs$P_input <- append(inputs$P_input,input_data[[8+i+(5*n_cats)]][n_mv_set])
+    inputs$ICA_input <- append(inputs$ICA_input,input_data[[8+i+(6*n_cats)]][n_mv_set])
+    inputs$ICM_input <- append(inputs$ICM_input,input_data[[8+i+(7*n_cats)]][n_mv_set])
+    inputs$IB_input <- append(inputs$IB_input,input_data[[8+i+(8*n_cats)]][n_mv_set])
+    inputs$ID_input <- append(inputs$ID_input,input_data[[8+i+(9*n_cats)]][n_mv_set])
+  }
   
   if(is.na(output_folder)==FALSE){
     file_benchmarks = paste(output_folder,"Benchmark_details.txt",sep="")
@@ -75,37 +85,37 @@ mainpop <- function (input_folder = "inst/extdata/Constant/",output_folder = NA,
     flag_file=0
   }
   
-  trial_params <- list(input_file=input_file, n_lines=n_lines, n_mv_set=n_mv_set,n_mv_start=n_mv_start, n_mv_end=n_mv_end, 
+  trial_params <- list(input_file=input_file, n_mv_set=n_mv_set,n_mv_start=n_mv_start, n_mv_end=n_mv_end, 
                        int_v_varied=int_v_varied, n_int_values=n_int_values,int_values=int_values,
                        start_interval=start_interval, time_values=time_values, n_pts=n_pts, flag_file=flag_file,
                        file_benchmarks=file_benchmarks,file_endpoints=file_endpoints, file_EIRd=file_EIRd, 
                        file_imm_start=file_imm_start)
   
   # Run simulation of main population
-  raw_data <- rcpp_mainpop(params,trial_params)
+  raw_data <- rcpp_mainpop(params,inputs,trial_params)
   
   # process raw data
-  
+  {
   n_run_names=paste("n_run",c(1:n_runs),sep="")
   n_pt_names=paste("n_pt",c(1:n_pts),sep="")
   na_names=paste("na",c(1:na),sep="")
   n_cat_names=paste("n_cat",c(1:n_cats),sep="")
-  n_day_names=paste("n_day",c(1:n_days),sep="")
+  n_days_names=paste("n_days",c(1:n_days),sep="")
   n_mv_names=paste("n_mv",c(1:n_mv_values),sep="")
   n_int_names=paste("n_int",c(1:n_int_values),sep="")
   slide_prev_names=paste("slide_prev",c(1:na),sep="")
   pcr_prev_names=paste("pcr_prev",c(1:na),sep="")
   clin_inc_names=paste("clin_inc",c(1:na),sep="")
   dimnames_list=list(na_names,n_pt_names,n_run_names)
-  
   EIR_benchmarks = array(data=raw_data$EIR_benchmarks,dim=c(n_pts,n_runs),dimnames=list(n_pt_names,n_run_names))
   slide_prev_benchmarks = array(data=raw_data$slide_prev_benchmarks,dim=c(na,n_pts,n_runs),dimnames=dimnames_list)
   pcr_prev_benchmarks = array(data=raw_data$pcr_prev_benchmarks,dim=c(na,n_pts,n_runs),dimnames=dimnames_list)
   clin_inc_benchmarks = array(data=raw_data$clin_inc_benchmarks,dim=c(na,n_pts,n_runs),dimnames=dimnames_list)
-  EIR_daily_data = array(data=raw_data$EIR_daily_data,dim=c(n_days,n_runs),dimnames=c(n_days_names,n_run_names))
-  IB_start_data = array(data=raw_data$IB_start_data,dim=c(n_cats,n_mv_values),dimnames=c(n_cat_names,n_mv_names))
-  IC_start_data = array(data=raw_data$IC_start_data,dim=c(n_cats,n_mv_values),dimnames=c(n_cat_names,n_mv_names))
-  ID_start_data = array(data=raw_data$ID_start_data,dim=c(n_cats,n_mv_values),dimnames=c(n_cat_names,n_mv_names))
+  EIR_daily_data = array(data=raw_data$EIR_daily_data,dim=c(n_days,n_runs),dimnames=list(n_days_names,n_run_names))
+  IB_start_data = array(data=raw_data$IB_start_data,dim=c(n_cats,n_mv_values),dimnames=list(n_cat_names,n_mv_names))
+  IC_start_data = array(data=raw_data$IC_start_data,dim=c(n_cats,n_mv_values),dimnames=list(n_cat_names,n_mv_names))
+  ID_start_data = array(data=raw_data$ID_start_data,dim=c(n_cats,n_mv_values),dimnames=list(n_cat_names,n_mv_names))
+  }
   
   output_data <- list(na=na,num_het=num_het,n_mv_values=n_mv_values,n_int_values=n_int_values,n_pts=n_pts,
                       time_values=time_values,int_values=int_values,
