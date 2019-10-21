@@ -43,7 +43,6 @@ mainpop <- function (input_folder = "inst/extdata/Constant/",output_folder = NA,
   n_cats=na*num_het
   n_days=max(time_values)+1
   n_mv_values=length(n_mv_set)
-  n_mv_start=n_mv_set[1]
   n_mv_end=n_mv_set[n_mv_values]
   if(int_v_varied==0) { int_values=c(0.0) }
   n_int_values=length(int_values)
@@ -54,8 +53,9 @@ mainpop <- function (input_folder = "inst/extdata/Constant/",output_folder = NA,
   # Read in data from input files
   input_file = paste(input_folder,"start_data.txt",sep="")
   input_data <- read.table(input_file,header=TRUE,nrows=n_mv_end)
-  inputs <- list(mv_input=input_data$mv, EL_input=input_data$EL, LL_input=input_data$LL, PL_input=input_data$PL,
-                 Sv_input=input_data$Sv1, Ev_input=input_data$Ev1, Iv_input=input_data$Iv1,
+  inputs <- list(mv_input=input_data$mv0[n_mv_set], 
+                 EL_input=input_data$EL[n_mv_set], LL_input=input_data$LL[n_mv_set], PL_input=input_data$PL[n_mv_set],
+                 Sv_input=input_data$Sv1[n_mv_set], Ev_input=input_data$Ev1[n_mv_set], Iv_input=input_data$Iv1[n_mv_set],
                  S_input=c(), T_input=c(), D_input=c(), A_input=c(), U_input=c(), P_input=c(),
                  ICA_input=c(), ICM_input=c(), IB_input=c(), ID_input=c())
   for(i in 1:n_cats){
@@ -85,8 +85,7 @@ mainpop <- function (input_folder = "inst/extdata/Constant/",output_folder = NA,
     flag_file=0
   }
   
-  trial_params <- list(input_file=input_file, n_mv_set=n_mv_set,n_mv_start=n_mv_start, n_mv_end=n_mv_end, 
-                       int_v_varied=int_v_varied, n_int_values=n_int_values,int_values=int_values,
+  trial_params <- list(n_mv_values=n_mv_values, int_v_varied=int_v_varied, int_values=int_values,
                        start_interval=start_interval, time_values=time_values, n_pts=n_pts, flag_file=flag_file,
                        file_benchmarks=file_benchmarks,file_endpoints=file_endpoints, file_EIRd=file_EIRd, 
                        file_imm_start=file_imm_start)
@@ -155,6 +154,12 @@ cluster_input_setup <- function(input_folder = "inst/extdata/Constant/", input_l
   assert_in(benchmark,c("EIR","slide_prev","pcr_prev","clin_inc"))
   assert_string(input_folder)
   assert_list(input_list)
+  assert_int(set_n_pt)
+  assert_int(set_n_int)
+  assert_bounded(age_start,0.0,65.0)
+  assert_bounded(age_end,age_start,65.0)
+  assert_in(set_n_pt,c(1:input_list$n_pts))
+  assert_in(set_n_int,c(1:input_list$n_int_values))
   
   age_file=paste(input_folder,"age_data.txt",sep="")
   age_data = read.table(age_file,header=TRUE,sep="\t")
@@ -207,7 +212,14 @@ cluster_input_setup <- function(input_folder = "inst/extdata/Constant/", input_l
 
 clusters_create <- function(input_list=list(),n_clusters=100,benchmark_mean=0.25, benchmark_stdev=0.025,
                             int_mean=0.15, int_stdev=0.05){
-  # TODO - Input error checking
+ 
+  # Input error checking (TODO - finish)
+  assert_list(input_list)
+  assert_int(n_clusters)
+  assert_numeric(benchmark_mean)
+  assert_numeric(benchmark_stdev)
+  assert_numeric(int_mean)
+  assert_numeric(int_stdev)
   
   nv_B=length(input_list$benchmark_values)
   nv_I=length(input_list$int_values)
@@ -283,15 +295,26 @@ clusters_create <- function(input_list=list(),n_clusters=100,benchmark_mean=0.25
 #' @param time_interval   Time interval between data points
 #' @param n_divs          Number of data points (including 0)
 #' @param prop_T_c        Treatment probability in trial cohort
-#' @param age_c0          Minimum age of trial cohort patients
-#' @param age_c1          Maximum age of trial cohort patients
+#' @param age_start          Minimum age of trial cohort patients
+#' @param age_end          Maximum age of trial cohort patients
 #'
 #' @export
 
 cohort <- function(mainpop_data = list(), cluster_data=list(),n_patients = 100,
                    input_folder = "inst/extdata/Constant/",output_folder = "inst/extdata/Constant/results_example/",
-                   time_interval = 7.0,n_divs = 13,prop_T_c = 0.9,age_c0 = 0.5,age_c1 = 10.0){
-  # TODO - Input error checking
+                   time_interval = 7.0,n_divs = 13,prop_T_c = 0.9,age_start = 0.5,age_end = 10.0){
+  
+  # Input error checking (TODO - finish)
+  assert_list(mainpop_data)
+  assert_list(cluster_data)
+  assert_int(n_patients)
+  assert_string(input_folder)
+  assert_string(output_folder)
+  assert_numeric(time_interval)
+  assert_int(n_divs)
+  assert_bounded(prop_T_c,0.0,1.0)
+  assert_bounded(age_start,0.0,65.0)
+  assert_bounded(age_end,age_start,65.0)
   
   n_clusters=length(cluster_data$n_B)
   parameter_file = paste(input_folder,"model_parameters.txt",sep="")
@@ -300,7 +323,7 @@ cohort <- function(mainpop_data = list(), cluster_data=list(),n_patients = 100,
   params <- read.table(parameter_file, header=TRUE)
 
   trial_params <- list(file_summary = file_summary,file_frequency = file_frequency,n_patients = n_patients,n_clusters=n_clusters,
-                       time_interval = time_interval,n_divs = n_divs,prop_T_c = prop_T_c,age_c0 = age_c0,age_c1 = age_c1,
+                       time_interval = time_interval,n_divs = n_divs,prop_T_c = prop_T_c,age_start = age_start,age_end = age_end,
                        EIR_daily_data = as.vector(mainpop_data$EIR_daily_data),
                        IB_start_data = as.vector(mainpop_data$IB_start_data),
                        IC_start_data = as.vector(mainpop_data$IC_start_data),

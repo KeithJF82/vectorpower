@@ -45,9 +45,9 @@ Rcpp::List rcpp_cohort(List params, List trial_params, List cluster_data)
 	int n_clusters = rcpp_to_int(trial_params["n_clusters"]);					//Number of lines in cluster data input file (number of clusters)
 	double prop_T_c = rcpp_to_int(trial_params["prop_T_c"]);					//Proportion of clinical cases successfully treated in cohort
 	int n_patients = rcpp_to_int(trial_params["n_patients"]);					//Number of patients in cohort
-	double age_c0 = rcpp_to_int(trial_params["age_c0"]);						//Minimum age in cohort
-	double age_c1 = rcpp_to_int(trial_params["age_c1"]);						//Maximum age in cohort
-	double age_c2 = age_c1 + (tmax / dy);										//Maximum age in cohort taking into account ageing during trial
+	double age_start = rcpp_to_int(trial_params["age_start"]);						//Minimum age in cohort
+	double age_end = rcpp_to_int(trial_params["age_end"]);						//Maximum age in cohort
+	double age_c2 = age_end + (tmax / dy);										//Maximum age in cohort taking into account ageing during trial
 
 	//Set up constant parameters------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -123,8 +123,8 @@ Rcpp::List rcpp_cohort(List params, List trial_params, List cluster_data)
 	int agefinding1 = 0;
 	int agefinding2 = 0;
 
-	na_c0 = 0;							//Minimum age category number in main population corresponding to first age category in cohort; determined from age_c0
-	na_c1 = na - 1;						//Maximum age category number in main population corresponding to last age category in cohort at start; determined from age_c1
+	na_c0 = 0;							//Minimum age category number in main population corresponding to first age category in cohort; determined from age_start
+	na_c1 = na - 1;						//Maximum age category number in main population corresponding to last age category in cohort at start; determined from age_end
 	na_c2 = na - 1;						//Maximum age category number in main population corresponding to last age category in cohort at end; determined from age_c2
 	for (i = 0; i < na; i++)
 	{
@@ -141,13 +141,13 @@ Rcpp::List rcpp_cohort(List params, List trial_params, List cluster_data)
 		age_rate[i] = 1.0 / age_width[i];
 		rem_rate[i] = age_rate[i] + eta;
 		age[i] = i == 0 ? 0.0 : (age[i - 1] + age_width[i - 1]);
-		if (agefinding0 == 1 && age[i] >= age_c0 * dy)
+		if (agefinding0 == 1 && age[i] >= age_start * dy)
 		{
 			na_c0 = i;
 			agefinding0 = 0;
 			agefinding1 = 1;
 		}
-		if (agefinding1 == 1 && age[i] >= age_c1 * dy)
+		if (agefinding1 == 1 && age[i] >= age_end * dy)
 		{
 			na_c1 = i;
 			agefinding1 = 0;

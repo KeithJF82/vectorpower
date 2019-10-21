@@ -15,7 +15,6 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 	FILE* endpoint_data = NULL;
 	FILE* data_EIR = NULL;
 	FILE* data_immunity = NULL;
-	FILE* input = NULL;
 	int flag_error = 0;
 
 	//Constants (TODO: Make global)----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -119,10 +118,7 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 	double dgon = rcpp_to_double(params["dgon"]);									// Gonotrophic cycle length
 
 	// Load trial parameter data from R--------------------------------------------------------------------------------------------------------------------------------------------
-
-	vector<int> n_mv_set = rcpp_to_vector_int(trial_params["n_mv_set"]);			// Vector of values of n_mv (mosquito density data sets in input file)
-	string input_filename = rcpp_to_string(trial_params["input_file"]);				// Name of file containing mosquito and human input data
-
+	
 	int flag_file = rcpp_to_int(trial_params["flag_file"]);							// Flag indicating whether results data to be saved to files
 	int int_v_varied = rcpp_to_int(trial_params["int_v_varied"]);					// Intervention parameter given variable value (0=model parameter set, 1=ATSB kill rate, 2=bednet coverage, 3=IRS coverage)
 	if (int_v_varied < 0 || int_v_varied > 3)
@@ -130,8 +126,8 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 		Rcout << "\nError in intervention parameter choice: int_v_varied=" << int_v_varied << "\n";
 		flag_error = 1;
 	}
-	int n_int_values = rcpp_to_int(trial_params["n_int_values"]);					// Number of intervention parameter values to use
 	vector<double> int_values = rcpp_to_vector_double(trial_params["int_values"]);	// Vector of intervention parameter values
+	int n_int_values = int_values.size();											// Number of intervention parameter values to use
 	double date_int = date_start + rcpp_to_double(trial_params["start_interval"]);	// Day of the year when intervention trial starts (period from date_start to date_int used to equilibrate lagged FOI data)
 	vector<double> time_values = rcpp_to_vector_double(trial_params["time_values"]);// Vector of time benchmark points
 	int n_pts = rcpp_to_int(trial_params["n_pts"]);									// Number of data points to be taken 
@@ -143,7 +139,7 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 
 	// Constant derived values--------------------------------------------------------------------------------------------------------------------------
 
-	int n_mv_values = n_mv_set.size();//n_mv_end - n_mv_start + 1;			// Number of mosquito density values to be used
+	int n_mv_values = rcpp_to_int(trial_params["n_mv_values"]);				// Number of mosquito density values to be used
 	int n_cats = na * num_het;												// Total number of age/heterogeneity categories in main population
 	int size1 = na * sizeof(double);										// Array dimensions
 	int size2 = num_het * sizeof(double);
@@ -794,7 +790,6 @@ end_run:
 
 finish:
 
-	if (input != NULL) { fclose(input); }
 	if (benchmarks_by_age != NULL) { fclose(benchmarks_by_age); }
 	if (endpoint_data != NULL) { fclose(endpoint_data); }
 	if (data_EIR != NULL) { fclose(data_EIR); }

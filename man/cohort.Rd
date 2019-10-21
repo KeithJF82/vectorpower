@@ -7,8 +7,8 @@
 cohort(mainpop_data = list(), cluster_data = list(),
   n_patients = 100, input_folder = "inst/extdata/Constant/",
   output_folder = "inst/extdata/Constant/results_example/",
-  time_interval = 7, n_divs = 13, prop_T_c = 0.9, age_c0 = 0.5,
-  age_c1 = 10)
+  time_interval = 7, n_divs = 13, prop_T_c = 0.9, age_start = 0.5,
+  age_end = 10)
 }
 \arguments{
 \item{mainpop_data}{List output by mainpop() containing main population data}
@@ -27,9 +27,9 @@ cohort(mainpop_data = list(), cluster_data = list(),
 
 \item{prop_T_c}{Treatment probability in trial cohort}
 
-\item{age_c0}{Minimum age of trial cohort patients}
+\item{age_start}{Minimum age of trial cohort patients}
 
-\item{age_c1}{Maximum age of trial cohort patients}
+\item{age_end}{Maximum age of trial cohort patients}
 }
 \description{
 Run stochastic individual model across trial cohort individuals in one or more clusters
