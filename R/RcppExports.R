@@ -9,3 +9,7 @@ rcpp_mainpop <- function(params, inputs, trial_params) {
     .Call(`_vectorpower_rcpp_mainpop`, params, inputs, trial_params)
 }
 
+rcpp_mainpop_ss <- function(params, trial_params) {
+    .Call(`_vectorpower_rcpp_mainpop_ss`, params, trial_params)
+}
+
