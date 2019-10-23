@@ -5,10 +5,8 @@
 \title{Cohort evaluation}
 \usage{
 cohort(mainpop_data = list(), cluster_data = list(),
-  n_patients = 100, input_folder = "inst/extdata/Constant/",
-  output_folder = "inst/extdata/Constant/results_example/",
-  time_interval = 7, n_divs = 13, prop_T_c = 0.9, age_start = 0.5,
-  age_end = 10)
+  n_patients = 100, output_folder = NA, time_interval = 7,
+  n_pts = 13, prop_T_c = 0.9, age_start = 0.5, age_end = 10)
 }
 \arguments{
 \item{mainpop_data}{List output by mainpop() containing main population data}
@@ -17,13 +15,11 @@ cohort(mainpop_data = list(), cluster_data = list(),
 
 \item{n_patients}{Number of trial cohort patients per cluster}
 
-\item{input_folder}{Folder containing model parameter data}
-
-\item{output_folder}{Folder to send results data}
+\item{output_folder}{Folder to send results data (set to NA to omit saving to file)}
 
 \item{time_interval}{Time interval between data points}
 
-\item{n_divs}{Number of data points (including 0)}
+\item{n_pts}{Number of data points (including 0)}
 
 \item{prop_T_c}{Treatment probability in trial cohort}
 

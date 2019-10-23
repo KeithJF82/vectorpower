@@ -4,13 +4,10 @@
 \alias{cluster_input_setup}
 \title{Cluster input setup}
 \usage{
-cluster_input_setup(input_folder = "inst/extdata/Constant/",
-  input_list = list(), benchmark = "EIR", set_n_pt = 1,
-  set_n_int = 1, age_start = 0, age_end = 65)
+cluster_input_setup(input_list = list(), benchmark = "EIR",
+  set_n_pt = 1, set_n_int = 1, age_start = 0, age_end = 65)
 }
 \arguments{
-\item{input_folder}{Folder containing age distribution data}
-
 \item{input_list}{List containing mainpop output data}
 
 \item{benchmark}{Benchmark type to use in choosing clusters ("EIR", "slide_prev", "pcr_prev", or "clin_inc")}

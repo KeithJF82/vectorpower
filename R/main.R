@@ -48,6 +48,10 @@ mainpop <- function (input_folder = "inst/extdata/Constant/",output_folder = NA,
   n_int_values=length(int_values)
   n_runs=n_mv_values*n_int_values
   
+  # Age data (used later)
+  age_file=paste(input_folder,"age_data.txt",sep="")
+  age_data = read.table(age_file,header=TRUE,sep="\t")
+  
   params <- read.table(paste(input_folder,"model_parameters.txt",sep=""), header=TRUE) # Read in model parameters
   
   # Read in data from input files
@@ -88,7 +92,7 @@ mainpop <- function (input_folder = "inst/extdata/Constant/",output_folder = NA,
   trial_params <- list(n_mv_values=n_mv_values, int_v_varied=int_v_varied, int_values=int_values,
                        start_interval=start_interval, time_values=time_values, n_pts=n_pts, flag_file=flag_file,
                        file_benchmarks=file_benchmarks,file_endpoints=file_endpoints, file_EIRd=file_EIRd, 
-                       file_imm_start=file_imm_start)
+                       file_imm_start=file_imm_start,age_data=age_data)
   
   # Run simulation of main population
   raw_data <- rcpp_mainpop(params,inputs,trial_params)
@@ -117,13 +121,73 @@ mainpop <- function (input_folder = "inst/extdata/Constant/",output_folder = NA,
   }
   
   output_data <- list(na=na,num_het=num_het,n_mv_values=n_mv_values,n_int_values=n_int_values,n_pts=n_pts,
-                      time_values=time_values,int_values=int_values,
+                      params=params,age_data=age_data,time_values=time_values,int_values=int_values,
                       EIR_benchmarks=EIR_benchmarks,slide_prev_benchmarks=slide_prev_benchmarks,
                       pcr_prev_benchmarks=pcr_prev_benchmarks,clin_inc_benchmarks=clin_inc_benchmarks, 
                       EIR_daily_data=EIR_daily_data,IB_start_data=IB_start_data,
                       IC_start_data=IC_start_data,ID_start_data=ID_start_data)
   
   return(output_data)
+}
+
+#------------------------------------------------
+#' @title Plot selected main population output data as a function of time
+#'
+#' @description Function for taking output of mainpop(), selecting the desired benchmark
+#'              (EIR, slide prevalence, PCR prevalence, clinical incidence) data, and 
+#'              plotting it on a graph as an aid to setting up clusters
+#'
+#' @details Takes in detailed benchmark data as a list and plots a graph based on the
+#'          input parameters 
+#'
+#' @param input_list          List containing mainpop output data
+#' @param benchmark           Benchmark type to use in choosing clusters ("EIR", "slide_prev", "pcr_prev", or "clin_inc")
+#' @param set_n_int           Intervention number to use (1-max)
+#' @param age_start           Starting age to use when calculating prevalence or incidence over age range (not used with EIR)
+#' @param age_end             End age to use when calculating prevalence or incidence over age range (not used with EIR)
+
+plot_mainpop_data <- function(input_list=list(),benchmark = "EIR", set_n_int=1, age_start = 0, age_end = 65.0){
+  
+  # Input error checking (TODO - finish)
+  assert_in(benchmark,c("EIR","slide_prev","pcr_prev","clin_inc"))
+  assert_list(input_list)
+  assert_int(set_n_int)
+  assert_bounded(age_start,0.0,65.0)
+  assert_bounded(age_end,age_start,65.0)
+  assert_in(set_n_int,c(1:input_list$n_int_values))
+  
+  n_age_start = findInterval(age_start,input_list$age_data$age0)
+  n_age_end = findInterval(age_end,input_list$age_data$age1)
+  
+  density_sum = 0
+  benchmark_values = 0
+  if(benchmark == "EIR"){
+    benchmark_values = input_list$EIR_benchmarks[,(input_list$n_int_values*c(0:(input_list$n_mv_values-1)))+set_n_int]
+  }else{
+    j=input_list$n_int_values*c(1:input_list$n_mv_values)
+    if(benchmark == "slide_prev"){ benchmark_data = input_list$slide_prev_benchmarks[,,j]}
+    if(benchmark == "pcr_prev"){ benchmark_data = input_list$pcr_prev_benchmarks[,,j]}
+    if(benchmark == "clin_inc"){ benchmark_data = input_list$clin_inc_benchmarks[,,j] }
+    
+    for(i in n_age_start:n_age_end){
+      density_sum = density_sum + input_list$age_data$density[i]
+      benchmark_values = benchmark_values + benchmark_data[i,,]
+    }
+    benchmark_values = benchmark_values/density_sum
+  }
+  int_values=input_list$int_values
+  
+  matplot(input_list$time_values,benchmark_values[,1],type="p",pch=2,col=2,xlab="time (days)",ylab=benchmark,
+          ylim=c(0,max(benchmark_values)))
+  if(input_list$n_mv_values>1){
+    for(i in 2:input_list$n_mv_values){
+      matplot(input_list$time_values,benchmark_values[,i],type="p",pch=2,col=1+i, xaxt="n",xlab="",ylab="",add=TRUE)
+    }
+  }
+  legend("bottomleft", inset=0.01, legend=c(1:input_list$n_mv_values), lwd=1.0,col=1+c(1:input_list$n_mv_values),
+                  horiz=FALSE,bg='white',cex=1.0)
+  
+  return(0)
 }
 
 #------------------------------------------------
@@ -136,23 +200,20 @@ mainpop <- function (input_folder = "inst/extdata/Constant/",output_folder = NA,
 #' @details Takes in detailed benchmark data as a list and outputs lists of chosen 
 #'          benchmark values and intervention parameter values (as both list and files)
 #'
-#' @param input_folder        Folder containing age distribution data
 #' @param input_list          List containing mainpop output data
 #' @param benchmark           Benchmark type to use in choosing clusters ("EIR", "slide_prev", "pcr_prev", or "clin_inc")
-#' @param set_n_pt             Data point to use (1-max)
+#' @param set_n_pt            Data point to use (1-max)
 #' @param set_n_int           Intervention number to use (1-max)
 #' @param age_start           Starting age to use when calculating prevalence or incidence over age range (not used with EIR)
 #' @param age_end             End age to use when calculating prevalence or incidence over age range (not used with EIR)
 #'
 #' @export
 
-cluster_input_setup <- function(input_folder = "inst/extdata/Constant/", input_list=list(),
-                                benchmark = "EIR",set_n_pt = 1,set_n_int=1,age_start = 0,age_end = 65.0){
+cluster_input_setup <- function(input_list=list(), benchmark = "EIR",set_n_pt = 1,set_n_int=1,age_start = 0,age_end = 65.0){
   
   # Input error checking (TODO - finish)
   assert_in(set_n_pt,1:input_list$n_pts)
   assert_in(benchmark,c("EIR","slide_prev","pcr_prev","clin_inc"))
-  assert_string(input_folder)
   assert_list(input_list)
   assert_int(set_n_pt)
   assert_int(set_n_int)
@@ -161,11 +222,8 @@ cluster_input_setup <- function(input_folder = "inst/extdata/Constant/", input_l
   assert_in(set_n_pt,c(1:input_list$n_pts))
   assert_in(set_n_int,c(1:input_list$n_int_values))
   
-  age_file=paste(input_folder,"age_data.txt",sep="")
-  age_data = read.table(age_file,header=TRUE,sep="\t")
-  n_age_cats = length(age_data$age0)
-  n_age_start = findInterval(age_start,age_data$age0)
-  n_age_end = findInterval(age_end,age_data$age1)
+  n_age_start = findInterval(age_start,input_list$age_data$age0)
+  n_age_end = findInterval(age_end,input_list$age_data$age1)
   
   density_sum = 0
   benchmark_values = 0
@@ -173,12 +231,12 @@ cluster_input_setup <- function(input_folder = "inst/extdata/Constant/", input_l
     benchmark_values = input_list$EIR_benchmarks[set_n_pt,(input_list$n_int_values*c(0:(input_list$n_mv_values-1)))+set_n_int]
   }else{
     j=input_list$n_int_values*c(1:input_list$n_mv_values)
-    if(benchmark == "slide_prev"){ benchmark_data = input_list$slide_prev_benchmarks[,set_n_pt,]}
-    if(benchmark == "pcr_prev"){ benchmark_data = input_list$pcr_prev_benchmarks[,set_n_pt,]}
-    if(benchmark == "clin_inc"){ benchmark_data = input_list$clin_inc_benchmarks[,set_n_pt,] }
+    if(benchmark == "slide_prev"){ benchmark_data = input_list$slide_prev_benchmarks[,set_n_pt,j]}
+    if(benchmark == "pcr_prev"){ benchmark_data = input_list$pcr_prev_benchmarks[,set_n_pt,j]}
+    if(benchmark == "clin_inc"){ benchmark_data = input_list$clin_inc_benchmarks[,set_n_pt,j] }
     
     for(i in n_age_start:n_age_end){
-      density_sum = density_sum + age_data$density[i]
+      density_sum = density_sum + input_list$age_data$density[i]
       benchmark_values = benchmark_values + benchmark_data[i,]
     }
     benchmark_values = benchmark_values/density_sum
@@ -290,49 +348,55 @@ clusters_create <- function(input_list=list(),n_clusters=100,benchmark_mean=0.25
 #' @param mainpop_data    List output by mainpop() containing main population data
 #' @param cluster_data    List output by clusters_create() containing cluster data
 #' @param n_patients      Number of trial cohort patients per cluster
-#' @param input_folder    Folder containing model parameter data
-#' @param output_folder   Folder to send results data
+#' @param output_folder   Folder to send results data (set to NA to omit saving to file)
 #' @param time_interval   Time interval between data points
-#' @param n_divs          Number of data points (including 0)
+#' @param n_pts           Number of data points (including 0)
 #' @param prop_T_c        Treatment probability in trial cohort
-#' @param age_start          Minimum age of trial cohort patients
-#' @param age_end          Maximum age of trial cohort patients
+#' @param age_start       Minimum age of trial cohort patients
+#' @param age_end         Maximum age of trial cohort patients
 #'
 #' @export
 
-cohort <- function(mainpop_data = list(), cluster_data=list(),n_patients = 100,
-                   input_folder = "inst/extdata/Constant/",output_folder = "inst/extdata/Constant/results_example/",
-                   time_interval = 7.0,n_divs = 13,prop_T_c = 0.9,age_start = 0.5,age_end = 10.0){
+cohort <- function(mainpop_data = list(), cluster_data=list(),n_patients = 100,output_folder = NA,
+                   time_interval = 7.0,n_pts = 13,prop_T_c = 0.9,age_start = 0.5,age_end = 10.0){
   
   # Input error checking (TODO - finish)
   assert_list(mainpop_data)
   assert_list(cluster_data)
   assert_int(n_patients)
-  assert_string(input_folder)
-  assert_string(output_folder)
   assert_numeric(time_interval)
-  assert_int(n_divs)
+  assert_int(n_pts)
   assert_bounded(prop_T_c,0.0,1.0)
   assert_bounded(age_start,0.0,65.0)
   assert_bounded(age_end,age_start,65.0)
   
   n_clusters=length(cluster_data$n_B)
-  parameter_file = paste(input_folder,"model_parameters.txt",sep="")
-  file_summary = paste(output_folder,"summary.txt",sep="")
-  file_frequency = paste(output_folder,"frequency.txt",sep="")
-  params <- read.table(parameter_file, header=TRUE)
+  if(is.na(output_folder)==FALSE){
+    file_summary = paste(output_folder,"summary.txt",sep="")
+    file_frequency = paste(output_folder,"frequency.txt",sep="")
+    flag_file=1
+  } else {
+    file_summary = NA
+    file_frequency = NA
+    flag_file=0
+  }
 
   trial_params <- list(file_summary = file_summary,file_frequency = file_frequency,n_patients = n_patients,n_clusters=n_clusters,
-                       time_interval = time_interval,n_divs = n_divs,prop_T_c = prop_T_c,age_start = age_start,age_end = age_end,
-                       EIR_daily_data = as.vector(mainpop_data$EIR_daily_data),
+                       time_interval = time_interval,n_pts = n_pts,prop_T_c = prop_T_c,age_start = age_start,age_end = age_end,
+                       flag_file = flag_file, EIR_daily_data = as.vector(mainpop_data$EIR_daily_data),
                        IB_start_data = as.vector(mainpop_data$IB_start_data),
                        IC_start_data = as.vector(mainpop_data$IC_start_data),
                        ID_start_data = as.vector(mainpop_data$ID_start_data))
 
-  raw_data <- rcpp_cohort(params,trial_params,cluster_data)
-
-  # placeholder; TODO - Once export of data in R list format added to cohort.cpp, add processing here
+  raw_data <- rcpp_cohort(mainpop_data$params,trial_params,cluster_data)
   results_data <- data.frame(raw_data)
+  
+  cluster_names=paste("cluster",c(1:n_clusters),sep="")
+  patient_names=paste("patient",c(1:n_patients),sep="")
+  n_pt_names=paste("n_pt",c(1:n_pts),sep="")
+  patients_status_outputs = array(data=raw_data$patients_status_outputs,dim=c(n_pts,n_patients,n_clusters),
+                                  dimnames=list(n_pt_names,patient_names,cluster_names))
+  
 
-  return(results_data)
+  return(patients_status_outputs)
 }
