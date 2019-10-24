@@ -36,8 +36,12 @@ mainpop <- function (input_folder = "inst/extdata/Constant/",output_folder = NA,
   assert_numeric(int_values)
   assert_numeric(time_values)
 
-  # Set up key values. TODO - Set na and num_het automatically
-  na=145
+  # Set up parameters 
+  # TODO - set num_het from inputs
+  # TODO - Input age data to mainpop
+  age_data = read.table(paste(input_folder,"age_data.txt",sep=""),header=TRUE,sep="\t")           # Read in age data
+  params <- read.table(paste(input_folder,"model_parameters.txt",sep=""), header=TRUE)   # Read in model parameters
+  na=length(age_data$age0)
   num_het=9
   n_pts=length(time_values)
   n_cats=na*num_het
@@ -47,12 +51,6 @@ mainpop <- function (input_folder = "inst/extdata/Constant/",output_folder = NA,
   if(int_v_varied==0) { int_values=c(0.0) }
   n_int_values=length(int_values)
   n_runs=n_mv_values*n_int_values
-  
-  # Age data (used later)
-  age_file=paste(input_folder,"age_data.txt",sep="")
-  age_data = read.table(age_file,header=TRUE,sep="\t")
-  
-  params <- read.table(paste(input_folder,"model_parameters.txt",sep=""), header=TRUE) # Read in model parameters
   
   # Read in data from input files
   input_file = paste(input_folder,"start_data.txt",sep="")
@@ -75,6 +73,7 @@ mainpop <- function (input_folder = "inst/extdata/Constant/",output_folder = NA,
     inputs$ID_input <- append(inputs$ID_input,input_data[[8+i+(9*n_cats)]][n_mv_set])
   }
   
+  # TODO - Move the creation of the file names to mainpop.cpp
   if(is.na(output_folder)==FALSE){
     file_benchmarks = paste(output_folder,"Benchmark_details.txt",sep="")
     file_EIRd = paste(output_folder,"EIR.txt",sep="")
@@ -89,15 +88,16 @@ mainpop <- function (input_folder = "inst/extdata/Constant/",output_folder = NA,
     flag_file=0
   }
   
-  trial_params <- list(n_mv_values=n_mv_values, int_v_varied=int_v_varied, int_values=int_values,
+  # Organize trial parameters into list
+  trial_params <- list(age_data=age_data, n_mv_values=n_mv_values, int_v_varied=int_v_varied, int_values=int_values,
                        start_interval=start_interval, time_values=time_values, n_pts=n_pts, flag_file=flag_file,
                        file_benchmarks=file_benchmarks,file_endpoints=file_endpoints, file_EIRd=file_EIRd, 
-                       file_imm_start=file_imm_start,age_data=age_data)
+                       file_imm_start=file_imm_start)
   
   # Run simulation of main population
   raw_data <- rcpp_mainpop(params,inputs,trial_params)
   
-  # process raw data
+  # process raw output data
   {
   n_run_names=paste("n_run",c(1:n_runs),sep="")
   n_pt_names=paste("n_pt",c(1:n_pts),sep="")
@@ -121,11 +121,12 @@ mainpop <- function (input_folder = "inst/extdata/Constant/",output_folder = NA,
   }
   
   output_data <- list(na=na,num_het=num_het,n_mv_values=n_mv_values,n_int_values=n_int_values,n_pts=n_pts,
-                      params=params,age_data=age_data,time_values=time_values,int_values=int_values,
+                      time_values=time_values,int_values=int_values,
                       EIR_benchmarks=EIR_benchmarks,slide_prev_benchmarks=slide_prev_benchmarks,
-                      pcr_prev_benchmarks=pcr_prev_benchmarks,clin_inc_benchmarks=clin_inc_benchmarks, 
-                      EIR_daily_data=EIR_daily_data,IB_start_data=IB_start_data,
-                      IC_start_data=IC_start_data,ID_start_data=ID_start_data)
+                      pcr_prev_benchmarks=pcr_prev_benchmarks,clin_inc_benchmarks=clin_inc_benchmarks,
+                      EIR_daily_data=EIR_daily_data,
+                      IB_start_data=IB_start_data,IC_start_data=IC_start_data,ID_start_data=ID_start_data,
+                      params=params,age_data=age_data)
   
   return(output_data)
 }
