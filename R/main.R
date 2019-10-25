@@ -178,12 +178,15 @@ plot_mainpop_data <- function(input_list=list(),benchmark = "EIR", set_n_int=1, 
   }
   int_values=input_list$int_values
   
-  matplot(input_list$time_values,benchmark_values[,1],type="p",pch=2,col=2,xlab="time (days)",ylab=benchmark,
-          ylim=c(0,max(benchmark_values)))
   if(input_list$n_mv_values>1){
+    matplot(input_list$time_values,benchmark_values[,1],type="p",pch=2,col=2,xlab="time (days)",ylab=benchmark,
+            ylim=c(0,max(benchmark_values)))
     for(i in 2:input_list$n_mv_values){
       matplot(input_list$time_values,benchmark_values[,i],type="p",pch=2,col=1+i, xaxt="n",xlab="",ylab="",add=TRUE)
     }
+  }else{
+    matplot(input_list$time_values,benchmark_values,type="p",pch=2,col=2,xlab="time (days)",ylab=benchmark,
+            ylim=c(0,max(benchmark_values)))
   }
   legend("bottomleft", inset=0.01, legend=c(1:input_list$n_mv_values), lwd=1.0,col=1+c(1:input_list$n_mv_values),
                   horiz=FALSE,bg='white',cex=1.0)

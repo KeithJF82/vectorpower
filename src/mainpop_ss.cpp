@@ -269,6 +269,11 @@ Rcpp::List rcpp_mainpop_ss(List params, List trial_params)
 			{
 				pos2 = pos - num_het;
 				EIR_cur = EIRd * foi_age[i] * rel_foi[j];
+				ICA[pos] = 0.0;
+				ICM[pos] = 0.0;
+				IB[pos] = 0.0;
+				ID[pos] = 0.0;
+				b[pos] = bh * ((bmin_rev / (1.0 + pow(IB[pos] * inv_IB0, kb))) + bmin);
 				FOI_cur = EIR_cur * (IB[pos] > 0.0 ? b[pos] : bh);
 				S[pos] = den[i] * het_wt[j];
 				T[pos] = 0.0;
@@ -279,10 +284,6 @@ Rcpp::List rcpp_mainpop_ss(List params, List trial_params)
 				rate_ibaq[pos] = EIR_cur / ((EIR_cur * ub) + 1.0);
 				rate_detaq[pos] = FOI_cur / ((FOI_cur * ud) + 1.0);
 				rate_clinaq[pos] = FOI_cur / ((FOI_cur * uc) + 1.0);
-				ICA[pos] = (i == 0 ? 0.0 : ICA[pos2]) + ((rate_clinaq[pos] * x_I[i]) / (1.0 + (x_I[i] / dc)));
-				ICM[pos] = i == 0 ? 0.0 : (ICM_init[j] * (dm / (age[i + 1] - age[i])) * (exp(-1.0 / dm * age[i]) - exp(-1.0 / dm * age[i + 1])));
-				IB[pos] = ((i == 0 ? 0.0 : IB[pos2]) + (rate_ibaq[pos] * x_I[i]) / (1.0 + (x_I[i] / db)));
-				ID[pos] = ((i == 0 ? 0.0 : ID[pos2]) + (rate_detaq[pos] * x_I[i]) / (1.0 + (x_I[i] / dd)));
 				pos++;
 			}
 		}
@@ -340,7 +341,7 @@ Rcpp::List rcpp_mainpop_ss(List params, List trial_params)
 
 				if (i == 0)
 				{
-					Y[pos] = den_het[pos] / (1 + aT[pos] + aD[pos] + aP[pos]);
+					Y[pos] = den_het[pos] / (1.0 + aT[pos] + aD[pos] + aP[pos]);
 					T[pos] = aT[pos] * Y[pos];
 					D[pos] = aD[pos] * Y[pos];
 					P[pos] = aP[pos] * Y[pos];
@@ -348,29 +349,34 @@ Rcpp::List rcpp_mainpop_ss(List params, List trial_params)
 				}
 				else
 				{
-					Y[pos] = (den_het[pos] - (delta[i] * (T[pos2] / betaT[pos] + D[pos2] / betaD[pos] + (rT * T[pos2] / betaT[pos] + P[pos2]) / betaP[pos]))) / (1 + aT[pos] + aD[pos] + aP[pos]);
+					Y[pos] = (den_het[pos] - ((delta[i] * (T[pos2] / betaT[pos] + (D[pos2] / betaD[pos]) + ((rT * T[pos2]) / betaT[pos]) + (P[pos2] / betaP[pos]))))) / (1.0 + aT[pos] + aD[pos] + aP[pos]);
 					T[pos] = (aT[pos] * Y[pos]) + ((delta[i] * T[pos2]) / betaT[pos]);
 					D[pos] = (aD[pos] * Y[pos]) + ((delta[i] * D[pos2]) / betaD[pos]);
-					P[pos] = (aP[pos] * Y[pos]) + ((delta[i] * (((rT * T[pos2]) / betaT[pos]) + P[pos2])) / betaP[pos]);
+					P[pos] = (aP[pos] * Y[pos]) + (delta[i] * (((rT * T[pos2]) / betaT[pos]) + (P[pos2] / betaP[pos])));
 				}
 
-				A[pos] = (delta[i] * (i == 0 ? 0.0 : A[pos2]) + FOI_cur * (1 - phi_cur) * Y[pos] + rD * D[pos]) / (betaA[pos] + FOI_cur * (1 - phi_cur));
-				U[pos] = (rA0 * A[pos]) + ((delta[i] * (i == 0 ? 0.0 : U[pos2])) / betaU[pos]);
+				A[pos] = ((i == 0 ? 0.0 : delta[i] * A[pos2]) + (FOI_cur * (1.0 - phi_cur) * Y[pos] + (rD * D[pos]))) / (betaA[pos] + (FOI_cur * (1 - phi_cur)));
+				U[pos] = (rA0 * A[pos]) + (i == 0 ? 0.0 : delta[i] * (U[pos2] / betaU[pos]));
 				S[pos] = Y[pos] - A[pos] - U[pos];
-				ICA[pos] = (i == 0 ? 0.0 : ICA[pos2]) + ((rate_clinaq[pos] * x_I[i]) / (1.0 + (x_I[i] / dc)));
-				ICM[pos] = i == 0 ? 0.0 : (ICM_init[j] * (dm / (age[i + 1] - age[i])) * (exp(-1.0 / dm * age[i]) - exp(-1.0 / dm * age[i + 1])));
-				IB[pos] = ((i == 0 ? 0.0 : IB[pos2]) + (rate_ibaq[pos] * x_I[i]) / (1.0 + (x_I[i] / db)));
-				ID[pos] = ((i == 0 ? 0.0 : ID[pos2]) + (rate_detaq[pos] * x_I[i]) / (1.0 + (x_I[i] / dd)));
+				ICA[pos] = ((i == 0 ? 0.0 : ICA[pos2]) + (rate_clinaq[pos] * x_I[i])) / (1.0 + (x_I[i] / dc));
+				ICM[pos] = i == na ? 0.0 : ((ICM_init[j] * dm) / (age[i + 1] - age[i])) * ((exp(-1.0 / (dm * age[i]))) - (exp(-1.0 / (dm * age[i + 1]))));
+				IB[pos] = ((i == 0 ? 0.0 : IB[pos2]) + (rate_ibaq[pos] * x_I[i])) / (1.0 + (x_I[i] / db));
+				ID[pos] = ((i == 0 ? 0.0 : ID[pos2]) + (rate_detaq[pos] * x_I[i])) / (1.0 + (x_I[i] / dd));				
+
 				pos++;
-				pos2++;
 			}
 		}
 
-		if (FOIv1 > 0.0) { dev = abs(FOIv1 - FOIv0) / (FOIv1 + FOIv0); }
-		else { dev = 1.0; }
+		if (isnan(FOIv1) != 0) { goto finish; }
+		else
+		{
+			if (FOIv1 > 0.0) { dev = abs(FOIv1 - FOIv0) / (FOIv1 + FOIv0); }
+			else { dev = 1.0; }
+		}
 		Rcout << "\n FOIv0 = " << FOIv0 << "\t FOIv1 = " << FOIv1 << "\tdev = " << dev;
 		if (dev > 1.0e-8) { goto repeat; }
 
+		finish:
 		H = arraysum(S, n_cats) + arraysum(T, n_cats) + arraysum(D, n_cats) + arraysum(A, n_cats) + arraysum(U, n_cats) + arraysum(P, n_cats);
 		H_inv = 1.0 / H;
 		pos = 0;
