@@ -25,6 +25,7 @@ Rcpp::List rcpp_mainpop_ss(List params, List trial_params)
 	string file_endpoints = rcpp_to_string(trial_params["file_endpoints"]);
 	vector<double> EIRy = rcpp_to_vector_double(trial_params["EIRy"]);
 	int n_mv_values = EIRy.size();
+	vector<double> mv_values(n_mv_values, 0.0);
 	double mu_atsb = rcpp_to_double(params["mu_atsb_def"]);			// Attractive targeted sugar bait (ATSB) killing rate associated with data
 	double cov_nets = rcpp_to_double(params["cov_nets_def"]);			// Proportion of people protected by bednets associated with data
 	double cov_irs = rcpp_to_double(params["cov_irs_def"]);			// Proportion of people protected by interior residual spraying (IRS) associated with data
@@ -115,6 +116,7 @@ Rcpp::List rcpp_mainpop_ss(List params, List trial_params)
 	for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\tICM%i", i); }
 	for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\tIB%i", i); }
 	for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\tID%i", i); }
+	fprintf(endpoint_data, "\n");
 	fclose(endpoint_data);
 
 	// Set up arrays-------------------------------------------------------------------------------------------------------------------------------------
@@ -292,6 +294,8 @@ Rcpp::List rcpp_mainpop_ss(List params, List trial_params)
 				pos++;
 			}
 		}
+		//Initial mosquito density
+		mv0 = 0.29 * exp(0.26 * EIRy[n_mv]);
 		
 		//Calculations repeated until steady state reached
 		FOIv1 = 0.0;
@@ -307,11 +311,6 @@ Rcpp::List rcpp_mainpop_ss(List params, List trial_params)
 				p_det[pos] = dmin + (dmin_rev / (1.0 + (fd[i] * pow(ID[pos] * inv_ID0, kd))));
 				cA[pos] = cU + (cDU * pow(p_det[pos], gamma_inf));
 				FOIvij[pos] = foi_age[i] * av0 * ((cT * T[pos]) + (cD * D[pos])+(cA[pos] * A[pos]) + (cU * U[pos])) * rel_foi[j] * inv_omega;
-				/*if (isnan(FOIvij[pos]) != 0 )
-				{
-					Rcout << "\nFOIvij(" << i << "," << j << ")=nan\tT = " << T[pos] << "\tD = " << D[pos] << "\tA = " << A[pos] << "\tU = " << U[pos];			
-					goto finish;
-				}*/
 				pos++;
 			}
 		}
@@ -319,16 +318,16 @@ Rcpp::List rcpp_mainpop_ss(List params, List trial_params)
 		FOIv1 = arraysum(FOIvij,n_cats);
 
 		// Mosquito characteristics
-		Iv1 = (FOIv1 * Surv1) / (FOIv1 + muv1);
+		Iv1 = (mv0 * FOIv1 * Surv1) / (FOIv1 + muv1);
 		Sv1 = (muv1 * Iv1) / (FOIv1 * Surv1);
-		Ev1 = 1.0 - Sv1 - Iv1;
-		mv0 = (omega * EIRd) / (Iv1 * av0);
+		Ev1 = mv0 - Sv1 - Iv1;
+		mv0 = (omega * EIRd * (FOIv1 + muv1)) / ((FOIv1 * Surv1) * av0);
 		KL = (mv0 * (2.0 * dl * muv1 * (1.0 + (dp * mup))) * (gammal * (lambda + 1.0))) / term;
-
+		
 		// Larval characteristics
 		EL = KL * (lambda / (gammal * (lambda + 1.0))) * term;
-		LL = KL / (gammal * (lambda + 1.0)) * term;
-		PL = KL * (dp / (dl * (10.0 + dp * mup))) * (1.0 / (gammal * (lambda + 1.0))) * term;
+		LL = (KL / (gammal * (lambda + 1.0))) * term;
+		PL = KL * (dp / (dl * (1.0 + (dp * mup)))) * (1.0 / (gammal * (lambda + 1.0))) * term;
 	
 		// Human characteristics
 		for (j = 0; j < num_het; j++) { ICM_init[j] = P_IC_M * (ICA[(age20l * num_het) + j] + age_20_factor * (ICA[(age20u * num_het) + j] - ICA[(age20l * num_het) + j])); }
@@ -387,6 +386,7 @@ Rcpp::List rcpp_mainpop_ss(List params, List trial_params)
 		if (dev > 1.0e-8) { goto repeat; }
 
 		//finish:
+		mv_values[n_mv] = mv0;
 		H = arraysum(S, n_cats) + arraysum(T, n_cats) + arraysum(D, n_cats) + arraysum(A, n_cats) + arraysum(U, n_cats) + arraysum(P, n_cats);
 		H_inv = 1.0 / H;
 		pos = 0;
@@ -407,7 +407,7 @@ Rcpp::List rcpp_mainpop_ss(List params, List trial_params)
 
 		// Output data to use as input for future computation
 		endpoint_data = fopen(file_endpoints.c_str(), "a");
-		fprintf(endpoint_data, "\n%i\t%.3e\t%.3e\t%.3e\t%.3e\t%.3e\t%.3e\t%.3e", n_mv + 1, mv0, EL, LL, PL, Sv1, Ev1, Iv1);
+		fprintf(endpoint_data, "%i\t%.3e\t%.3e\t%.3e\t%.3e\t%.3e\t%.3e\t%.3e", n_mv + 1, mv0, EL, LL, PL, Sv1, Ev1, Iv1);
 		for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\t%.3e", S[i]); }
 		for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\t%.3e", T[i]); }
 		for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\t%.3e", D[i]); }
@@ -418,6 +418,7 @@ Rcpp::List rcpp_mainpop_ss(List params, List trial_params)
 		for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\t%.3e", ICM[i]); }
 		for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\t%.3e", IB[i]); }
 		for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\t%.3e", ID[i]); }
+		fprintf(endpoint_data, "\n");
 		fclose(endpoint_data);
 
 	}
@@ -425,11 +426,9 @@ Rcpp::List rcpp_mainpop_ss(List params, List trial_params)
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 	//finish2:
-	vector<double> dummy(1, 0.0);
-
 	if (endpoint_data != NULL) { fclose(endpoint_data); }
 	Rcout << "\nComputations complete.\n";
 
 	// Return list
-	return List::create(Named("dummy") = dummy);
+	return List::create(Named("mv_values") = mv_values);
 }

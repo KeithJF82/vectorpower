@@ -3,6 +3,7 @@
 export(cluster_input_setup)
 export(clusters_create)
 export(cohort)
+export(dataset_create)
 export(mainpop)
 import(graphics)
 import(utils)

@@ -350,6 +350,7 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
                         for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\tICM%i", i); }
                         for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\tIB%i", i); }
                         for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\tID%i", i); }
+						fprintf(endpoint_data, "\n");
                         fclose(endpoint_data);
                 }
         }
@@ -768,7 +769,7 @@ end_run:
                 {
                         // Output detailed data to use as input for future computation
                         endpoint_data = fopen(file_endpoints.c_str(), "a");
-                        fprintf(endpoint_data, "\n%i\t%.3e\t%.3e\t%.3e\t%.3e\t%.3e\t%.3e\t%.3e", n_run, mv0, EL, LL, PL, Sv1, Ev1, Iv1);
+                        fprintf(endpoint_data, "%i\t%.3e\t%.3e\t%.3e\t%.3e\t%.3e\t%.3e\t%.3e", n_run, mv0, EL, LL, PL, Sv1, Ev1, Iv1);
                         for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\t%.3e", S[i]); }
                         for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\t%.3e", T[i]); }
                         for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\t%.3e", D[i]); }
@@ -779,6 +780,7 @@ end_run:
                         for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\t%.3e", ICM[i]); }
                         for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\t%.3e", IB[i]); }
                         for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\t%.3e", ID[i]); }
+						fprintf(endpoint_data, "\n");
                         fclose(endpoint_data);
                 }
 
