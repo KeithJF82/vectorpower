@@ -9,7 +9,7 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 {
         int n_run, n_mv, n_int, i, j, ij, nt, nt_E, div, nt_latgam, nt_latmosq, pos, pos2, ntmax, dur_Ei, latgami, latmosqi, tflag, interval, increment, data_saved, flag_int, np;
         double mv0, param_int, t, t_int, mu_net_irs, prevent_net_irs, prop_T_rev, av0, muv1, K0, year_day, rain, KL, beta, Surv1, EIRd, mv, incv, incv0, FOIv, FOIv0, age0, age1, t_mark1, t_mark2, EIR_sum, dt2;
-        double mu_atsb, cov_nets, cov_irs, prop_T, rN, rNW, dNW, rI, rIW, dIW, dIF, EL, LL, PL, Sv1, Ev1, Iv1, H, H_inv, delS, delT, delD, delA1, delA2, delP, delU1, delU2, inv_x, inv_KL;
+        double mu_atsb, cov_nets, cov_irs, prop_T, rN, rNW, dNW, rI, rIW, dIW, dIF, EL, LL, PL, Sv1, Ev1, Iv1, H, /*H_inv, */delS, delT, delD, delA1, delA2, delP, delU1, delU2, inv_x, inv_KL;
         double S_cur, T_cur, D_cur, A_cur, U_cur, P_cur, FOI_cur, foi_age_cur, clin_inc_cur, ICA_cur, ICM_cur, IB_cur, ID_cur, EIR_cur, delSv1, EL_cur, LL_cur, PL_cur, dEL, dLL, Sv_cur, Ev_cur, Iv_cur;
         FILE* benchmarks_by_age = NULL;
         FILE* endpoint_data = NULL;
@@ -307,14 +307,8 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 
         if (flag_error == 1)//If one or more errors were found during setup, skip simulations and go to end.
         {
-                Rcout << "\nOne or more errors found. Ending program.\n";
+                Rcout << "\nOne or more errors found. Ending main population calculations.\n";
                 goto finish;
-        }
-        else
-        {
-                Rcout << "\nSimulation start date: " << date_start << "\nIntervention start date: " << date_int;
-                if (flag_file == 1) { Rcout << "\nBenchmark details file: " << file_benchmarks << "\nEndpoints file: " << file_endpoints << "\nDaily EIR file: " << file_EIRd << "\nStarting immunity file: " << file_imm_start; }
-                R_FlushConsole();
         }
         
         if (flag_file == 1) 
@@ -355,7 +349,7 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
                 }
         }
 
-        Rcout << "\n\nDefault trial parameter values:\nCase treatment rate=" << prop_T_def << "\nATSB killing rate=" << mu_atsb_def << "\nBednet coverage=" << cov_nets_def << "\nIRS coverage=" << cov_irs_def;
+        //Rcout << "\n\nDefault trial parameter values:\nCase treatment rate=" << prop_T_def << "\nATSB killing rate=" << mu_atsb_def << "\nBednet coverage=" << cov_nets_def << "\nIRS coverage=" << cov_irs_def;
         for (n_run = 0; n_run < n_runmax; n_run++)// This for() loop runs all the simulations, jumping to start_run for each one and jumping back to run_complete when it is finished
         {
                 n_int = n_run % n_int_values;
@@ -370,8 +364,8 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 
                 goto start_run;
         run_complete:
-                Rcout << "\nRun " << n_run << " complete.\n";
-                R_FlushConsole();
+				//Rcout << "\nRun " << n_run + 1 << " complete.\n";
+				R_FlushConsole();
         }
 
         goto finish;
@@ -396,7 +390,7 @@ start_run:
                 (phi_bite_bed * (1.0 - rI) * (1.0 - rN) * (dIW + ((1.0 - rIW - dIW) * (dNW + ((1.0 - rNW - dNW) * dIF))))));
         av0 = 0.3333 * Q0 * (1.0 - prevent_net_irs);                                                                                                                                                                                                                                                                                            // Biting rate on humans / mosquito
         muv1 = muv0 + mu_atsb + mu_net_irs;                                                                                                                                                                                                                                                                                                                     // Total mosquito death rate
-        Rcout << "\nRun " << n_run << " Mosquito density=" << mv0 << " Intervention number=" << n_int;
+        Rcout << "\nRun " << n_run + 1 << " Mosquito density=" << mv0 << " Intervention number=" << n_int;
 
 restart_run:
         dt2 = dt * 0.1;
@@ -438,8 +432,8 @@ restart_run:
                 ID[i] = ID_input[pos];
         }
 
-        H = arraysum(S, n_cats) + arraysum(T, n_cats) + arraysum(D, n_cats) + arraysum(A, n_cats) + arraysum(U, n_cats) + arraysum(P, n_cats);
-        H_inv = 1.0 / H;
+        //H = arraysum(S, n_cats) + arraysum(T, n_cats) + arraysum(D, n_cats) + arraysum(A, n_cats) + arraysum(U, n_cats) + arraysum(P, n_cats);
+        //H_inv = 1.0 / H;
         pos = 0;
         FOIv0 = 0.0;
         for (i = 0; i < na; i++) //Run through age categories
@@ -448,12 +442,12 @@ restart_run:
                 for (j = 0; j < num_het; j++) //Run through heterogeneity categories
                 {
                         // Normalize S,T,D,A,U,P to sum to 1.0
-                        S[pos] *= H_inv;
+                        /*S[pos] *= H_inv;
                         T[pos] *= H_inv;
                         D[pos] *= H_inv;
                         A[pos] *= H_inv;
                         U[pos] *= H_inv;
-                        P[pos] *= H_inv;
+                        P[pos] *= H_inv;*/
                         EIR_cur = EIRd * foi_age_cur * rel_foi[j];
                         b[pos] = bh * ((bmin_rev / (1.0 + pow(IB[pos] * inv_IB0, kb))) + bmin);
                         FOI0[pos] = EIR_cur * (IB[pos] > 0.0 ? b[pos] : bh);
@@ -529,6 +523,7 @@ restart_run:
                         break;
                         default: {Rcout << "\n\tint_v_varied error\n"; }
                         }
+						R_FlushConsole();
                         prevent_net_irs = phi_bite_house - ((phi_bite_house - phi_bite_bed) * (1.0 - rI) * (1.0 - rIW - dIW) * (1.0 - dIF)) -
                                 (phi_bite_bed * (1.0 - rI) * (1.0 - rIW - dIW) * (1.0 - dIF) * (1.0 - rN) * (1.0 - rNW - dNW));
                         mu_net_irs = 0.3333 * Q0 * (((phi_bite_house - phi_bite_bed) * (1.0 - rI) * (dIW + ((1.0 - rIW - dIW) * dIF))) +
@@ -693,7 +688,7 @@ restart_run:
                         {
                                 if (dt <= 0.0025) { goto end_run; }
                                 dt = max(0.0025, dt * 0.9);
-                                Rcout << "\ntflag = " << tflag << " Adjusting time increment. New dt = " << dt << "\n";
+                                //Rcout << "\ntflag = " << tflag << " Adjusting time increment. New dt = " << dt << "\n";
                                 goto restart_run;
                         }
 
@@ -796,7 +791,7 @@ finish:
         if (endpoint_data != NULL) { fclose(endpoint_data); }
         if (data_EIR != NULL) { fclose(data_EIR); }
         if (data_immunity != NULL) { fclose(data_immunity); }
-        Rcout << "\nMain population computations complete.\n";
+        //Rcout << "\nMain population computations complete.\n";
 
         // Return list
         return List::create(Named("EIR_benchmarks") = EIR_benchmarks, Named("slide_prev_benchmarks")= slide_prev_benchmarks, 

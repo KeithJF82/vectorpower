@@ -33,9 +33,10 @@ dataset_create <- function (dataset_folder="",EIR_values=c(1.0),param_file="",ag
   assert_string(age_file)   # TODO - Change to check that file exists
   
   #
-  if(dir.exists(dataset_folder)==FALSE){dir.create(output_folder)}
+  if(dir.exists(dataset_folder)==FALSE){dir.create(dataset_folder)}
   
   # Copy parameter files from existing folder to new one
+  cat("\nCreating new model_parameters.txt and age_data.txt files.")
   param_file_new=paste(dataset_folder,"model_parameters.txt",sep="")
   age_file_new=paste(dataset_folder,"age_data.txt",sep="")
   file.copy(from=param_file,to=param_file_new, overwrite = TRUE, copy.mode = TRUE, copy.date = FALSE)
@@ -45,30 +46,33 @@ dataset_create <- function (dataset_folder="",EIR_values=c(1.0),param_file="",ag
   n_mv_values=length(EIR_values)
   file_endpoints = paste(dataset_folder,"start_data.txt",sep="")
   params <- read.table(paste(dataset_folder,"model_parameters.txt",sep=""), header=TRUE) # Read in model parameters
+  cat("\nGenerating preliminary data (steady state at constant rainfall)")
   trial_params <- list(EIRy=EIR_values,file_endpoints=file_endpoints)
   raw_data <- rcpp_mainpop_ss(params,trial_params)
   mv_values <- raw_data$mv_values
   
-  # Run model without interventions from starting data
+  # Run model without interventions from steady-state data for nyears years in one go to achieve equilibrium
+  cat("\nBeginning main population calculations to equilibrium.")
   n_mv_set=c(1:n_mv_values)
   output_folder=paste(dataset_folder,"Temp/",sep="")
   if(dir.exists(output_folder)==FALSE){dir.create(output_folder)}
-  
-  # Running for 10 years in one go to achieve equilibrium
   mainpop_data <- mainpop(input_folder = dataset_folder, output_folder = output_folder,n_mv_set = n_mv_set, int_v_varied = 0, 
-                          int_values=c(0.0), start_interval = 0.0, time_values=365*c(0:10) )
+                          int_values=c(0.0), start_interval = 0.0, time_values=365*c(0:nyears) )
   plot_mainpop_data(input_list=mainpop_data,set_n_int=1,benchmark = "EIR",age_start = 0,age_end = 65.0)
   
   # Transfer endpoints as new start data
+  cat("\n\nCreating new starting_data.txt file from results.")
   file.copy(from=paste(output_folder,"endpoints.txt",sep=""),to=paste(dataset_folder,"start_data.txt",sep=""),
             overwrite = TRUE, copy.mode = TRUE, copy.date = FALSE)
   
   # Run for 1 year with daily data points to show year-round EIR
+  cat("\nRunning main population model for 1 year to establish year-round EIR data.")
   mainpop_data <- mainpop(input_folder = dataset_folder,n_mv_set = n_mv_set, int_v_varied = 0, int_values=c(0.0), 
                           start_interval = 0.0, time_values=1.0*c(0:364) )
-  plot_mainpop_data(input_list=mainpop_data,set_n_int=1,benchmark = "EIR",age_start = 0,age_end = 65.0)
+  plot_mainpop_data(input_list=mainpop_data,set_n_int=1,benchmark = "EIR")
   
   # Output annual EIR data for reference
+  cat("\n\nOutputting annual EIR data.\n")
   annual_EIR_file=paste(dataset_folder,"EIR_annual_data.txt",sep="")
   EIRy_values = rep(0,n_mv_values)
   cat("n_mv\tmv0\tEIRy_ss\tEIRy",file=annual_EIR_file)

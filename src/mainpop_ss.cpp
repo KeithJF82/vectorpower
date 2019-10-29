@@ -99,10 +99,7 @@ Rcpp::List rcpp_mainpop_ss(List params, List trial_params)
         double dgon = rcpp_to_double(params["dgon"]);                                                           // Gonotrophic cycle length
 
         // Set up conditions for one or more runs-------------------------------------------------------------------------------------------------------------------------------------
-
-        Rcout << "\nEndpoints file: " << file_endpoints;
-        R_FlushConsole();
-
+		
         int n_cats = na * num_het;                                                                                              // Total number of age/heterogeneity categories in main population
         endpoint_data = fopen(file_endpoints.c_str(), "w");
         fprintf(endpoint_data, "n_run\tmv0\tEL\tLL\tPL\tSv1\tEv1\tIv1");
@@ -262,11 +259,10 @@ Rcpp::List rcpp_mainpop_ss(List params, List trial_params)
                 (phi_bite_bed * (1.0 - rI) * (1.0 - rN) * (dIW + ((1.0 - rIW - dIW) * (dNW + ((1.0 - rNW - dNW) * dIF))))));
         av0 = 0.3333 * Q0 * (1.0 - prevent_net_irs);                                                                                                                                                                    // Biting rate on humans / mosquito
         muv1 = muv0 + mu_atsb + mu_net_irs;                                                                                                                                                                                             // Total mosquito death rate
-        Surv1 = exp(-muv1 * latmosq);
-        
+        Surv1 = exp(-muv1 * latmosq); 
+		
         for (n_mv = 0; n_mv < n_mv_values; n_mv++)
         {
-                Rcout << "\nn_mv = " << n_mv;
                 EIRd = EIRy[n_mv] * inv_dy;
 
                 // Initial human characteristics
@@ -295,7 +291,7 @@ Rcpp::List rcpp_mainpop_ss(List params, List trial_params)
                         }
                 }
                 //Initial mosquito density
-                mv0 = 0.29 * exp(0.26 * EIRy[n_mv]);
+				mv0 = (0.2345 * EIRy[n_mv]) + 0.1216;
                 
                 //Calculations repeated until steady state reached
                 FOIv1 = 0.0;
@@ -382,11 +378,12 @@ Rcpp::List rcpp_mainpop_ss(List params, List trial_params)
                 { 
                         dev = abs(FOIv1 - FOIv0) / (FOIv1 + FOIv0); 
                 }
-                Rcout << "\n" << n_repeats << ":\tFOIv1 = " << FOIv1 << "\tmv0 = " << mv0 << "\tdev = " << dev;
                 if (dev > 1.0e-8) { goto repeat; }
 
                 //finish:
                 mv_values[n_mv] = mv0;
+				Rcout << "\nn_mv = " << n_mv << "\tMosquito density = " << mv0;
+				R_FlushConsole();
                 H = arraysum(S, n_cats) + arraysum(T, n_cats) + arraysum(D, n_cats) + arraysum(A, n_cats) + arraysum(U, n_cats) + arraysum(P, n_cats);
                 H_inv = 1.0 / H;
                 pos = 0;
@@ -427,7 +424,7 @@ Rcpp::List rcpp_mainpop_ss(List params, List trial_params)
 
         //finish2:
         if (endpoint_data != NULL) { fclose(endpoint_data); }
-        Rcout << "\nComputations complete.\n";
+        Rcout << "\nSteady-state calculations complete.\n";
 
         // Return list
         return List::create(Named("mv_values") = mv_values);
