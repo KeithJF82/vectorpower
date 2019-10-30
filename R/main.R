@@ -165,14 +165,14 @@ plot_mainpop_data <- function(input_list=list(),benchmark = "EIR", set_n_int=1, 
   if(benchmark == "EIR"){
     benchmark_values = input_list$EIR_benchmarks[,(input_list$n_int_values*c(0:(input_list$n_mv_values-1)))+set_n_int]
   }else{
-    j=input_list$n_int_values*c(1:input_list$n_mv_values)
+    j=(input_list$n_int_values*c(0:(input_list$n_mv_values-1)))+set_n_int
     if(benchmark == "slide_prev"){ benchmark_data = input_list$slide_prev_benchmarks[,,j]}
     if(benchmark == "pcr_prev"){ benchmark_data = input_list$pcr_prev_benchmarks[,,j]}
     if(benchmark == "clin_inc"){ benchmark_data = input_list$clin_inc_benchmarks[,,j] }
     
     for(i in n_age_start:n_age_end){
       density_sum = density_sum + input_list$age_data$density[i]
-      benchmark_values = benchmark_values + benchmark_data[i,,]
+      benchmark_values = benchmark_values + benchmark_data[i,]
     }
     benchmark_values = benchmark_values/density_sum
   }

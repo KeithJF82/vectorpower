@@ -102,7 +102,7 @@ Rcpp::List rcpp_mainpop_ss(List params, List trial_params)
 		
         int n_cats = na * num_het;                                                                                              // Total number of age/heterogeneity categories in main population
         endpoint_data = fopen(file_endpoints.c_str(), "w");
-        fprintf(endpoint_data, "n_run\tmv0\tEL\tLL\tPL\tSv1\tEv1\tIv1");
+        fprintf(endpoint_data, "n_mv\tmv0\tEL\tLL\tPL\tSv1\tEv1\tIv1");
         for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\tS%i", i); }
         for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\tT%i", i); }
         for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\tD%i", i); }

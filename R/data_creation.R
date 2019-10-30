@@ -56,32 +56,41 @@ dataset_create <- function (dataset_folder="",EIR_values=c(1.0),param_file="",ag
   n_mv_set=c(1:n_mv_values)
   output_folder=paste(dataset_folder,"Temp/",sep="")
   if(dir.exists(output_folder)==FALSE){dir.create(output_folder)}
-  mainpop_data <- mainpop(input_folder = dataset_folder, output_folder = output_folder,n_mv_set = n_mv_set, int_v_varied = 0, 
-                          int_values=c(0.0), start_interval = 0.0, time_values=365*c(0:nyears) )
-  plot_mainpop_data(input_list=mainpop_data,set_n_int=1,benchmark = "EIR",age_start = 0,age_end = 65.0)
+  eq_data <- mainpop(input_folder = dataset_folder, output_folder = output_folder,n_mv_set = n_mv_set, int_v_varied = 0, 
+                     int_values=c(0.0), start_interval = 0.0, time_values=365*c(0:nyears) )
+  plot_mainpop_data(input_list=eq_data,set_n_int=1,benchmark = "EIR",age_start = 0,age_end = 65.0)
   
   # Transfer endpoints as new start data
   cat("\n\nCreating new starting_data.txt file from results.")
   file.copy(from=paste(output_folder,"endpoints.txt",sep=""),to=paste(dataset_folder,"start_data.txt",sep=""),
             overwrite = TRUE, copy.mode = TRUE, copy.date = FALSE)
   
-  # Run for 1 year with daily data points to show year-round EIR
-  cat("\nRunning main population model for 1 year to establish year-round EIR data.")
-  mainpop_data <- mainpop(input_folder = dataset_folder,n_mv_set = n_mv_set, int_v_varied = 0, int_values=c(0.0), 
-                          start_interval = 0.0, time_values=1.0*c(0:364) )
-  plot_mainpop_data(input_list=mainpop_data,set_n_int=1,benchmark = "EIR")
+  # Run for 1 year with daily data points to produce year-round data
+  cat("\nRunning main population model for 1 year to establish year-round values\n(annual EIR and incidence, annual average prevalences).")
+  annual_data <- mainpop(input_folder = dataset_folder,n_mv_set = n_mv_set, int_v_varied = 0, int_values=c(0.0),
+                         start_interval = 0.0, time_values=1.0*c(0:364) )
+  plot_mainpop_data(input_list=annual_data,set_n_int=1,benchmark = "EIR")
   
-  # Output annual EIR data for reference
-  cat("\n\nOutputting annual EIR data.\n")
-  annual_EIR_file=paste(dataset_folder,"EIR_annual_data.txt",sep="")
+  # Output annual data for reference
+  cat("\n\nOutputting annual data.\n")
+  annual_EIR_file=paste(dataset_folder,"annual_data.txt",sep="")
   EIRy_values = rep(0,n_mv_values)
-  cat("n_mv\tmv0\tEIRy_ss\tEIRy",file=annual_EIR_file)
+  slide_prevy_values=EIRy_values
+  clin_incy_values=EIRy_values
+  pcr_prevy_values=EIRy_values
+  cat("n_mv\tmv0\tEIRy_ss\tEIRy\tslide_prev_y\tclin_inc_y\tpcr_prev_y\n",file=annual_EIR_file)
   for(i in n_mv_set){
-    if(i==1){cat("n_mv\t|mv0\t\t|EIRy_ss|EIRy")}
-    EIRy_values[i]=sum(mainpop_data$EIR_benchmarks[,i])
-    cat("\n",i,"\t|",mv_values[i],"\t|",EIR_values[i],"\t|",EIRy_values[i],sep="")
-    cat("\n",i,"\t",mv_values[i],"\t",EIR_values[i],"\t",EIRy_values[i],file=annual_EIR_file,append=TRUE,sep="")
+    if(i==1){cat("n_mv\tmosq_density\tEIRy_ss\tEIRy\tslide_prev_y\tclin_inc_y\tpcr_prev_y\n")}
+    EIRy_values[i]=sum(annual_data$EIR_benchmarks[,i])
+    slide_prevy_values[i]=sum(annual_data$slide_prev_benchmarks[,,i])/365
+    clin_incy_values[i]=sum(annual_data$clin_inc_benchmarks[,,i])
+    pcr_prevy_values[i]=sum(annual_data$pcr_prev_benchmarks[,,i])/365
+    cat(i,mv_values[i],EIR_values[i],EIRy_values[i],slide_prevy_values[i],clin_incy_values[i],pcr_prevy_values[i],"\n",sep="\t")
+    cat(i,mv_values[i],EIR_values[i],EIRy_values[i],slide_prevy_values[i],clin_incy_values[i],pcr_prevy_values[i],"\n",
+        file=annual_EIR_file,append=TRUE,sep="\t")
   }
   
   # TODO - Delete Temp folder
+  
+  return(annual_data)
 }

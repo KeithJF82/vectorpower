@@ -177,8 +177,6 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
         double* age_rate = (double*)malloc(size1);                                                              // Rates of transition between age categories
         double* rem_rate = (double*)malloc(size1);                                                              // Total loss rate from each age category (ageing + death)
         double* age = (double*)malloc(size1);                                                                   // Age values corresponding to starts of age categories (days)
-        double* agey0 = (double*)malloc(size1);                                                                 // Age values corresponding to starts of age categories (years)
-        double* agey1 = (double*)malloc(size1);                                                                 // Age values corresponding to ends of age categories (years)
         double eta = 1.0 / (21.0 * dy);                                                                                 // Death rate, for exponential population distribution
         double* den = (double*)malloc(size1);
         double* foi_age = (double*)malloc(size1);
@@ -200,9 +198,7 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
                 age_rate[i] = 1.0 / age_width[i];
                 rem_rate[i] = age_rate[i] + eta;
                 age[i] = i == 0 ? 0.0 : (age[i - 1] + age_width[i - 1]);
-                agey0[i] = age[i] * inv_dy;
         }
-        for (i = 0; i < na - 1; i++) { agey1[i] = age[i + 1] * inv_dy; }
         for (i = 0; i < na; i++)
         {
                 den[i] = i == 0 ? (1.0 / (1.0 + (age_rate[0] / eta))) : (age_rate[i - 1] * den[i - 1] / (rem_rate[i]));
@@ -764,7 +760,7 @@ end_run:
                 {
                         // Output detailed data to use as input for future computation
                         endpoint_data = fopen(file_endpoints.c_str(), "a");
-                        fprintf(endpoint_data, "%i\t%.3e\t%.3e\t%.3e\t%.3e\t%.3e\t%.3e\t%.3e", n_run, mv0, EL, LL, PL, Sv1, Ev1, Iv1);
+						fprintf(endpoint_data, "%i\t%.3e\t%.3e\t%.3e\t%.3e\t%.3e\t%.3e\t%.3e", n_run + 1, mv0, EL, LL, PL, Sv1, Ev1, Iv1);
                         for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\t%.3e", S[i]); }
                         for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\t%.3e", T[i]); }
                         for (i = 0; i < n_cats; i++) { fprintf(endpoint_data, "\t%.3e", D[i]); }
