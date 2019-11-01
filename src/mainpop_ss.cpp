@@ -15,10 +15,6 @@ Rcpp::List rcpp_mainpop_ss(List params, List trial_params)
 
         //Constants (TODO: Make global)----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
         double dy = 365.0;              // Days in a year
-        int na = 145;           // Number of age categories in main population
-        int num_het = 9;                // Number of heterogeneity categories
-        double het_x[] = { -4.5127459, -3.2054291, -2.076848, -1.0232557, 0.0, 1.0232557, 2.076848, 3.2054291, 4.5127459 }; // Biting heterogeneity
-        double het_wt[] = { 0.00002235, 0.00278914, 0.04991641, 0.2440975, 0.40634921, 0.2440975, 0.04991641, 0.00278914, 0.00002235 }; // Fractions in each heterogeneity category
 
         // Load environment/vector/parasite/etc. parameters from R------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -26,6 +22,21 @@ Rcpp::List rcpp_mainpop_ss(List params, List trial_params)
         vector<double> EIRy = rcpp_to_vector_double(trial_params["EIRy"]);
         int n_mv_values = EIRy.size();
         vector<double> mv_values(n_mv_values, 0.0);
+		
+		// Heterogeneity parameters
+		int num_het = rcpp_to_int(params["num_het"]);									// Number of age categories in main population
+		vector<double> het_x = rcpp_to_vector_double(params["het_x"]);					// Biting heterogeneity
+		vector<double> het_wt = rcpp_to_vector_double(params["het_wt"]);				// Fractions in each heterogeneity category
+
+		// Age parameters
+		int na = rcpp_to_int(params["na"]);												// Number of age categories in main population
+		vector<double> age_width = rcpp_to_vector_double(params["age_width"]);			// Widths of age categories in days
+		vector<double> age_rate = rcpp_to_vector_double(params["age_rate"]);			// Rates of transition between age categories
+		vector<double> rem_rate = rcpp_to_vector_double(params["rem_rate"]);			// Total loss rate from each age category (ageing + death)
+		vector<double> age = rcpp_to_vector_double(params["age"]);						// Age values corresponding to starts of age categories (days)
+		vector<double> den = rcpp_to_vector_double(params["den"]);
+		double eta = rcpp_to_double(params["eta"]);												// Death rate, for exponential population distribution
+
         double mu_atsb = rcpp_to_double(params["mu_atsb_def"]);                 // Attractive targeted sugar bait (ATSB) killing rate associated with data
         double cov_nets = rcpp_to_double(params["cov_nets_def"]);                       // Proportion of people protected by bednets associated with data
         double cov_irs = rcpp_to_double(params["cov_irs_def"]);                 // Proportion of people protected by interior residual spraying (IRS) associated with data
@@ -160,54 +171,31 @@ Rcpp::List rcpp_mainpop_ss(List params, List trial_params)
         double bmin_rev = 1.0 - bmin;
         double dmin_rev = 1.0 - dmin;
         double phi1_rev = 1.0 - phi1;
-        double* age_width = (double*)malloc(size1);                                                             // Widths of age categories in days
-        double* age_rate = (double*)malloc(size1);                                                              // Rates of transition between age categories
         double* delta = (double*)malloc(size1);
         double* gamma = (double*)malloc(size1);
-        double* rem_rate = (double*)malloc(size1);
-        double* age = (double*)malloc(size1);                                                           // Age values corresponding to starts of age categories (days)
-        double eta = 1.0 / (21.0 * dy);                                                                         // Death rate, for exponential population distribution
-        double* den = (double*)malloc(size1);
         double* foi_age = (double*)malloc(size1);
         int* age20i = (int*)malloc(na * sizeof(int));
 
         // Set age category parameters
-        for (i = 0; i < na; i++)
-        {
-                if (i < 25) { age_width[i] = dy * 0.04; }
-                if (i > 24 && i < 45) { age_width[i] = dy * 0.05; }
-                if (i > 44 && i < 60) { age_width[i] = dy / 15.0; }
-                if (i > 59 && i < 70) { age_width[i] = dy * 0.1; }
-                if (i > 69 && i < 78) { age_width[i] = dy * 0.125; }
-                if (i > 77 && i < 83) { age_width[i] = dy * 0.2; }
-                if (i > 82 && i < 99) { age_width[i] = dy * 0.25; }
-                if (i > 98 && i < 119) { age_width[i] = dy * 0.5; }
-                if (i > 118 && i < 129) { age_width[i] = dy * 1.0; }
-                if (i > 128) { age_width[i] = dy * 2.0; }
-                age_rate[i] = 1.0 / age_width[i];
-                rem_rate[i] = age_rate[i] + eta;
-                gamma[i] = i == na - 1 ? 0.0 : rem_rate[i];
-                age[i] = i == 0 ? 0.0 : (age[i - 1] + age_width[i - 1]);
-        }
         pos = 0;
         for (i = 0; i < na; i++)
         {
-                den[i] = i == 0 ? (1.0 / (1.0 + (age_rate[0] / eta))) : ((age_rate[i - 1] * den[i - 1]) / rem_rate[i]);
-                foi_age[i] = 1.0 - (rho * exp(-age[i] / a0));
-                if (i == 0) { age20i[i] = 0; }
-                else
-                {
-                        if (age[i] >= 20.0 * dy && age[i - 1] < 20.0 * dy) { age20i[i] = i; }
-                        else { age20i[i] = age20i[i - 1]; }
-                }
-                for (j = 0; j < num_het; j++) 
-                { 
-                        den_het[pos] = den[i] * het_wt[j];
-                        betaT[pos] = rT + gamma[i];
-                        betaD[pos] = rD + gamma[i];
-                        betaP[pos] = rP + gamma[i];
-                        pos++;
-                }
+			gamma[i] = i == na - 1 ? 0.0 : rem_rate[i];
+            foi_age[i] = 1.0 - (rho * exp(-age[i] / a0));
+            if (i == 0) { age20i[i] = 0; }
+            else
+            {
+                    if (age[i] >= 20.0 * dy && age[i - 1] < 20.0 * dy) { age20i[i] = i; }
+                    else { age20i[i] = age20i[i - 1]; }
+            }
+            for (j = 0; j < num_het; j++) 
+            { 
+                    den_het[pos] = den[i] * het_wt[j];
+                    betaT[pos] = rT + gamma[i];
+                    betaD[pos] = rD + gamma[i];
+                    betaP[pos] = rP + gamma[i];
+                    pos++;
+            }
         }
 
         int age20u = age20i[na - 1];

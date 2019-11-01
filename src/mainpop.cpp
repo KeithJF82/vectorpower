@@ -17,18 +17,14 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
         FILE* data_immunity = NULL;
         int flag_error = 0;
 
-        //Constants (TODO: Make global)----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        double dy = 365.0;                      // Days in a year
+        //Constants ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        double dy = 365.0;              // Days in a year
         double tinterval1 = 1.0;        // Interval between calculations of current prevalence / incidence values
-        int na = 145;                           // Number of age categories in main population
-        int num_het = 9;                        // Number of heterogeneity categories
-        double het_x[] = { -4.5127459, -3.2054291, -2.076848, -1.0232557, 0.0, 1.0232557, 2.076848, 3.2054291, 4.5127459 }; // Biting heterogeneity
-        double het_wt[] = { 0.00002235, 0.00278914, 0.04991641, 0.2440975, 0.40634921, 0.2440975, 0.04991641, 0.00278914, 0.00002235 }; // Fractions in each heterogeneity category
         double KMIN = 0.0005;           // Minimum value of larval birth rate coefficient K0 to prevent zero or negative mosquito numbers
 
         // Load environment/vector/parasite/etc. parameters from R------------------------------------------------------------------------------------------------------------------------------------------------
         
-        //Rainfall parameters
+        // Rainfall parameters
         double date_start = rcpp_to_double(params["date_start"]);
         double Rnorm = rcpp_to_double(params["Rnorm"]);
         double rconst = rcpp_to_double(params["rconst"]);
@@ -43,10 +39,24 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
         double Im3 = rcpp_to_double(params["Im3"]);
         double Im4 = rcpp_to_double(params["Im4"]);
 
-        double mu_atsb_def = rcpp_to_double(params["mu_atsb_def"]);                                             // Attractive targeted sugar bait (ATSB) killing rate associated with data
-        double cov_nets_def = rcpp_to_double(params["cov_nets_def"]);                                   // Proportion of people protected by bednets associated with data
-        double cov_irs_def = rcpp_to_double(params["cov_irs_def"]);                                             // Proportion of people protected by interior residual spraying (IRS) associated with data
-        double prop_T_def = rcpp_to_double(params["prop_T_def"]);                                               // Proportion of clinical cases successfully treated in main population associated with data
+		// Heterogeneity parameters
+		int num_het = rcpp_to_int(params["num_het"]);									// Number of age categories in main population
+		vector<double> het_x = rcpp_to_vector_double(params["het_x"]);					// Biting heterogeneity
+		vector<double> het_wt = rcpp_to_vector_double(params["het_wt"]);				// Fractions in each heterogeneity category
+
+		// Age parameters
+		int na = rcpp_to_int(params["na"]);												// Number of age categories in main population
+		vector<double> age_width = rcpp_to_vector_double(params["age_width"]);			// Widths of age categories in days
+		vector<double> age_rate = rcpp_to_vector_double(params["age_rate"]);			// Rates of transition between age categories
+		vector<double> rem_rate = rcpp_to_vector_double(params["rem_rate"]);			// Total loss rate from each age category (ageing + death)
+		vector<double> age = rcpp_to_vector_double(params["age"]);						// Age values corresponding to starts of age categories (days)
+		vector<double> den = rcpp_to_vector_double(params["den"]);
+		double eta = rcpp_to_double(params["eta"]);												// Death rate, for exponential population distribution
+
+        double mu_atsb_def = rcpp_to_double(params["mu_atsb_def"]);                             // Attractive targeted sugar bait (ATSB) killing rate associated with data
+        double cov_nets_def = rcpp_to_double(params["cov_nets_def"]);                           // Proportion of people protected by bednets associated with data
+        double cov_irs_def = rcpp_to_double(params["cov_irs_def"]);                             // Proportion of people protected by interior residual spraying (IRS) associated with data
+        double prop_T_def = rcpp_to_double(params["prop_T_def"]);                               // Proportion of clinical cases successfully treated in main population associated with data
 
         double Q0 = rcpp_to_double(params["Q0"]);                                                                               // Default anthropophagy
         double muv0 = rcpp_to_double(params["muv0"]);                                                                   // Default mosquito birth / death rate
@@ -173,17 +183,11 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
         double* slide_prev_age = (double*)malloc(size1);
         double* pcr_prev_age = (double*)malloc(size1);
         double* clin_inc_age = (double*)malloc(size1);
-        double* age_width = (double*)malloc(size1);                                                             // Widths of age categories in days
-        double* age_rate = (double*)malloc(size1);                                                              // Rates of transition between age categories
-        double* rem_rate = (double*)malloc(size1);                                                              // Total loss rate from each age category (ageing + death)
-        double* age = (double*)malloc(size1);                                                                   // Age values corresponding to starts of age categories (days)
-        double eta = 1.0 / (21.0 * dy);                                                                                 // Death rate, for exponential population distribution
-        double* den = (double*)malloc(size1);
         double* foi_age = (double*)malloc(size1);
         int* age20i = (int*)malloc(na * sizeof(int));
 
         // Set age category parameters
-        for (i = 0; i < na; i++)
+        /*for (i = 0; i < na; i++)
         {
                 if (i < 25) { age_width[i] = dy * 0.04; }
                 if (i > 24 && i < 45) { age_width[i] = dy * 0.05; }
@@ -198,10 +202,10 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
                 age_rate[i] = 1.0 / age_width[i];
                 rem_rate[i] = age_rate[i] + eta;
                 age[i] = i == 0 ? 0.0 : (age[i - 1] + age_width[i - 1]);
-        }
+        }*/
         for (i = 0; i < na; i++)
         {
-                den[i] = i == 0 ? (1.0 / (1.0 + (age_rate[0] / eta))) : (age_rate[i - 1] * den[i - 1] / (rem_rate[i]));
+                //den[i] = i == 0 ? (1.0 / (1.0 + (age_rate[0] / eta))) : (age_rate[i - 1] * den[i - 1] / (rem_rate[i]));
                 foi_age[i] = 1.0 - (rho * exp(-age[i] / a0));
                 if (i == 0) { age20i[i] = 0; }
                 else

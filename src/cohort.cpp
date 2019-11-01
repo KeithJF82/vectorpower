@@ -27,14 +27,10 @@ Rcpp::List rcpp_cohort(List params, List trial_params, List cluster_data)
 	//Constants (TODO: Make global)----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	double dy = 365.0;			// Days in a year
 	double tinterval1 = 1.0;	// Interval between calculations of current prevalence / incidence values
-	int na = 145;				// Number of age categories in main population
-	int num_het = 9;			// Number of heterogeneity categories
-	double het_x[] = { -4.5127459, -3.2054291, -2.076848, -1.0232557, 0.0, 1.0232557, 2.076848, 3.2054291, 4.5127459 }; // Biting heterogeneity
-	double het_wt[] = { 0.00002235, 0.00278914, 0.04991641, 0.2440975, 0.40634921, 0.2440975, 0.04991641, 0.00278914, 0.00002235 }; // Fractions in each heterogeneity category
 
 	//Load input parameter data from R------------------------------------------------------------------------------------------------------------------------------------------
 
-	Rcout << "\nLoading input parameter data from R\n";
+	Rcout << "\nBeginning cluster calculations\n";
 	R_FlushConsole();
 	int flag_file = rcpp_to_int(trial_params["flag_file"]);						// Flag indicating whether results data to be saved to files
 	string output_filename1 = rcpp_to_string(trial_params["file_summary"]);		// Individual data (fraction in each category) every tinterval2 days over intervention period for each iteration (single run) or average cohort prevalence/indidence/PCR test positivity rate every tinterval2 days after intervention start (multi-run)
@@ -52,10 +48,20 @@ Rcpp::List rcpp_cohort(List params, List trial_params, List cluster_data)
 
 	//Set up constant parameters------------------------------------------------------------------------------------------------------------------------------------------------
 
-	Rcout << "\nInitializing constants.\n";
-	R_FlushConsole();
+	// Heterogeneity parameters
+	int num_het = rcpp_to_int(params["num_het"]);									// Number of age categories in main population
+	vector<double> het_x = rcpp_to_vector_double(params["het_x"]);					// Biting heterogeneity
+	vector<double> het_wt = rcpp_to_vector_double(params["het_wt"]);				// Fractions in each heterogeneity category
+
+	// Age parameters
+	int na = rcpp_to_int(params["na"]);												// Number of age categories in main population
+	vector<double> age_width = rcpp_to_vector_double(params["age_width"]);			// Widths of age categories in days
+	vector<double> age_rate = rcpp_to_vector_double(params["age_rate"]);			// Rates of transition between age categories
+	vector<double> rem_rate = rcpp_to_vector_double(params["rem_rate"]);			// Total loss rate from each age category (ageing + death)
+	vector<double> age = rcpp_to_vector_double(params["age"]);						// Age values corresponding to starts of age categories (days)
+	vector<double> den = rcpp_to_vector_double(params["den"]);
+
 	int n_cats = na * num_het; //Total number of age/heterogeneity categories in main population 
-	double inv_dy = 1.0 / dy;
 	double dv_p1 = 1.0 / n_patients;
 	double dv_p2 = dv_p1 * (dy / tinterval2);
 	double rho = rcpp_to_double(params["rho"]);										// Age-dependent biting parameter
@@ -102,7 +108,6 @@ Rcpp::List rcpp_cohort(List params, List trial_params, List cluster_data)
 
 	//Constant derived values--------------------------------------------------------------------------------------------------------------------------
 
-	Rcout << "\nInitializing constant derived values.\n";
 	R_FlushConsole();
 
 	double rT = 1.0 / dur_T;			//Rate of recovery from disease and parasitaemia when treated
@@ -113,13 +118,6 @@ Rcpp::List rcpp_cohort(List params, List trial_params, List cluster_data)
 	double rate_dc = 1.0 / dc;
 	double rate_db = 1.0 / db;
 	double rate_dd = 1.0 / dd;
-	double* age_width = (double*)malloc(na * sizeof(double));
-	double* age_rate = (double*)malloc(na * sizeof(double));
-	double* rem_rate = (double*)malloc(na * sizeof(double));
-	double* age = (double*)malloc(na * sizeof(double));
-	double* agey0 = (double*)malloc(na * sizeof(double));
-	double* agey1 = (double*)malloc(na * sizeof(double));
-	double eta = 1.0 / (21.0 * dy);		//death rate, for exponential population distribution
 	int agefinding0 = 1;				//Flags indicating which cohort age parameter is being sought while running through ages
 	int agefinding1 = 0;
 	int agefinding2 = 0;
@@ -129,19 +127,6 @@ Rcpp::List rcpp_cohort(List params, List trial_params, List cluster_data)
 	na_c2 = na - 1;						//Maximum age category number in main population corresponding to last age category in cohort at end; determined from age_c2
 	for (i = 0; i < na; i++)
 	{
-		if (i < 25) { age_width[i] = dy * 0.04; }
-		if (i > 24 && i < 45) { age_width[i] = dy * 0.05; }
-		if (i > 44 && i < 60) { age_width[i] = dy / 15.0; }
-		if (i > 59 && i < 70) { age_width[i] = dy * 0.1; }
-		if (i > 69 && i < 78) { age_width[i] = dy * 0.125; }
-		if (i > 77 && i < 83) { age_width[i] = dy * 0.2; }
-		if (i > 82 && i < 99) { age_width[i] = dy * 0.25; }
-		if (i > 98 && i < 119) { age_width[i] = dy * 0.5; }
-		if (i > 118 && i < 129) { age_width[i] = dy; }
-		if (i > 128) { age_width[i] = dy * 2.0; }
-		age_rate[i] = 1.0 / age_width[i];
-		rem_rate[i] = age_rate[i] + eta;
-		age[i] = i == 0 ? 0.0 : (age[i - 1] + age_width[i - 1]);
 		if (agefinding0 == 1 && age[i] >= age_start * dy)
 		{
 			na_c0 = i;
@@ -159,20 +144,16 @@ Rcpp::List rcpp_cohort(List params, List trial_params, List cluster_data)
 			na_c2 = i;
 			agefinding2 = 0;
 		}
-		agey0[i] = age[i] * inv_dy;
 	}
 
 	int na_c = na_c2 - na_c0 + 1;			//Total number of age categories within cohort
 	int n_cats_c = na_c * num_het;			//Total number of age and heterogeneity categories in cohort
-	for (i = 0; i < na - 1; i++) { agey1[i] = age[i + 1] * inv_dy; }
 
 	//Calculate the proportion in each age group using discrete time, to match the equilibrium from the differential eqns
-	double* den = (double*)malloc(na * sizeof(double));
 	double* foi_age = (double*)malloc(na * sizeof(double));
 	double densum = 0.0;
 	for (i = 0; i < na; i++)
 	{
-		den[i] = i == 0 ? (1.0 / (1.0 + (age_rate[0] / eta))) : (age_rate[i - 1] * den[i - 1] / (rem_rate[i]));
 		densum += den[i];
 		foi_age[i] = 1.0 - (rho * exp(-age[i] / a0));
 	}
@@ -206,7 +187,6 @@ Rcpp::List rcpp_cohort(List params, List trial_params, List cluster_data)
 
 	//Set up conditions for one or more runs-------------------------------------------------------------------------------------------------------------------------------------
 
-	Rcout << "\nSetting up conditions.\n";
 	R_FlushConsole();
 	if (flag_file == 1)
 	{
@@ -227,10 +207,10 @@ Rcpp::List rcpp_cohort(List params, List trial_params, List cluster_data)
 		mvn = run_mvn[n_c];
 		int_num = run_int[n_c];
 		data_num = run_data_num[n_c];
-		Rcout << "\nProcessing cluster " << n_c << ":\tmvn=" << mvn << "\tint_num=" << int_num << "\tdata_num=" << data_num;
+		Rcout << "Processing cluster " << n_c << ":\tmvn=" << mvn << "\tint_num=" << int_num << "\tdata_num=" << data_num;
 		goto start_run;
 	run_complete:
-		Rcout << "\nCluster " << n_c << " complete.\n";
+		Rcout << "\n";
 	}
 
 	goto finish;
@@ -285,7 +265,6 @@ restart:
 
 	p_multiplier = 1.0 / dt;
 	ntmax = intdiv(tmax, dt);
-	Rcout << "\nRunning individual model; dt=" << dt << "; ntmax=" << ntmax;
 	R_FlushConsole();
 
 	for (n = 0; n < n_patients; n++)
@@ -507,7 +486,7 @@ finish:
 
 	if (output1 != NULL) { fclose(output1); }
 	if (output2 != NULL) { fclose(output2); }
-	Rcout << "\nProgram complete\n";
+	Rcout << "\nCluster calculations complete\n";
 
 	// Return list
 	//return List::create(Named("slide_prev_values") = slide_prev_values, Named("pcr_prev_values") = pcr_prev_values, Named("clin_inc_values") = clin_inc_values,Named("pcr_distribution") = pcr_distribution);
