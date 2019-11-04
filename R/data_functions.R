@@ -33,7 +33,7 @@ dataset_create <- function (dataset_folder="",EIR_values=c(1.0),param_file="",ag
   assert_string(param_file) # TODO - Change to check that file exists
   assert_string(age_file)   # TODO - Change to check that file exists
   assert_string(het_file)   # TODO - Change to check that file exists
-  assert_int(nyears)
+  assert_single_int(nyears)
   assert_single_bounded(nyears,1,20)
   
   #
@@ -126,8 +126,8 @@ dataset_create <- function (dataset_folder="",EIR_values=c(1.0),param_file="",ag
 plot_mainpop_data <- function(input_list=list(),benchmark = "EIR", set_n_int=1, age_start = 0, age_end = 65.0){
   
   # Input error checking (TODO - finish)
-  assert_in(benchmark,c("EIR","slide_prev","pcr_prev","clin_inc"))
   assert_list(input_list)
+  assert_in(benchmark,c("EIR","slide_prev","pcr_prev","clin_inc"))
   assert_int(set_n_int)
   assert_bounded(age_start,0.0,65.0)
   assert_bounded(age_end,age_start,65.0)
@@ -184,6 +184,7 @@ plot_mainpop_data <- function(input_list=list(),benchmark = "EIR", set_n_int=1, 
 age_data_setup <- function(age_width_years=c()){
   
   assert_numeric(age_width_years)
+  assert_vector(age_width_years)
   
   dy = 365.0
   eta = 1.0/(21.0*dy)

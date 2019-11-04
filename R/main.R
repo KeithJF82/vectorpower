@@ -29,11 +29,14 @@ mainpop <- function (input_folder = "inst/extdata/Constant/",output_folder = NA,
                      int_v_varied=0, int_values= c(0.0),
                      start_interval = 31.0, time_values=c(0.0,7.0))
   {
-  # Input error checking (TODO: finish)
+  # Input error checking
   assert_string(input_folder)
-  assert_in(int_v_varied,0:3)
+  assert_string(output_folder)
   assert_numeric(n_mv_set)
+  assert_int(int_v_varied)
+  assert_in(int_v_varied,0:3)
   assert_numeric(int_values)
+  assert_single_numeric(start_interval)
   assert_numeric(time_values)
 
   # Set up parameters 
@@ -151,16 +154,15 @@ mainpop <- function (input_folder = "inst/extdata/Constant/",output_folder = NA,
 
 cluster_input_setup <- function(input_list=list(), benchmark = "EIR",set_n_pt = 1,set_n_int=1,age_start = 0,age_end = 65.0){
   
-  # Input error checking (TODO - finish)
-  assert_in(set_n_pt,1:input_list$n_pts)
-  assert_in(benchmark,c("EIR","slide_prev","pcr_prev","clin_inc"))
+  # Input error checking
   assert_list(input_list)
+  assert_in(benchmark,c("EIR","slide_prev","pcr_prev","clin_inc"))
   assert_int(set_n_pt)
+  assert_in(set_n_pt,c(1:input_list$n_pts))
   assert_int(set_n_int)
+  assert_in(set_n_int,c(1:input_list$n_int_values))
   assert_bounded(age_start,0.0,65.0)
   assert_bounded(age_end,age_start,65.0)
-  assert_in(set_n_pt,c(1:input_list$n_pts))
-  assert_in(set_n_int,c(1:input_list$n_int_values))
   
   n_age_start = findInterval(age_start,input_list$params$age_years)
   n_age_end = findInterval(age_end,input_list$params$age_years)
@@ -213,11 +215,11 @@ clusters_create <- function(input_list=list(),n_clusters=100,benchmark_mean=0.25
  
   # Input error checking (TODO - finish)
   assert_list(input_list)
-  assert_int(n_clusters)
-  assert_numeric(benchmark_mean)
-  assert_numeric(benchmark_stdev)
-  assert_numeric(int_mean)
-  assert_numeric(int_stdev)
+  assert_single_int(n_clusters)
+  assert_single_numeric(benchmark_mean)
+  assert_single_numeric(benchmark_stdev)
+  assert_single_numeric(int_mean)
+  assert_single_numeric(int_stdev)
   
   nv_B=length(input_list$benchmark_values)
   nv_I=length(input_list$int_values)
@@ -303,12 +305,13 @@ cohort <- function(mainpop_data = list(), cluster_data=list(),n_patients = 100,o
   # Input error checking (TODO - finish)
   assert_list(mainpop_data)
   assert_list(cluster_data)
-  assert_int(n_patients)
-  assert_numeric(time_interval)
-  assert_int(n_pts)
-  assert_bounded(prop_T_c,0.0,1.0)
-  assert_bounded(age_start,0.0,65.0)
-  assert_bounded(age_end,age_start,65.0)
+  assert_single_int(n_patients)
+  assert_string(output_folder)
+  assert_single_numeric(time_interval)
+  assert_single_int(n_pts)
+  assert_single_bounded(prop_T_c,0.0,1.0)
+  assert_single_bounded(age_start,0.0,65.0)
+  assert_single_bounded(age_end,age_start,65.0)
   
   n_clusters=length(cluster_data$n_B)
   if(is.na(output_folder)==FALSE){
