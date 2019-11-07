@@ -193,8 +193,8 @@ Rcpp::List rcpp_cohort(List params, List trial_params, List cluster_data)
 		output1 = fopen(output_filename1.c_str(), "w");
 		fprintf(output1, "n_patients\t%i\nCluster\tmvn\tint_num", n_patients);
 		for (div = 1; div <= n_divs; div++) { fprintf(output1, "\tslide_prev%i", div); }
-		for (div = 1; div <= n_divs; div++) { fprintf(output1, "\tpcr_p%i", div); }
-		for (div = 1; div <= n_divs; div++) { fprintf(output1, "\tclin_incinc_%i", div); }
+		for (div = 1; div <= n_divs; div++) { fprintf(output1, "\tpcr_prev%i", div); }
+		for (div = 1; div <= n_divs; div++) { fprintf(output1, "\tclin_inc_%i", div); }
 		fclose(output1);
 		output2 = fopen(output_filename2.c_str(), "w");
 		fprintf(output2, "n_patients\t%i\nCluster\tmvn\tint_num", n_patients);

@@ -370,7 +370,7 @@ Rcpp::List rcpp_mainpop_ss(List params, List trial_params)
 
                 //finish:
                 mv_values[n_mv] = mv0;
-				Rcout << "\nn_mv = " << n_mv << "\tMosquito density = " << mv0;
+				Rcout << "\nn_mv = " << n_mv + 1 << "\tMosquito density = " << mv0;
 				R_FlushConsole();
                 H = arraysum(S, n_cats) + arraysum(T, n_cats) + arraysum(D, n_cats) + arraysum(A, n_cats) + arraysum(U, n_cats) + arraysum(P, n_cats);
                 H_inv = 1.0 / H;

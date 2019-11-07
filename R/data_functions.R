@@ -115,7 +115,7 @@ dataset_create <- function (dataset_folder="",EIR_values=c(1.0),param_file="",ag
 #'              plotting it on a graph as an aid to setting up clusters
 #'
 #' @details Takes in detailed benchmark data as a list and plots a graph based on the
-#'          input parameters 
+#'          input parameters ; returns graph x and y values as a list
 #'
 #' @param input_list          List containing mainpop output data
 #' @param benchmark           Benchmark type to use in choosing clusters ("EIR", "slide_prev", "pcr_prev", or "clin_inc")
@@ -167,7 +167,49 @@ plot_mainpop_data <- function(input_list=list(),benchmark = "EIR", set_n_int=1, 
   legend("bottomleft", inset=0.01, legend=c(1:input_list$n_mv_values), lwd=1.0,col=1+c(1:input_list$n_mv_values),
          horiz=FALSE,bg='white',cex=1.0)
   
-  return(0)
+  output <- list(input_list$time_values,benchmark_values)
+  names(output)[[1]]="time (days)"
+  names(output)[[2]]=benchmark
+  
+  return(output)
+}
+
+#------------------------------------------------
+#' @title Plot pre-calculated data from dataset folder
+#'
+#' @description Function for displaying pre-calculated annual data or mosquito density parameter values from dataset folder
+#'
+#' @details Reads data from annual_data.txt in dataset folder and outputs chosen benchmark values as a graph; returns graph 
+#'          x and y values as a list
+#'
+#' @param input_folder      Dataset folder
+#' @param xvalues           Data to display on x-axis ("N_M" for line number, "M" for mosquito density parameter)
+#' @param yvalues           Data to display on y-axis ("M", "EIR", "slide_prev", "pcr_prev", or "clin_inc")
+
+plot_folder_data <- function(input_folder="",xvalues="N_M",yvalues = "M"){
+  
+  # Input error checking (TODO - finish)
+  assert_in(xvalues,c("N_M","M"))
+  assert_in(yvalues,c("M","EIR","slide_prev","pcr_prev","clin_inc"))
+  
+  annual_data <- as.list(read.table(paste(input_folder,"annual_data.txt",sep=""), header=TRUE))   # Read in annual data
+  n_mv_values=length(annual_data$n_mv)
+  
+  if(xvalues=="N_M"){ xdata = annual_data$n_mv } else { xdata = annual_data$mv0 }
+  
+  if(yvalues=="M"){ydata = annual_data$mv0}
+  if(yvalues=="EIR"){ydata = annual_data$EIRy}
+  if(yvalues=="slide_prev"){ydata = annual_data$slide_prev_y}
+  if(yvalues=="clin_inc"){ydata = annual_data$clin_inc_y}
+  if(yvalues=="pcr_prev"){ydata = annual_data$pcr_prev_y}
+  
+  matplot(xdata,ydata,type="p",pch=2,col=2,xlab=xvalues,ylab=yvalues,ylim=c(0,max(ydata)))
+  
+  output <- list(xdata,ydata)
+  names(output)[[1]]=xvalues
+  names(output)[[2]]=yvalues
+  
+  return(output)
 }
 #------------------------------------------------
 #' @title Set up age data from age distribution data

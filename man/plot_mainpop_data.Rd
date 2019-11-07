@@ -25,5 +25,5 @@ Function for taking output of mainpop(), selecting the desired benchmark
 }
 \details{
 Takes in detailed benchmark data as a list and plots a graph based on the
-         input parameters
+         input parameters ; returns graph x and y values as a list
 }

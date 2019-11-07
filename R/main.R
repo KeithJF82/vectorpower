@@ -31,7 +31,7 @@ mainpop <- function (input_folder = "inst/extdata/Constant/",output_folder = NA,
   {
   # Input error checking
   assert_string(input_folder)
-  assert_string(output_folder)
+  if(is.na(output_folder)==0){assert_string(output_folder)}
   assert_numeric(n_mv_set)
   assert_int(int_v_varied)
   assert_in(int_v_varied,0:3)
@@ -43,6 +43,10 @@ mainpop <- function (input_folder = "inst/extdata/Constant/",output_folder = NA,
   age_data=age_data_setup(read.table(paste(input_folder,"age_data.txt",sep=""),header=TRUE,sep="\t")[[1]])
   het_data = as.list(read.table(paste(input_folder,"het_data.txt",sep=""),header=TRUE,sep="\t"))  # Read in biting heterogeneity data
   params <- as.list(read.table(paste(input_folder,"model_parameters.txt",sep=""), header=TRUE))   # Read in model parameters
+  annual_data_file=paste(input_folder,"annual_data.txt",sep="")
+  if(file.exists(annual_data_file)==1){annual_data <- as.list(read.table(annual_data_file, header=TRUE))
+  } else {annual_data <- list()}
+  
   na=length(age_data$age_width)
   num_het=length(het_data$het_x)
   params=c(na=na,num_het=num_het,params,age_data,het_data)
@@ -123,12 +127,14 @@ mainpop <- function (input_folder = "inst/extdata/Constant/",output_folder = NA,
   ID_start_data = array(data=raw_data$ID_start_data,dim=c(n_cats,n_mv_values),dimnames=list(n_cat_names,n_mv_names))
   }
   
-  output_data <- list(params=params,n_mv_values=n_mv_values,n_int_values=n_int_values,n_pts=n_pts,
+  output_data <- list(params=params,n_mv_values=n_mv_values,n_int_values=n_int_values,n_pts=n_pts,n_mv_set=n_mv_set,
                       time_values=time_values,int_values=int_values,
                       EIR_benchmarks=EIR_benchmarks,slide_prev_benchmarks=slide_prev_benchmarks,
                       pcr_prev_benchmarks=pcr_prev_benchmarks,clin_inc_benchmarks=clin_inc_benchmarks,
-                      EIR_daily_data=EIR_daily_data,
+                      EIR_daily_data=EIR_daily_data,annual_data=annual_data,
                       IB_start_data=IB_start_data,IC_start_data=IC_start_data,ID_start_data=ID_start_data)
+  
+  #save(output_data,file=paste(input_folder,"mainpop_output.Rdata",sep=""))
   
   return(output_data)
 }
@@ -144,7 +150,9 @@ mainpop <- function (input_folder = "inst/extdata/Constant/",output_folder = NA,
 #'          benchmark values and intervention parameter values (as both list and files)
 #'
 #' @param input_list          List containing mainpop output data
-#' @param benchmark           Benchmark type to use in choosing clusters ("EIR", "slide_prev", "pcr_prev", or "clin_inc")
+#' @param benchmark           Benchmark type to use in choosing clusters ("EIR", "slide_prev", "pcr_prev", or "clin_inc"
+#'                            for new data, "EIR_annual", "slide_prev_annual", "pcr_prev_annual", "clin_inc_annual" for
+#'                            pre-existing annual data in input folder)
 #' @param set_n_pt            Data point to use (1-max)
 #' @param set_n_int           Intervention number to use (1-max)
 #' @param age_start           Starting age to use when calculating prevalence or incidence over age range (not used with EIR)
@@ -156,7 +164,7 @@ cluster_input_setup <- function(input_list=list(), benchmark = "EIR",set_n_pt = 
   
   # Input error checking
   assert_list(input_list)
-  assert_in(benchmark,c("EIR","slide_prev","pcr_prev","clin_inc"))
+  assert_in(benchmark,c("EIR","slide_prev","pcr_prev","clin_inc","EIR_annual","slide_prev_annual","pcr_prev_annual","clin_inc_annual"))
   assert_int(set_n_pt)
   assert_in(set_n_pt,c(1:input_list$n_pts))
   assert_int(set_n_int)
@@ -167,30 +175,41 @@ cluster_input_setup <- function(input_list=list(), benchmark = "EIR",set_n_pt = 
   n_age_start = findInterval(age_start,input_list$params$age_years)
   n_age_end = findInterval(age_end,input_list$params$age_years)
   
-  density_sum = 0
-  benchmark_values = 0
-  if(benchmark == "EIR"){
-    benchmark_values = input_list$EIR_benchmarks[set_n_pt,(input_list$n_int_values*c(0:(input_list$n_mv_values-1)))+set_n_int]
-  }else{
+  n_EIR=switch(benchmark,"EIR"=1,"EIR_annual"=1,"slide_prev"=2,"pcr_prev"=2,"clin_inc"=2,
+               "slide_prev_annual"=2,"pcr_prev_annual"=2,"clin_inc_annual"=2)
+  n_annual=switch(benchmark,"EIR"=1,"EIR_annual"=2,"slide_prev"=1,"pcr_prev"=1,"clin_inc"=1,
+                  "slide_prev_annual"=2,"pcr_prev_annual"=2,"clin_inc_annual"=2)
+  n_AE=(10*n_EIR)+n_annual
+  
+  benchmark_values=0
+  if(n_AE==11){benchmark_values = input_list$EIR_benchmarks[set_n_pt,(input_list$n_int_values*c(0:(input_list$n_mv_values-1)))+set_n_int]}
+  if(n_AE==12){benchmark_values = input_list$annual_data$EIRy[input_list$n_mv_set]}
+  if(n_AE==21){
+    density_sum = 0
     j=input_list$n_int_values*c(1:input_list$n_mv_values)
     if(benchmark == "slide_prev"){ benchmark_data = input_list$slide_prev_benchmarks[,set_n_pt,j]}
     if(benchmark == "pcr_prev"){ benchmark_data = input_list$pcr_prev_benchmarks[,set_n_pt,j]}
     if(benchmark == "clin_inc"){ benchmark_data = input_list$clin_inc_benchmarks[,set_n_pt,j] }
-    
     for(i in n_age_start:n_age_end){
       density_sum = density_sum + input_list$params$den_norm[i]
       benchmark_values = benchmark_values + benchmark_data[i,]
     }
     benchmark_values = benchmark_values/density_sum
   }
-  int_values=input_list$int_values
+  if(n_AE==22){
+    if(benchmark == "slide_prev_annual"){ benchmark_values = input_list$annual_data$slide_prev_y[input_list$n_mv_set] }
+    if(benchmark == "pcr_prev_annual"){ benchmark_values = input_list$annual_data$pcr_prev_y[input_list$n_mv_set] }
+    if(benchmark == "clin_inc_annual"){ benchmark_values = input_list$annual_data$clin_inc_y[input_list$n_mv_set] }
+  }
   
-  matplot(c(1:input_list$n_mv_values),benchmark_values,type="p",pch=2,col=2,xlab="N_M",ylab=benchmark)
+  if(n_annual==1){ matplot(c(1:input_list$n_mv_values),benchmark_values,type="p",pch=2,col=2,xlab="N_M",ylab=benchmark)}
+  else{ matplot(input_list$n_mv_set,benchmark_values,type="p",pch=2,col=2,xlab="N_M",ylab=benchmark) }
   
-  ret <- list(benchmark=benchmark,set_n_pt = set_n_pt,set_n_int=set_n_int,age_start = age_start,age_end = age_end,
-              benchmark_values=benchmark_values,int_values=int_values)
   
-  return(ret)
+  output <- list(benchmark=benchmark,set_n_pt = set_n_pt,set_n_int=set_n_int,age_start = age_start,age_end = age_end,
+                 benchmark_values=benchmark_values,int_values=input_list$int_values,n_mv_set=input_list$n_mv_set)
+  
+  return(output)
 }
 
 #------------------------------------------------
@@ -276,6 +295,7 @@ clusters_create <- function(input_list=list(),n_clusters=100,benchmark_mean=0.25
   matplot(cprob,v_i1,type="l",col=1,xlab="Cumulative probability",ylab="Intervention parameter")
   matplot(cprob,v_i2,type="l",col=2,add=TRUE)
   matplot(clusters$CP_I,clusters$I,type="p",pch=1,col=3,add=TRUE)
+  par(mfrow=c(1,1))
   
   return(clusters)
 }
