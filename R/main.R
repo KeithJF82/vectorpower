@@ -281,12 +281,12 @@ clusters_create <- function(input_list=list(),n_clusters=100,benchmark_mean=0.25
   for(i in 1:n_clusters){
     j=findInterval(clusters$CP_B[i],cprob)+1
     clusters$B[i]=v_bm2[j]
-    clusters$n_B[i]=mvn_index[j]-1
+    clusters$n_B[i]=mvn_index[j]
     j=findInterval(clusters$CP_I[i],cprob)+1
     clusters$I[i]=v_i2[j]
-    clusters$n_I[i]=int_index[j]-1
+    clusters$n_I[i]=int_index[j]
   }
-  clusters$n_run=((clusters$n_B)*nv_I)+clusters$n_I
+  clusters$n_run=((clusters$n_B-1)*nv_I)+clusters$n_I-1
   
   par(mfrow=c(1,2))
   matplot(cprob,v_bm1,type="l",col=1,xlab="Cumulative probability",ylab=input_list$benchmark)
@@ -311,24 +311,20 @@ clusters_create <- function(input_list=list(),n_clusters=100,benchmark_mean=0.25
 #' @param cluster_data    List output by clusters_create() containing cluster data
 #' @param n_patients      Number of trial cohort patients per cluster
 #' @param output_folder   Folder to send results data (set to NA to omit saving to file)
-#' @param time_interval   Time interval between data points
-#' @param n_pts           Number of data points (including 0)
-#' @param prop_T_c        Treatment probability in trial cohort
+#' @param prop_T_c        Treatment probability in cohort
 #' @param age_start       Minimum age of trial cohort patients
 #' @param age_end         Maximum age of trial cohort patients
 #'
 #' @export
 
 cohort <- function(mainpop_data = list(), cluster_data=list(),n_patients = 100,output_folder = NA,
-                   time_interval = 7.0,n_pts = 13,prop_T_c = 0.9,age_start = 0.5,age_end = 10.0){
+                   prop_T_c = 0.9,age_start = 0.5,age_end = 10.0){
   
   # Input error checking (TODO - finish)
   assert_list(mainpop_data)
   assert_list(cluster_data)
   assert_single_int(n_patients)
   assert_string(output_folder)
-  assert_single_numeric(time_interval)
-  assert_single_int(n_pts)
   assert_single_bounded(prop_T_c,0.0,1.0)
   assert_single_bounded(age_start,0.0,65.0)
   assert_single_bounded(age_end,age_start,65.0)
@@ -345,17 +341,20 @@ cohort <- function(mainpop_data = list(), cluster_data=list(),n_patients = 100,o
   }
 
   trial_params <- list(file_summary = file_summary,file_frequency = file_frequency,n_patients = n_patients,n_clusters=n_clusters,
-                       time_interval = time_interval,n_pts = n_pts,prop_T_c = prop_T_c,age_start = age_start,age_end = age_end,
+                       time_values=mainpop_data$time_values,tmax_i=length(mainpop_data$EIR_daily_data[,1]),
+                       prop_T_c = prop_T_c,age_start = age_start,age_end = age_end,
                        flag_file = flag_file, EIR_daily_data = as.vector(mainpop_data$EIR_daily_data),
                        IB_start_data = as.vector(mainpop_data$IB_start_data),
                        IC_start_data = as.vector(mainpop_data$IC_start_data),
                        ID_start_data = as.vector(mainpop_data$ID_start_data))
 
   raw_data <- rcpp_cohort(mainpop_data$params,trial_params,cluster_data)
+  cat("\n\nC section complete.\n\n")
   results_data <- data.frame(raw_data)
   
   cluster_names=paste("cluster",c(1:n_clusters),sep="")
   patient_names=paste("patient",c(1:n_patients),sep="")
+  n_pts=length(mainpop_data$time_values)
   n_pt_names=paste("n_pt",c(1:n_pts),sep="")
   patients_status_outputs = array(data=raw_data$patients_status_outputs,dim=c(n_pts,n_patients,n_clusters),
                                   dimnames=list(n_pt_names,patient_names,cluster_names))

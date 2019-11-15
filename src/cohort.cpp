@@ -33,12 +33,12 @@ Rcpp::List rcpp_cohort(List params, List trial_params, List cluster_data)
 	Rcout << "\nBeginning cluster calculations\n";
 	R_FlushConsole();
 	int flag_file = rcpp_to_int(trial_params["flag_file"]);						// Flag indicating whether results data to be saved to files
-	string output_filename1 = rcpp_to_string(trial_params["file_summary"]);		// Individual data (fraction in each category) every tinterval2 days over intervention period for each iteration (single run) or average cohort prevalence/indidence/PCR test positivity rate every tinterval2 days after intervention start (multi-run)
-	string output_filename2 = rcpp_to_string(trial_params["file_frequency"]);	// Positive PCR test frequency data for each iteration (single run) or average across all iterations (multi-run)
-	double tinterval2 = rcpp_to_double(trial_params["time_interval"]);			// Interval between calculations of regular test probabilities and averaged prevalence/incidence values
-	int n_divs = rcpp_to_int(trial_params["n_pts"]);							// Number of tinterval2-length divisions to run after intervention starts
-	double tmax = (n_divs - 1) * tinterval2;									// Duration of intervention trial 
-	int tmax_i = intdiv(tmax, 1.0) + 1;
+	string output_filename1 = rcpp_to_string(trial_params["file_summary"]);		// Individual data (fraction in each category) at each specified time point
+	string output_filename2 = rcpp_to_string(trial_params["file_frequency"]);	// Positive PCR test frequency data for each iteration
+	vector<double> time_values = rcpp_to_vector_double(trial_params["time_values"]);// Vector of time benchmark points
+	int n_divs = time_values.size();
+	int tmax_i = rcpp_to_int(trial_params["tmax_i"]);
+	double tmax = tmax_i * 1.0;
 	int n_clusters = rcpp_to_int(trial_params["n_clusters"]);					// Number of lines in cluster data input file (number of clusters)
 	double prop_T_c = rcpp_to_int(trial_params["prop_T_c"]);					// Proportion of clinical cases successfully treated in cohort
 	int n_patients = rcpp_to_int(trial_params["n_patients"]);					// Number of patients in cohort
@@ -63,7 +63,6 @@ Rcpp::List rcpp_cohort(List params, List trial_params, List cluster_data)
 
 	int n_cats = na * num_het; //Total number of age/heterogeneity categories in main population 
 	double dv_p1 = 1.0 / n_patients;
-	double dv_p2 = dv_p1 * (dy / tinterval2);
 	double rho = rcpp_to_double(params["rho"]);										// Age-dependent biting parameter
 	double a0 = rcpp_to_double(params["a0"]);										// Age-dependent biting parameter
 	double sigma2 = rcpp_to_double(params["sigma2"]);								// Variance of log heterogeneity in biting
@@ -168,11 +167,11 @@ Rcpp::List rcpp_cohort(List params, List trial_params, List cluster_data)
 	//Set up additional arrays-------------------------------------------------------------------------------------------------------------------------------------
 
 	double* cprob = (double*)malloc(n_cats_c * sizeof(double));						//Cumulative probability distribution used to determine age/heterogenity category to place randomly generated patients
-	int* pcr_test_results = (int*)malloc(n_divs * n_patients * sizeof(int));		//PCR test results for individual patients at tinterval2 checkpoints
+	int* pcr_test_results = (int*)malloc(n_divs * n_patients * sizeof(int));		//PCR test results for individual patients at checkpoints
 	double* pcr_distribution = (double*)malloc((n_divs + 1) * sizeof(double));		//Frequency distribution of number of positive PCR test results over entire trial
-	double* slide_prev_values = (double*)malloc(n_divs * sizeof(double));			//Values of slide prevalence (cohort) at tinterval2 checkpoints
-	double* clin_inc_values = (double*)malloc(n_divs * sizeof(double));				//Values of clinical incidence (cohort) at tinterval2 checkpoints
-	double* pcr_prev_values = (double*)malloc(n_divs * sizeof(double));				//Values of proportion of patients in cohort giving positive PCR test results at tinterval2 checkpoints
+	double* slide_prev_values = (double*)malloc(n_divs * sizeof(double));			//Values of slide prevalence (cohort) at checkpoints
+	double* clin_inc_values = (double*)malloc(n_divs * sizeof(double));				//Values of clinical incidence (cohort) at checkpoints
+	double* pcr_prev_values = (double*)malloc(n_divs * sizeof(double));				//Values of proportion of patients in cohort giving positive PCR test results at checkpoints
 	vector<int> patients_status_outputs(n_clusters * n_patients * n_divs, 0);		//All patient statuses across all clusters at each time point, for output to R
 
 	//Load input data------------------------------------------------------------------------------------------------------------------------------------------
@@ -207,7 +206,7 @@ Rcpp::List rcpp_cohort(List params, List trial_params, List cluster_data)
 		mvn = run_mvn[n_c];
 		int_num = run_int[n_c];
 		data_num = run_data_num[n_c];
-		Rcout << "Processing cluster " << n_c << ":\tmvn=" << mvn << "\tint_num=" << int_num << "\tdata_num=" << data_num;
+		Rcout << "Processing cluster " << n_c << ":\tmvn=" << mvn << "\tint_num=" << int_num << "\tdata_num=" << data_num; 
 		goto start_run;
 	run_complete:
 		Rcout << "\n";
@@ -264,13 +263,13 @@ restart:
 	pcr_distribution[n_divs] = 0.0;
 
 	p_multiplier = 1.0 / dt;
-	ntmax = intdiv(tmax, dt);
+	ntmax = intdiv(tmax - 1.0, dt);
 	R_FlushConsole();
 
 	for (n = 0; n < n_patients; n++)
 	{
 		patient[n].status = 0; //All patients start in group S, representing pre-intervention treatment
-		pos = (mvn * n_cats) + (patient[n].na * num_het) + patient[n].num_het;
+		pos = ((mvn - 1) * n_cats) + (patient[n].na * num_het) + patient[n].num_het;
 		patient[n].IB = IB_input[pos];
 		patient[n].IC = IC_input[pos];
 		patient[n].ID = ID_input[pos];
@@ -279,7 +278,7 @@ restart:
 	}
 
 	t_mark1 = tinterval1;
-	t_mark2 = 0.0;// tinterval2;
+	t_mark2 = time_values[0];
 	div = 0;
 	interval = 0;
 	rate_db_t = rate_db * dt;
@@ -331,7 +330,7 @@ restart:
 					p_clin_inf = phi0 * ((phi1_rev / (1.0 + pow(IC_cur * inv_IC0, kc))) + phi1); //Probability of a clinical infection
 					if (runif1() <= p_clin_inf)
 					{/*clinical infection*/
-						clin_inc_values[div] += dv_p2;
+						clin_inc_values[div] += dv_p1;
 						if (runif1() <= prop_T_c) {/*to T*/ patient[n].status = 1; }
 						else {/*to D*/ patient[n].status = 2; }
 					}
@@ -450,8 +449,8 @@ restart:
 				pos2 += n_divs;
 			}
 
-			t_mark2 += tinterval2;
 			div++;
+			if (div < n_divs) { t_mark2 = time_values[div]; }
 			for (n = 0; n < n_patients; n++)
 			{
 				j = 0;
