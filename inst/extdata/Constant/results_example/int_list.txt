@@ -1,2 +1,0 @@
-"n_int"	"param_int"
-1	0

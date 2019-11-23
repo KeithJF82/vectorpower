@@ -255,8 +255,10 @@ clusters_create <- function(input_list=list(),n_clusters=100,benchmark_mean=0.25
   mvn_index=prob
   int_index=prob
   for(i in 1:nprobs){
-    v_bm1[i]=benchmark_mean+(((i-mid)*benchmark_stdev*10)/nprobs)
-    v_i1[i]=int_mean+(((i-mid)*int_stdev*10)/nprobs)
+    if(benchmark_stdev==0.0){v_bm1[i]=benchmark_mean} else {
+      v_bm1[i]=benchmark_mean+(((i-mid)*benchmark_stdev*10)/nprobs)}
+    if(int_stdev==0.0){v_i1[i]=int_mean} else {
+      v_i1[i]=int_mean+(((i-mid)*int_stdev*10)/nprobs)}
     prob[i]=exp(-0.5*((i-mid)/sigma0)^2)
   }
   prob=prob/sum(prob)
@@ -266,12 +268,12 @@ clusters_create <- function(input_list=list(),n_clusters=100,benchmark_mean=0.25
   }
   
   for(i in 1:nprobs){
-    j=findInterval(v_bm1[i],input_list$benchmark_values)+1
-    if(j>nv_B){j=nv_B}
+    j=findInterval(v_bm1[i],input_list$benchmark_values)
+    j=max(1,j)
     mvn_index[i]=j
     v_bm2[i]=input_list$benchmark_values[j]
-    j=findInterval(v_i1[i],input_list$int_values)+1
-    if(j>nv_I){j=nv_I}
+    j=findInterval(v_i1[i],input_list$int_values)
+    j=max(1,j)
     int_index[i]=j
     v_i2[i]=input_list$int_values[j]
   }
@@ -279,10 +281,12 @@ clusters_create <- function(input_list=list(),n_clusters=100,benchmark_mean=0.25
   clusters <- data.frame(CP_B=stats::runif(n_clusters,0,1),n_B=rep(0,n_clusters),B=rep(0,n_clusters),
                          CP_I=stats::runif(n_clusters,0,1),n_I=rep(0,n_clusters),I=rep(0,n_clusters),n_run=rep(0,n_clusters))
   for(i in 1:n_clusters){
-    j=findInterval(clusters$CP_B[i],cprob)+1
+    j=findInterval(clusters$CP_B[i],cprob)
+    j=max(1,j)
     clusters$B[i]=v_bm2[j]
     clusters$n_B[i]=mvn_index[j]
-    j=findInterval(clusters$CP_I[i],cprob)+1
+    j=findInterval(clusters$CP_I[i],cprob)
+    j=max(1,j)
     clusters$I[i]=v_i2[j]
     clusters$n_I[i]=int_index[j]
   }
