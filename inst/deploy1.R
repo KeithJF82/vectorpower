@@ -17,8 +17,8 @@ basedata = plot_folder_data(input_folder=dataset_folder,xvalues="N_M",yvalues="E
   time_values = c(0.0,31.0,62.0,92.0,123.0,153.0) # Time points at which benchmark data output
   n_mv_set = c(1:5) # List of sets of values to load from starting data
   int_values = 0.1*c(0:1) # List of intervention parameter values
-  control_folder=paste(dataset_folder,"Control/",sep="")   # Folder to send control cluster output
-  int_folder=paste(dataset_folder,"Intervention1/",sep="") # Folder to send intervention cluster output
+  control_folder=paste(dataset_folder,"Control/",sep="")   # Folder (inside dataset folder) to send control cluster output
+  int_folder=paste(dataset_folder,"Intervention/",sep="") # Folder to send intervention cluster output
   benchmark1="EIR" # Benchmark to display from main population data after simulations complete
   benchmark2="EIR_annual" # Malaria benchmark to use to select data for clusters
   age_start_coh=0.5 # Minimum age of cohort patients
@@ -42,37 +42,38 @@ save(mainpop_data1,file=data_file)
 # Load previously generated data from .Rdata file
 load(data_file)
 
-# Plot example 
-plot_con <- plot_mainpop_data(input_list=mainpop_data1,set_n_int=1,
-                              benchmark=benchmark1)
-plot_int <- plot_mainpop_data(input_list=mainpop_data1,set_n_int=2,
-                              benchmark=benchmark1)
+# Plot control results - EIR over time for different baseline malaria levels
+plot_con <- plot_mainpop_data(input_list=mainpop_data1,set_n_int=1,benchmark=benchmark1)
 
+# Plot intervention results - EIR over time for different baseline malaria levels
+plot_int <- plot_mainpop_data(input_list=mainpop_data1,set_n_int=2,benchmark=benchmark1)
+
+# Create list of benchmark and intervention parameter values from which to draw clusters
+setup_list <- cluster_input_setup(input_list=mainpop_data1, set_n_pt=1, set_n_int=1, benchmark = benchmark2)
 
 # ---------------------------------------------------------------------------------------------------------------------------
 
-# Choose benchmark value set to use for control cluster setup
-setup_list_con <- cluster_input_setup(input_list=mainpop_data1, set_n_pt=1, set_n_int=1, benchmark = benchmark2)
-
-# Create list of control clusters (note setting of intervention parameter mean and standard deviation to 0)
-cluster_list_con <- clusters_create(input_list=setup_list_con,n_clusters=n_clusters,
-                                    benchmark_mean=benchmark_mean, benchmark_stdev=benchmark_stdev, 
+# Create list of control clusters (note setting of intervention parameter mean 
+# and standard deviation to 0)
+cluster_list_con <- clusters_create(input_list=setup_list,n_clusters=n_clusters,
+                                    benchmark_mean=benchmark_mean, 
+                                    benchmark_stdev=benchmark_stdev, 
                                     int_mean=0.0, int_stdev=0.0)
 
 # Simulate control clusters
-cohort_data_con <- cohort(mainpop_data=mainpop_data1,cluster_data=cluster_list_con,output_folder=control_folder,
-                          prop_T_c = 0.9,n_patients = n_patients,age_start = age_start_coh,age_end = age_end_coh)
+cohort_data_con <- cohort(mainpop_data=mainpop_data1,cluster_data=cluster_list_con,
+                          output_folder=control_folder,prop_T_c = 0.9,n_patients = n_patients,
+                          age_start = age_start_coh,age_end = age_end_coh)
 
 # ---------------------------------------------------------------------------------------------------------------------------
 
-# Choose benchmark value set to use for intervention cluster setup
-setup_list_int <- cluster_input_setup(input_list=mainpop_data1, set_n_pt=1, set_n_int=1, benchmark = benchmark2)
-
 # Create list of intervention clusters
-cluster_list_int <- clusters_create(input_list=setup_list_int,n_clusters=n_clusters,
-                                    benchmark_mean=benchmark_mean, benchmark_stdev=benchmark_stdev, 
+cluster_list_int <- clusters_create(input_list=setup_list,n_clusters=n_clusters,
+                                    benchmark_mean=benchmark_mean, 
+                                    benchmark_stdev=benchmark_stdev, 
                                     int_mean=int_mean, int_stdev=int_stdev)
 
 # Simulate intervention clusters
-cohort_data_int <- cohort(mainpop_data=mainpop_data1,cluster_data=cluster_list_int,output_folder=int_folder,
-                          prop_T_c = 0.9,n_patients = n_patients,age_start = age_start_coh,age_end = age_end_coh)
+cohort_data_int <- cohort(mainpop_data=mainpop_data1,cluster_data=cluster_list_int,
+                          output_folder=int_folder,prop_T_c = 0.9,n_patients = n_patients,
+                          age_start = age_start_coh,age_end = age_end_coh)
