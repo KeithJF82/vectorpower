@@ -93,16 +93,17 @@ dataset_create <- function (dataset_folder="",EIR_values=c(1.0),param_file="",ag
   cat("n_mv\tmv0\tEIRy_ss\tEIRy\tslide_prev_y\tclin_inc_y\tpcr_prev_y\n",file=annual_EIR_file)
   for(i in n_mv_set){
     if(i==1){cat("n_mv\tmosq_density\tEIRy_ss\tEIRy\tslide_prev_y\tclin_inc_y\tpcr_prev_y\n")}
-    EIRy_values[i]=sum(annual_data$EIR_benchmarks[,i])
-    slide_prevy_values[i]=sum(annual_data$slide_prev_benchmarks[,,i])/365
-    clin_incy_values[i]=sum(annual_data$clin_inc_benchmarks[,,i])
-    pcr_prevy_values[i]=sum(annual_data$pcr_prev_benchmarks[,,i])/365
+    EIRy_values[i]=sum(annual_data$EIR_benchmarks[,1,i])
+    slide_prevy_values[i]=sum(annual_data$slide_prev_benchmarks[,,1,i])/365
+    clin_incy_values[i]=sum(annual_data$clin_inc_benchmarks[,,1,i])
+    pcr_prevy_values[i]=sum(annual_data$pcr_prev_benchmarks[,,1,i])/365
     cat(i,mv_values[i],EIR_values[i],EIRy_values[i],slide_prevy_values[i],clin_incy_values[i],pcr_prevy_values[i],"\n",sep="\t")
     cat(i,mv_values[i],EIR_values[i],EIRy_values[i],slide_prevy_values[i],clin_incy_values[i],pcr_prevy_values[i],"\n",
         file=annual_EIR_file,append=TRUE,sep="\t")
   }
   
   # Delete Temp folder
+  setwd(dataset_folder)
   unlink("Temp", recursive=TRUE,force=TRUE)
   
   return(annual_data)
@@ -139,12 +140,11 @@ plot_mainpop_data <- function(input_list=list(),benchmark = "EIR", set_n_int=1, 
   density_sum = 0
   benchmark_values = 0
   if(benchmark == "EIR"){
-    benchmark_values = input_list$EIR_benchmarks[,(input_list$n_int_values*c(0:(input_list$n_mv_values-1)))+set_n_int]
+    benchmark_values = input_list$EIR_benchmarks[,set_n_int,input_list$n_mv_set]
   }else{
-    j=(input_list$n_int_values*c(0:(input_list$n_mv_values-1)))+set_n_int
-    if(benchmark == "slide_prev"){ benchmark_data = input_list$slide_prev_benchmarks[,,j]}
-    if(benchmark == "pcr_prev"){ benchmark_data = input_list$pcr_prev_benchmarks[,,j]}
-    if(benchmark == "clin_inc"){ benchmark_data = input_list$clin_inc_benchmarks[,,j] }
+    if(benchmark == "slide_prev"){ benchmark_data = input_list$slide_prev_benchmarks[,,set_n_int,input_list$n_mv_set]}
+    if(benchmark == "pcr_prev"){ benchmark_data = input_list$pcr_prev_benchmarks[,,set_n_int,input_list$n_mv_set]}
+    if(benchmark == "clin_inc"){ benchmark_data = input_list$clin_inc_benchmarks[,,set_n_int,input_list$n_mv_set] }
     
     for(i in n_age_start:n_age_end){
       density_sum = density_sum + input_list$params$den_norm[i]
@@ -175,6 +175,62 @@ plot_mainpop_data <- function(input_list=list(),benchmark = "EIR", set_n_int=1, 
 }
 
 #------------------------------------------------
+#' @title Plot year-round rainfall based on parameter file
+#'
+#' @description Function for displaying year-round rainfall data based on parameter values in input file
+#'
+#' @details Reads data from model_parameters.txt in dataset folder, calculates rainfall on each day of the year
+#'          and outputs resulting values as a graph
+#'
+#' @param input_folder      Dataset folder
+
+plot_rainfall <- function(input_folder=""){
+  
+  assert_string(input_folder)
+  
+  if(dir.exists(dataset_folder)==FALSE){ cat("\nFolder does not exist.\n")} else {
+    params <- read.table(paste(dataset_folder,"model_parameters.txt",sep=""), header=TRUE) 
+    
+    Rnorm=params$Rnorm
+    rconst=params$rconst
+    Re0=params$Re0
+    Re1=params$Re1
+    Re2=params$Re2
+    Re3=params$Re3
+    Re4=params$Re4
+    Im0=params$Im0
+    Im1=params$Im1
+    Im2=params$Im2
+    Im3=params$Im3
+    Im4=params$Im4 
+    rain_coeff=((Rnorm) / (14.0*8.0*64.0*365.0));
+    trig_coeff1 = (2.0*3.1415926536)/365; 
+    trig_coeff2 = trig_coeff1*2.0;
+    trig_coeff3 = trig_coeff1*3.0;
+    trig_coeff4 = trig_coeff1*4.0;
+    trig_coeff5 = trig_coeff1*5.0;
+    
+    days=c(0:364)
+    rainfall=rep(0,365)
+    
+    for(i in days){
+      rainfall[i]=rain_coeff*(rconst + (2.0*(
+        (Re0*cos(trig_coeff1*i)) + (Im0*sin(trig_coeff1*i)) +
+          (Re1*cos(trig_coeff2*i)) + (Im1*sin(trig_coeff2*i)) +
+          (Re2*cos(trig_coeff3*i)) + (Im2*sin(trig_coeff3*i)) +
+          (Re3*cos(trig_coeff4*i)) + (Im3*sin(trig_coeff4*i)) +
+          (Re4*cos(trig_coeff5*i)) + (Im4*sin(trig_coeff5*i))
+      )));
+    }
+    
+    matplot(days,rainfall,type="l",col=1,lwd=1.5,xlab="Day",ylab="Rainfall (a.u.)")
+    matplot(params$date_start,rainfall[params$date_start],type="p",pch=2,col=2,add=TRUE)
+    legend("topright", inset=0.01, legend=c("Rainfall","Start date"),lwd=1.0,col=c(1:2),horiz=FALSE,bg='white',cex=1.0)
+    
+  }
+  
+}
+#------------------------------------------------
 #' @title Plot pre-calculated data from dataset folder
 #'
 #' @description Function for displaying pre-calculated annual data or mosquito density parameter values from dataset folder
@@ -190,7 +246,7 @@ plot_folder_data <- function(input_folder="",xvalues="N_M",yvalues = "M"){
   
   # Input error checking (TODO - finish)
   assert_in(xvalues,c("N_M","M"))
-  assert_in(yvalues,c("M","EIR","slide_prev","pcr_prev","clin_inc"))
+  assert_in(yvalues,c("M","EIR","EIR_ss","slide_prev","pcr_prev","clin_inc"))
   
   annual_data <- as.list(read.table(paste(input_folder,"annual_data.txt",sep=""), header=TRUE))   # Read in annual data
   n_mv_values=length(annual_data$n_mv)
@@ -199,6 +255,7 @@ plot_folder_data <- function(input_folder="",xvalues="N_M",yvalues = "M"){
   
   if(yvalues=="M"){ydata = annual_data$mv0}
   if(yvalues=="EIR"){ydata = annual_data$EIRy}
+  if(yvalues=="EIR_ss"){ydata = annual_data$EIRy_ss}
   if(yvalues=="slide_prev"){ydata = annual_data$slide_prev_y}
   if(yvalues=="clin_inc"){ydata = annual_data$clin_inc_y}
   if(yvalues=="pcr_prev"){ydata = annual_data$pcr_prev_y}

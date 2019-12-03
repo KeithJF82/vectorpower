@@ -57,7 +57,6 @@ mainpop <- function (input_folder = "inst/extdata/Constant/",output_folder = NA,
   n_mv_end=n_mv_set[n_mv_values]
   if(int_v_varied==0) { int_values=c(0.0) }
   n_int_values=length(int_values)
-  n_runs=n_mv_values*n_int_values
   
   # Read in data from input files
   input_file = paste(input_folder,"start_data.txt",sep="")
@@ -106,22 +105,18 @@ mainpop <- function (input_folder = "inst/extdata/Constant/",output_folder = NA,
   
   # process raw output data
   {
-  n_run_names=paste("n_run",c(1:n_runs),sep="")
   n_pt_names=paste("n_pt",c(1:n_pts),sep="")
   na_names=paste("na",c(1:na),sep="")
   n_cat_names=paste("n_cat",c(1:n_cats),sep="")
   n_days_names=paste("n_days",c(1:n_days),sep="")
   n_mv_names=paste("n_mv",c(1:n_mv_values),sep="")
   n_int_names=paste("n_int",c(1:n_int_values),sep="")
-  slide_prev_names=paste("slide_prev",c(1:na),sep="")
-  pcr_prev_names=paste("pcr_prev",c(1:na),sep="")
-  clin_inc_names=paste("clin_inc",c(1:na),sep="")
-  dimnames_list=list(na_names,n_pt_names,n_run_names)
-  EIR_benchmarks = array(data=raw_data$EIR_benchmarks,dim=c(n_pts,n_runs),dimnames=list(n_pt_names,n_run_names))
-  slide_prev_benchmarks = array(data=raw_data$slide_prev_benchmarks,dim=c(na,n_pts,n_runs),dimnames=dimnames_list)
-  pcr_prev_benchmarks = array(data=raw_data$pcr_prev_benchmarks,dim=c(na,n_pts,n_runs),dimnames=dimnames_list)
-  clin_inc_benchmarks = array(data=raw_data$clin_inc_benchmarks,dim=c(na,n_pts,n_runs),dimnames=dimnames_list)
-  EIR_daily_data = array(data=raw_data$EIR_daily_data,dim=c(n_days,n_runs),dimnames=list(n_days_names,n_run_names))
+  dimnames_list=list(na_names,n_pt_names,n_int_names,n_mv_names)
+  EIR_benchmarks = array(data=raw_data$EIR_benchmarks,dim=c(n_pts,n_int_values,n_mv_values),dimnames=list(n_pt_names,n_int_names,n_mv_names))
+  slide_prev_benchmarks = array(data=raw_data$slide_prev_benchmarks,dim=c(na,n_pts,n_int_values,n_mv_values),dimnames=dimnames_list)
+  pcr_prev_benchmarks = array(data=raw_data$pcr_prev_benchmarks,dim=c(na,n_pts,n_int_values,n_mv_values),dimnames=dimnames_list)
+  clin_inc_benchmarks = array(data=raw_data$clin_inc_benchmarks,dim=c(na,n_pts,n_int_values,n_mv_values),dimnames=dimnames_list)
+  EIR_daily_data = array(data=raw_data$EIR_daily_data,dim=c(n_days,n_int_values,n_mv_values),dimnames=list(n_days_names,n_int_names,n_mv_names))
   IB_start_data = array(data=raw_data$IB_start_data,dim=c(n_cats,n_mv_values),dimnames=list(n_cat_names,n_mv_names))
   IC_start_data = array(data=raw_data$IC_start_data,dim=c(n_cats,n_mv_values),dimnames=list(n_cat_names,n_mv_names))
   ID_start_data = array(data=raw_data$ID_start_data,dim=c(n_cats,n_mv_values),dimnames=list(n_cat_names,n_mv_names))
@@ -182,14 +177,13 @@ cluster_input_setup <- function(input_list=list(), benchmark = "EIR",set_n_pt = 
   n_AE=(10*n_EIR)+n_annual
   
   benchmark_values=0
-  if(n_AE==11){benchmark_values = input_list$EIR_benchmarks[set_n_pt,(input_list$n_int_values*c(0:(input_list$n_mv_values-1)))+set_n_int]}
+  if(n_AE==11){benchmark_values = input_list$EIR_benchmarks[set_n_pt,set_n_int,]}
   if(n_AE==12){benchmark_values = input_list$annual_data$EIRy[input_list$n_mv_set]}
   if(n_AE==21){
     density_sum = 0
-    j=input_list$n_int_values*c(1:input_list$n_mv_values)
-    if(benchmark == "slide_prev"){ benchmark_data = input_list$slide_prev_benchmarks[,set_n_pt,j]}
-    if(benchmark == "pcr_prev"){ benchmark_data = input_list$pcr_prev_benchmarks[,set_n_pt,j]}
-    if(benchmark == "clin_inc"){ benchmark_data = input_list$clin_inc_benchmarks[,set_n_pt,j] }
+    if(benchmark == "slide_prev"){ benchmark_data = input_list$slide_prev_benchmarks[,set_n_pt,set_n_int,input_list$n_mv_set]}
+    if(benchmark == "pcr_prev"){ benchmark_data = input_list$pcr_prev_benchmarks[,set_n_pt,set_n_int,input_list$n_mv_set]}
+    if(benchmark == "clin_inc"){ benchmark_data = input_list$clin_inc_benchmarks[,set_n_pt,set_n_int,input_list$n_mv_set] }
     for(i in n_age_start:n_age_end){
       density_sum = density_sum + input_list$params$den_norm[i]
       benchmark_values = benchmark_values + benchmark_data[i,]
@@ -335,6 +329,7 @@ cohort <- function(mainpop_data = list(), cluster_data=list(),n_patients = 100,o
   
   n_clusters=length(cluster_data$n_B)
   if(is.na(output_folder)==FALSE){
+    if(dir.exists(output_folder)==FALSE){dir.create(output_folder)}
     file_summary = paste(output_folder,"summary.txt",sep="")
     file_frequency = paste(output_folder,"frequency.txt",sep="")
     flag_file=1
@@ -345,7 +340,7 @@ cohort <- function(mainpop_data = list(), cluster_data=list(),n_patients = 100,o
   }
 
   trial_params <- list(file_summary = file_summary,file_frequency = file_frequency,n_patients = n_patients,n_clusters=n_clusters,
-                       time_values=mainpop_data$time_values,tmax_i=length(mainpop_data$EIR_daily_data[,1]),
+                       time_values=mainpop_data$time_values,tmax_i=length(mainpop_data$EIR_daily_data[,1,1]),
                        prop_T_c = prop_T_c,age_start = age_start,age_end = age_end,
                        flag_file = flag_file, EIR_daily_data = as.vector(mainpop_data$EIR_daily_data),
                        IB_start_data = as.vector(mainpop_data$IB_start_data),
@@ -353,7 +348,6 @@ cohort <- function(mainpop_data = list(), cluster_data=list(),n_patients = 100,o
                        ID_start_data = as.vector(mainpop_data$ID_start_data))
 
   raw_data <- rcpp_cohort(mainpop_data$params,trial_params,cluster_data)
-  cat("\n\nC section complete.\n\n")
   results_data <- data.frame(raw_data)
   
   cluster_names=paste("cluster",c(1:n_clusters),sep="")
