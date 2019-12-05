@@ -15,3 +15,7 @@ LinkingTo:
 Imports: 
     Rcpp
 SystemRequirements: C++11
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
