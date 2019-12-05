@@ -188,8 +188,8 @@ plot_rainfall <- function(input_folder=""){
   
   assert_string(input_folder)
   
-  if(dir.exists(dataset_folder)==FALSE){ cat("\nFolder does not exist.\n")} else {
-    params <- read.table(paste(dataset_folder,"model_parameters.txt",sep=""), header=TRUE) 
+  if(dir.exists(input_folder)==FALSE){ cat("\nFolder does not exist.\n")} else {
+    params <- read.table(paste(input_folder,"model_parameters.txt",sep=""), header=TRUE) 
     
     Rnorm=params$Rnorm
     rconst=params$rconst
