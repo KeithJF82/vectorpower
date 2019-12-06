@@ -26,9 +26,9 @@ In this example, the folder containing all three parameter files (the inst/extda
 
 ```{r}
 input_location = "C:/Users/kjfras16/Documents/0 - Git repositories/vectorpower/inst/extdata/param_examples/"
-param_file=paste(vectorpower_location,"model_parameters_Mali.txt",sep="")
-age_file=paste(vectorpower_location,"age_data_145.txt",sep="")
-het_file=paste(vectorpower_location,"het_data_9.txt",sep="")
+param_file=paste(input_location,"model_parameters_Mali.txt",sep="")
+age_file=paste(input_location,"age_data_145.txt",sep="")
+het_file=paste(input_location,"het_data_9.txt",sep="")
 ```
 
 The location of the folder where the new data set is to be created must also be specified, along with the name of the new folder to create inside that folder where the files making up the dataset will be placed. As above, when running the example on your computer, you should change output_location to give the folder you want to use.
