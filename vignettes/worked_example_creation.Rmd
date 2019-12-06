@@ -25,7 +25,7 @@ rainfall as a function of time (which controls the seasonality of malaria)
 In this example, the folder containing all three parameter files (the inst/extdata/param_examples folder inside the main vectorpower folder) is specified, with the individual filenames concatenated with the folder name to specify their locations. To run the example on your own computer, change input_location to give the location where you have installed vectorpower.
 
 ```{r}
-input_location = "C:/Users/kjfras16/Documents/0 - Git repositories/vectorpower/inst/extdata/param_examples/"
+input_location = "inst/extdata/param_examples/"
 param_file=paste(input_location,"model_parameters_Mali.txt",sep="")
 age_file=paste(input_location,"age_data_145.txt",sep="")
 het_file=paste(input_location,"het_data_9.txt",sep="")
