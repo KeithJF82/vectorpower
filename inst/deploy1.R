@@ -1,12 +1,12 @@
 
 # Input location of 'vectorpower' folder, e.g. "C:/Users/Name/Documents/GitHub/"
-vectorpower_location = "C:/Users/Keith/Documents/Work/"  
+vectorpower_location = "C:/Users/kjfras16/Documents/0 - Git repositories/"  
 library(devtools)
 setwd(vectorpower_location)
 load_all("vectorpower")
 
 # Input location of dataset folder to use and view annual EIR data
-dataset_folder = "C:/Users/Keith/Documents/Work/vectorpower demo/Demo Folder 1/" 
+dataset_folder = "C:/Users/kjfras16/Documents/0 - R files/vectorpower testing/Demo Folder 1/" 
 basedata = plot_folder_data(input_folder=dataset_folder,xvalues="N_M",yvalues="EIR")
 
 # Set inputs
@@ -29,18 +29,18 @@ basedata = plot_folder_data(input_folder=dataset_folder,xvalues="N_M",yvalues="E
   benchmark_stdev=1.0  # Standard deviation of benchmark2 to use to create distribution
   int_mean=0.1          # Mean value of intervention parameter to use to create distribution
   int_stdev=0.05        # Standard deviation of intervention parameter to use to create distribution
-  data_file=paste(dataset_folder,"data_file.Rdata",sep="")
+  data_file=paste(dataset_folder,"data_file.rds",sep="")
 }
 
 # Simulate main population
 mainpop_data1 <- mainpop(input_folder = dataset_folder,n_mv_set = n_mv_set, int_v_varied = 1, int_values=int_values,
                          start_interval = start_interval, time_values=time_values)
 
-# Save main population data to file
-save(mainpop_data1,file=data_file)
+# Save main population data to .rds file
+saveRDS(mainpop_data1,file=data_file)
 
-# Load previously generated data from .Rdata file
-load(data_file)
+# Load previously generated data from .rds file
+mainpop_data1 <- readRDS(data_file)
 
 # Plot control results - EIR over time for different baseline malaria levels
 plot_con <- plot_mainpop_data(input_list=mainpop_data1,set_n_int=1,benchmark=benchmark1)
