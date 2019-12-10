@@ -8,7 +8,7 @@ vignette: >
 ---
 
 ```{r}
-devtools::install_github("KeithJF82/vectorpower")
+devtools::install_github("KeithJF82/vectorpower",force=TRUE)
 library(vectorpower)
 ```
 
