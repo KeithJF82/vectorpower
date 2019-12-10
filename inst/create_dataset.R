@@ -1,3 +1,4 @@
+install.packages("devtools", repos='http://cran.us.r-project.org')
 devtools::install_github("KeithJF82/vectorpower")
 library(vectorpower)
 
