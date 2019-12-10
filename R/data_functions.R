@@ -39,14 +39,17 @@ dataset_create <- function (dataset_folder="",EIR_values=c(1.0),param_file="",ag
   #
   if(dir.exists(dataset_folder)==FALSE){dir.create(dataset_folder)}
   
-  # Copy parameter files from existing folder to new one
-  cat("\nCreating new model_parameters.txt and age_data.txt files.")
+  # Copy parameter data to new files
+  cat("\nCreating new model_parameters.txt, het_data.txt and age_data.txt files.\n")
+  param_data=read.table(param_file,header=TRUE)
+  age_data=read.table(age_file,header=TRUE)
+  het_data=read.table(het_file,header=TRUE)
   param_file_new=paste(dataset_folder,"model_parameters.txt",sep="")
   age_file_new=paste(dataset_folder,"age_data.txt",sep="")
   het_file_new=paste(dataset_folder,"het_data.txt",sep="")
-  file.copy(from=param_file,to=param_file_new, overwrite = TRUE, copy.mode = TRUE, copy.date = FALSE)
-  file.copy(from=age_file,to=age_file_new, overwrite = TRUE, copy.mode = TRUE, copy.date = FALSE)
-  file.copy(from=het_file,to=het_file_new, overwrite = TRUE, copy.mode = TRUE, copy.date = FALSE)
+  write.table(param_data,file=param_file_new,col.names=TRUE,sep="\t",quote=FALSE)
+  write.table(age_data,file=age_file_new,col.names=TRUE,sep="\t",quote=FALSE)
+  write.table(het_data,file=het_file_new,col.names=TRUE,sep="\t",quote=FALSE)
   
   # Create new steady-state constant-rainfall data for desired EIR [TODO: or mv0] values using parameter [TODO: and age] files
   n_mv_values=length(EIR_values)
