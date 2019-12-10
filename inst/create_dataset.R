@@ -6,7 +6,7 @@
 output_location = getwd()  
 
 # Input name of dataset folder to be created in output_location
-dataset_location = "Demo Folder 1/"
+dataset_location = "/Demo Folder 1/"
 
 # Input vector of Values of steady-state annual EIR to generate data for (annual EIR under 
 # variable rainfall will not be identical)

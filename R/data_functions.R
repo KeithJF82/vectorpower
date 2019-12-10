@@ -30,9 +30,9 @@ dataset_create <- function (dataset_folder="",EIR_values=c(1.0),param_file="",ag
   # Error checking (TODO - Finish)
   assert_string(dataset_folder)
   assert_numeric(EIR_values)
-  assert_string(param_file) # TODO - Change to check that file exists
-  assert_string(age_file)   # TODO - Change to check that file exists
-  assert_string(het_file)   # TODO - Change to check that file exists
+  # assert_string(param_file) # TODO - Change to check that file exists
+  # assert_string(age_file)   # TODO - Change to check that file exists
+  # assert_string(het_file)   # TODO - Change to check that file exists
   assert_single_int(nyears)
   assert_single_bounded(nyears,1,20)
   
