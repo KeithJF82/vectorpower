@@ -4,8 +4,14 @@
 \alias{dataset_create}
 \title{Create new data set}
 \usage{
-dataset_create(dataset_folder = "", EIR_values = c(1),
-  param_file = "", age_file = "", het_file = "", nyears = 10)
+dataset_create(
+  dataset_folder = "",
+  EIR_values = c(1),
+  param_file = "",
+  age_file = "",
+  het_file = "",
+  nyears = 10
+)
 }
 \arguments{
 \item{dataset_folder}{Folder where new dataset to be located. Will be created if not already in existence}

@@ -4,9 +4,14 @@
 \alias{clusters_create}
 \title{Create clusters}
 \usage{
-clusters_create(input_list = list(), n_clusters = 100,
-  benchmark_mean = 0.25, benchmark_stdev = 0.025, int_mean = 0.15,
-  int_stdev = 0.05)
+clusters_create(
+  input_list = list(),
+  n_clusters = 100,
+  benchmark_mean = 0.25,
+  benchmark_stdev = 0.025,
+  int_mean = 0.15,
+  int_stdev = 0.05
+)
 }
 \arguments{
 \item{input_list}{List containing input_data, produced by cluster_input_setup()}

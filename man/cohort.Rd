@@ -4,9 +4,15 @@
 \alias{cohort}
 \title{Cohort evaluation}
 \usage{
-cohort(mainpop_data = list(), cluster_data = list(),
-  n_patients = 100, output_folder = NA, prop_T_c = 0.9,
-  age_start = 0.5, age_end = 10)
+cohort(
+  mainpop_data = list(),
+  cluster_data = list(),
+  n_patients = 100,
+  output_folder = NA,
+  prop_T_c = 0.9,
+  age_start = 0.5,
+  age_end = 10
+)
 }
 \arguments{
 \item{mainpop_data}{List output by mainpop() containing main population data}

@@ -4,8 +4,13 @@
 \alias{plot_mainpop_data}
 \title{Plot selected main population output data as a function of time}
 \usage{
-plot_mainpop_data(input_list = list(), benchmark = "EIR",
-  set_n_int = 1, age_start = 0, age_end = 65)
+plot_mainpop_data(
+  input_list = list(),
+  benchmark = "EIR",
+  set_n_int = 1,
+  age_start = 0,
+  age_end = 65
+)
 }
 \arguments{
 \item{input_list}{List containing mainpop output data}

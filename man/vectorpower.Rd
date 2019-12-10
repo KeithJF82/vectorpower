@@ -3,7 +3,6 @@
 \docType{package}
 \name{vectorpower}
 \alias{vectorpower}
-\alias{vectorpower-package}
 \title{Power Calculation for Cluster Randomised Vector Control Trials}
 \description{
 Allows the user to estimate the sample size required for a given

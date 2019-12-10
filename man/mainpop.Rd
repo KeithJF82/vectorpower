@@ -4,9 +4,15 @@
 \alias{mainpop}
 \title{Main population evaluation}
 \usage{
-mainpop(input_folder = "inst/extdata/Constant/", output_folder = NA,
-  n_mv_set = c(1), int_v_varied = 0, int_values = c(0),
-  start_interval = 31, time_values = c(0, 7))
+mainpop(
+  input_folder = "inst/extdata/Constant/",
+  output_folder = NA,
+  n_mv_set = c(1),
+  int_v_varied = 0,
+  int_values = c(0),
+  start_interval = 31,
+  time_values = c(0, 7)
+)
 }
 \arguments{
 \item{input_folder}{Folder containing rainfall, model parameter and starting data}
