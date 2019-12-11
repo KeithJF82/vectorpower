@@ -1,8 +1,8 @@
 ---
-title: "Test"
+title: "Worked Example 1 - Data Creation"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Test}
+  %\VignetteIndexEntry{Worked Example 1 - Data Creation}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

@@ -7,6 +7,17 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(vectorpower)
+```
+
 ## Installation
 
 In R, ensure that you have the [devtools](https://www.rstudio.com/products/rpackages/devtools/) package installed by running:
@@ -26,4 +37,5 @@ Then load the package:
 ```{r setup}
 library(vectorpower)
 ```
+
 

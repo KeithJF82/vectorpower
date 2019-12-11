@@ -143,19 +143,18 @@ plot_mainpop_data <- function(input_list=list(),benchmark = "EIR", set_n_int=1, 
   density_sum = 0
   benchmark_values = 0
   if(benchmark == "EIR"){
-    benchmark_values = input_list$EIR_benchmarks[,set_n_int,input_list$n_mv_set]
+    benchmark_values = input_list$EIR_benchmarks[,set_n_int,]
   }else{
-    if(benchmark == "slide_prev"){ benchmark_data = input_list$slide_prev_benchmarks[,,set_n_int,input_list$n_mv_set]}
-    if(benchmark == "pcr_prev"){ benchmark_data = input_list$pcr_prev_benchmarks[,,set_n_int,input_list$n_mv_set]}
-    if(benchmark == "clin_inc"){ benchmark_data = input_list$clin_inc_benchmarks[,,set_n_int,input_list$n_mv_set] }
+    if(benchmark == "slide_prev"){ benchmark_data = input_list$slide_prev_benchmarks}
+    if(benchmark == "pcr_prev"){ benchmark_data = input_list$pcr_prev_benchmarks}
+    if(benchmark == "clin_inc"){ benchmark_data = input_list$clin_inc_benchmarks }
     
     for(i in n_age_start:n_age_end){
       density_sum = density_sum + input_list$params$den_norm[i]
-      benchmark_values = benchmark_values + benchmark_data[i,,]
+      benchmark_values = benchmark_values + benchmark_data[i,,set_n_int,]
     }
     benchmark_values = benchmark_values/density_sum
   }
-  int_values=input_list$int_values
   
   if(input_list$n_mv_values>1){
     matplot(input_list$time_values,benchmark_values[,1],type="p",pch=2,col=2,xlab="time (days)",ylab=benchmark,
