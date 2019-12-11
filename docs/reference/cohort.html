@@ -92,7 +92,13 @@
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
-      <a href="../articles/test.html">test</a>
+      <a href="../articles/installation.html">Installation</a>
+    </li>
+    <li>
+      <a href="../articles/test.html">Test</a>
+    </li>
+    <li>
+      <a href="../articles/worked_example1_data_creation.html">Worked Example 1 - Data Creation</a>
     </li>
   </ul>
 </li>
@@ -121,9 +127,15 @@
     <p>Run stochastic individual model across trial cohort individuals in one or more clusters</p>
     </div>
 
-    <pre class="usage"><span class='fu'>cohort</span>(<span class='kw'>mainpop_data</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(), <span class='kw'>cluster_data</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(),
-  <span class='kw'>n_patients</span> <span class='kw'>=</span> <span class='fl'>100</span>, <span class='kw'>output_folder</span> <span class='kw'>=</span> <span class='fl'>NA</span>, <span class='kw'>prop_T_c</span> <span class='kw'>=</span> <span class='fl'>0.9</span>,
-  <span class='kw'>age_start</span> <span class='kw'>=</span> <span class='fl'>0.5</span>, <span class='kw'>age_end</span> <span class='kw'>=</span> <span class='fl'>10</span>)</pre>
+    <pre class="usage"><span class='fu'>cohort</span>(
+  <span class='kw'>mainpop_data</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(),
+  <span class='kw'>cluster_data</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(),
+  <span class='kw'>n_patients</span> <span class='kw'>=</span> <span class='fl'>100</span>,
+  <span class='kw'>output_folder</span> <span class='kw'>=</span> <span class='fl'>NA</span>,
+  <span class='kw'>prop_T_c</span> <span class='kw'>=</span> <span class='fl'>0.9</span>,
+  <span class='kw'>age_start</span> <span class='kw'>=</span> <span class='fl'>0.5</span>,
+  <span class='kw'>age_end</span> <span class='kw'>=</span> <span class='fl'>10</span>
+)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">

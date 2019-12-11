@@ -25,7 +25,7 @@ install.packages("devtools", repos='http://cran.us.r-project.org')
 Then install the vectorpower package directly from GitHub by running
 
 ```{r, eval = FALSE}
-devtools::install_github("vectorpower/malecot")
+devtools::install_github("KeithJF82/vectorpower")
 ```
 
 Then load the package:
