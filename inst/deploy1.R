@@ -33,7 +33,7 @@ basedata = plot_folder_data(input_folder=dataset_folder,xvalues="N_M",yvalues="E
 }
 
 # Simulate main population
-mainpop_data1 <- mainpop(input_folder = dataset_folder,n_mv_set = n_mv_set, int_v_varied = 1, int_values=int_values,
+mainpop_data1 <- mainpop(input_folder = dataset_folder, n_mv_set = n_mv_set, int_v_varied = 1, int_values=int_values,
                          start_interval = start_interval, time_values=time_values)
 
 # Save main population data to .rds file
