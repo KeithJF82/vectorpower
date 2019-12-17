@@ -117,7 +117,45 @@
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb6-1" title="1">nyears=<span class="dv">1</span></a></code></pre></div>
 <p>With all the parameters specified, the dataset_create function is run. This will first set initial conditions using steady-state calculations, then run the time-dependent model for the specified number of years to reach equilibrium. The results will be output as the dataset’s starting data. The year-round data output from the starting data (assuming no new interventions) will then be calculated and output as an aid to users of the dataset.</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" title="1">data1 &lt;-<span class="st"> </span><span class="kw"><a href="../reference/dataset_create.html">dataset_create</a></span>(<span class="dt">dataset_folder=</span>dataset_folder,<span class="dt">param_file=</span>param_file,<span class="dt">age_file=</span>age_file,</a>
-<a class="sourceLine" id="cb7-2" title="2">                        <span class="dt">het_file=</span>het_file,<span class="dt">EIR_values=</span>EIR_values,<span class="dt">nyears=</span>nyears)</a></code></pre></div>
+<a class="sourceLine" id="cb7-2" title="2">                        <span class="dt">het_file=</span>het_file,<span class="dt">EIR_values=</span>EIR_values,<span class="dt">nyears=</span>nyears)</a>
+<a class="sourceLine" id="cb7-3" title="3"><span class="co">#&gt; </span></a>
+<a class="sourceLine" id="cb7-4" title="4"><span class="co">#&gt; Creating new model_parameters.txt, het_data.txt and age_data.txt files.</span></a>
+<a class="sourceLine" id="cb7-5" title="5"><span class="co">#&gt; </span></a>
+<a class="sourceLine" id="cb7-6" title="6"><span class="co">#&gt; Generating preliminary data (steady state at constant rainfall)</span></a>
+<a class="sourceLine" id="cb7-7" title="7"><span class="co">#&gt; n_mv = 1 Mosquito density = 0.527208</span></a>
+<a class="sourceLine" id="cb7-8" title="8"><span class="co">#&gt; n_mv = 2 Mosquito density = 0.815276</span></a>
+<a class="sourceLine" id="cb7-9" title="9"><span class="co">#&gt; n_mv = 3 Mosquito density = 1.08308</span></a>
+<a class="sourceLine" id="cb7-10" title="10"><span class="co">#&gt; n_mv = 4 Mosquito density = 1.34119</span></a>
+<a class="sourceLine" id="cb7-11" title="11"><span class="co">#&gt; n_mv = 5 Mosquito density = 1.5934</span></a>
+<a class="sourceLine" id="cb7-12" title="12"><span class="co">#&gt; Steady-state calculations complete.</span></a>
+<a class="sourceLine" id="cb7-13" title="13"><span class="co">#&gt; </span></a>
+<a class="sourceLine" id="cb7-14" title="14"><span class="co">#&gt; Beginning main population calculations to equilibrium.</span></a>
+<a class="sourceLine" id="cb7-15" title="15"><span class="co">#&gt; Run 1 Mosquito density=0.52721 Intervention number=0</span></a>
+<a class="sourceLine" id="cb7-16" title="16"><span class="co">#&gt; Run 2 Mosquito density=0.81528 Intervention number=0</span></a>
+<a class="sourceLine" id="cb7-17" title="17"><span class="co">#&gt; Run 3 Mosquito density=1.0831 Intervention number=0</span></a>
+<a class="sourceLine" id="cb7-18" title="18"><span class="co">#&gt; Run 4 Mosquito density=1.3412 Intervention number=0</span></a>
+<a class="sourceLine" id="cb7-19" title="19"><span class="co">#&gt; Run 5 Mosquito density=1.5934 Intervention number=0</span></a></code></pre></div>
+<p><img src="worked_example1_data_creation_files/figure-html/unnamed-chunk-8-1.png" width="700"></p>
+<pre><code>#&gt; 
+#&gt; 
+#&gt; Creating new starting_data.txt file from results.
+#&gt; Running main population model for 1 year to establish year-round values
+#&gt; (annual EIR and incidence, annual average prevalences).
+#&gt; Run 1 Mosquito density=0.5272 Intervention number=0
+#&gt; Run 2 Mosquito density=0.8153 Intervention number=0
+#&gt; Run 3 Mosquito density=1.083 Intervention number=0
+#&gt; Run 4 Mosquito density=1.341 Intervention number=0
+#&gt; Run 5 Mosquito density=1.593 Intervention number=0</code></pre>
+<p><img src="worked_example1_data_creation_files/figure-html/unnamed-chunk-8-2.png" width="700"></p>
+<pre><code>#&gt; 
+#&gt; 
+#&gt; Outputting annual data.
+#&gt; n_mv mosq_density    EIRy_ss EIRy    slide_prev_y    clin_inc_y  pcr_prev_y
+#&gt; 1    0.5272077   1   0.8218734   0.06581835  0.1748154   0.1336496   
+#&gt; 2    0.8152763   2   1.660179    0.1020711   0.26247 0.2092985   
+#&gt; 3    1.083078    3   2.517263    0.1284982   0.322335    0.2636997   
+#&gt; 4    1.341186    4   3.390876    0.1494839   0.3672826   0.3065042   
+#&gt; 5    1.593403    5   4.275946    0.1668633   0.4026235   0.3417163   </code></pre>
   </div>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
