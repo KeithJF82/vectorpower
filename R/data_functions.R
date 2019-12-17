@@ -7,6 +7,44 @@ NULL
 #------------------------------------------------
 # TODO - Create function for setting up or adjusting parameter and age data values in R?
 #------------------------------------------------
+#' @title Load data set from folder
+#'
+#' @description Function which takes the name of a dataset folder and sets the locations for the files 
+#'
+#' @details     Takes the location of a dataset folder, sets the locations for the files containing parameter values, 
+#'              age and heterogeneity data, starting data and (if applicable) annual data and outputs them as a list for
+#'              input to mainpop(). The filenames can also be set manually if they are not in a single dataset folder,
+#'              e.g. if they are to be loaded from online
+#'                            
+#'
+#' @param dataset_folder    Dataset folder location
+#'
+#' @export
+
+load_dataset <- function (dataset_folder="")
+{
+  
+  assert_string(dataset_folder)
+  
+  # Create file names
+  file_list=list(age_file="",het_file="",param_file="",start_file="",annual_file="")
+  if(dir.exists(dataset_folder)==1){
+    file_list$age_file=paste(dataset_folder,"age_data.txt",sep="")
+    file_list$het_file=paste(dataset_folder,"het_data.txt",sep="")
+    file_list$param_file=paste(dataset_folder,"model_parameters.txt",sep="")
+    file_list$start_file=paste(dataset_folder,"start_data.txt",sep="")
+    file_list$annual_file=paste(dataset_folder,"annual_data.txt",sep="")
+  }
+  else{cat("\nFolder does not exist.\n")}
+  
+  assert_file_exists(file_list$age_file)
+  assert_file_exists(file_list$het_file)
+  assert_file_exists(file_list$param_file)
+  assert_file_exists(file_list$start_file)
+  
+  return(file_list)
+}
+#------------------------------------------------
 #' @title Create new data set
 #'
 #' @description Function which sets up a folder containing new data in the correct formats which can be used for
@@ -27,16 +65,15 @@ NULL
 
 dataset_create <- function (dataset_folder="",EIR_values=c(1.0),param_file="",age_file="",het_file="",nyears=10)
 {
-  # Error checking (TODO - Finish)
+  # Error checking
   assert_string(dataset_folder)
   assert_numeric(EIR_values)
-  # assert_string(param_file) # TODO - Change to check that file exists
-  # assert_string(age_file)   # TODO - Change to check that file exists
-  # assert_string(het_file)   # TODO - Change to check that file exists
   assert_single_int(nyears)
   assert_single_bounded(nyears,1,20)
+  assert_file_exists(age_file)
+  assert_file_exists(het_file)
+  assert_file_exists(param_file)
   
-  #
   if(dir.exists(dataset_folder)==FALSE){dir.create(dataset_folder)}
   
   # Copy parameter data to new files
@@ -71,7 +108,8 @@ dataset_create <- function (dataset_folder="",EIR_values=c(1.0),param_file="",ag
   n_mv_set=c(1:n_mv_values)
   output_folder=paste(dataset_folder,"Temp/",sep="")
   if(dir.exists(output_folder)==FALSE){dir.create(output_folder)}
-  eq_data <- mainpop(input_folder = dataset_folder, output_folder = output_folder,n_mv_set = n_mv_set, int_v_varied = 0, 
+  input_files=list(age_file=age_file,het_file=het_file,param_file=param_file,start_file=file_endpoints,annual_file="")
+  eq_data <- mainpop(input_files = input_files, output_folder = output_folder,n_mv_set = n_mv_set, int_v_varied = 0, 
                      int_values=c(0.0), start_interval = 0.0, time_values=365*c(0:nyears) )
   plot_mainpop_data(input_list=eq_data,set_n_int=1,benchmark = "EIR",age_start = 0,age_end = 65.0)
   
@@ -82,7 +120,7 @@ dataset_create <- function (dataset_folder="",EIR_values=c(1.0),param_file="",ag
   
   # Run for 1 year with daily data points to produce year-round data
   cat("\nRunning main population model for 1 year to establish year-round values\n(annual EIR and incidence, annual average prevalences).")
-  annual_data <- mainpop(input_folder = dataset_folder,n_mv_set = n_mv_set, int_v_varied = 0, int_values=c(0.0),
+  annual_data <- mainpop(input_files = load_dataset(dataset_folder),n_mv_set = n_mv_set, int_v_varied = 0, int_values=c(0.0),
                          start_interval = 0.0, time_values=1.0*c(0:364) )
   plot_mainpop_data(input_list=annual_data,set_n_int=1,benchmark = "EIR")
   
@@ -184,14 +222,14 @@ plot_mainpop_data <- function(input_list=list(),benchmark = "EIR", set_n_int=1, 
 #' @details Reads data from model_parameters.txt in dataset folder, calculates rainfall on each day of the year
 #'          and outputs resulting values as a graph
 #'
-#' @param input_folder      Dataset folder
+#' @param dataset_folder      Dataset folder
 
-plot_rainfall <- function(input_folder=""){
+plot_rainfall <- function(dataset_folder=""){
   
-  assert_string(input_folder)
+  assert_string(dataset_folder)
   
-  if(dir.exists(input_folder)==FALSE){ cat("\nFolder does not exist.\n")} else {
-    params <- read.table(paste(input_folder,"model_parameters.txt",sep=""), header=TRUE) 
+  if(dir.exists(dataset_folder)==FALSE){ cat("\nFolder does not exist.\n")} else {
+    params <- read.table(paste(dataset_folder,"model_parameters.txt",sep=""), header=TRUE) 
     
     Rnorm=params$Rnorm
     rconst=params$rconst

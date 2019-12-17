@@ -14,7 +14,8 @@ NULL
 #'
 #' @details Takes a list of parameters, returns a list of raw data (data also saved to files as backup). 
 #'
-#' @param input_folder    Folder containing rainfall, model parameter and starting data
+#' @param input_files     List of files containing parameter values, age and heterogeneity data, starting data, 
+#'                        and (if applicable) annual data
 #' @param output_folder   Folder to send output files (no files saved if set to NA)
 #' @param n_mv_set        Vector of mosquito density number values to use (must be increasing order)
 #' @param int_v_varied    Intervention parameter given variable value 
@@ -25,12 +26,11 @@ NULL
 #'
 #' @export
 
-mainpop <- function (input_folder = "inst/extdata/Constant/",output_folder = NA,n_mv_set=c(1), 
-                     int_v_varied=0, int_values= c(0.0),
+mainpop <- function (input_files = list(),output_folder = NA,n_mv_set=c(1), int_v_varied=0, int_values= c(0.0),
                      start_interval = 31.0, time_values=c(0.0,7.0))
 {
   # Input error checking
-  assert_string(input_folder)
+  assert_list(input_files)
   if(is.na(output_folder)==0){assert_string(output_folder)}
   assert_numeric(n_mv_set)
   assert_int(int_v_varied)
@@ -38,13 +38,16 @@ mainpop <- function (input_folder = "inst/extdata/Constant/",output_folder = NA,
   assert_numeric(int_values)
   assert_single_numeric(start_interval)
   assert_numeric(time_values)
+  assert_file_exists(input_files$age_file)
+  assert_file_exists(input_files$het_file)
+  assert_file_exists(input_files$param_file)
+  assert_file_exists(input_files$start_file)
   
-  # Set up parameters 
-  age_data=age_data_setup(read.table(paste(input_folder,"age_data.txt",sep=""),header=TRUE,sep="\t")[[1]])
-  het_data = as.list(read.table(paste(input_folder,"het_data.txt",sep=""),header=TRUE,sep="\t"))  # Read in biting heterogeneity data
-  params <- as.list(read.table(paste(input_folder,"model_parameters.txt",sep=""), header=TRUE))   # Read in model parameters
-  annual_data_file=paste(input_folder,"annual_data.txt",sep="")
-  if(file.exists(annual_data_file)==1){annual_data <- as.list(read.table(annual_data_file, header=TRUE))
+  # Set up parameters (TODO: Check that data inputs properly)
+  age_data=age_data_setup(read.table(input_files$age_file,header=TRUE,sep="\t")[[1]])
+  het_data = as.list(read.table(input_files$het_file,header=TRUE,sep="\t"))  # Read in biting heterogeneity data
+  params <- as.list(read.table(input_files$param_file, header=TRUE))   # Read in model parameters
+  if(file.exists(input_files$annual_file)==1){annual_data <- as.list(read.table(input_files$annual_file, header=TRUE))
   } else {annual_data <- list()}
   
   na=length(age_data$age_width)
@@ -59,8 +62,7 @@ mainpop <- function (input_folder = "inst/extdata/Constant/",output_folder = NA,
   n_int_values=length(int_values)
   
   # Read in data from input files
-  input_file = paste(input_folder,"start_data.txt",sep="")
-  input_data <- read.table(input_file,header=TRUE,nrows=n_mv_end)
+  input_data <- read.table(input_files$start_file,header=TRUE,nrows=n_mv_end)
   inputs <- list(mv_input=input_data$mv0[n_mv_set], 
                  EL_input=input_data$EL[n_mv_set], LL_input=input_data$LL[n_mv_set], PL_input=input_data$PL[n_mv_set],
                  Sv_input=input_data$Sv1[n_mv_set], Ev_input=input_data$Ev1[n_mv_set], Iv_input=input_data$Iv1[n_mv_set],

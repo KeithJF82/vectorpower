@@ -16,10 +16,12 @@ knitr::opts_chunk$set(
 
 ## Worked example 2 - Running main population calculations
 
-This is an example of how to load a dataset and 
+This is an example of how to load a dataset and carry out simulations of the progression of malaria in the main (non-cohort) population.
 
 First load the package (install it first if necessary as shown in the Installation article)
 
 ```{r, eval = FALSE}
 library(vectorpower)
 ```
+
+Next 

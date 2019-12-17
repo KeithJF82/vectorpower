@@ -5,7 +5,7 @@
 \title{Main population evaluation}
 \usage{
 mainpop(
-  input_folder = "inst/extdata/Constant/",
+  input_files = list(),
   output_folder = NA,
   n_mv_set = c(1),
   int_v_varied = 0,
@@ -15,7 +15,8 @@ mainpop(
 )
 }
 \arguments{
-\item{input_folder}{Folder containing rainfall, model parameter and starting data}
+\item{input_files}{List of files containing parameter values, age and heterogeneity data, starting data, 
+and (if applicable) annual data}
 
 \item{output_folder}{Folder to send output files (no files saved if set to NA)}
 

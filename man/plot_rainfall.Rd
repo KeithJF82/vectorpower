@@ -4,10 +4,10 @@
 \alias{plot_rainfall}
 \title{Plot year-round rainfall based on parameter file}
 \usage{
-plot_rainfall(input_folder = "")
+plot_rainfall(dataset_folder = "")
 }
 \arguments{
-\item{input_folder}{Dataset folder}
+\item{dataset_folder}{Dataset folder}
 }
 \description{
 Function for displaying year-round rainfall data based on parameter values in input file
