@@ -92,6 +92,14 @@
     
     
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" title="1"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span>(vectorpower)</a></code></pre></div>
+<p>This is a test of writing data to a file in code in a vignette and whether it can work on Travis CI.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" title="1">x=<span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>)</a>
+<a class="sourceLine" id="cb2-2" title="2">y=x<span class="op">^</span><span class="dv">2</span></a>
+<a class="sourceLine" id="cb2-3" title="3">data1=<span class="kw"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span>(x,y)</a>
+<a class="sourceLine" id="cb2-4" title="4"><span class="kw"><a href="https://rdrr.io/r/utils/write.table.html">write.table</a></span>(data1,<span class="dt">file=</span><span class="st">"test.txt"</span>,<span class="dt">quote=</span><span class="ot">FALSE</span>)</a>
+<a class="sourceLine" id="cb2-5" title="5">data2=<span class="kw"><a href="https://rdrr.io/r/utils/read.table.html">read.table</a></span>(<span class="dt">file=</span><span class="st">"test.txt"</span>,<span class="dt">header=</span><span class="ot">TRUE</span>)</a>
+<a class="sourceLine" id="cb2-6" title="6"><span class="kw"><a href="https://rdrr.io/r/graphics/plot.html">plot</a></span>(data2<span class="op">$</span>x,data2<span class="op">$</span>y)</a></code></pre></div>
+<p><img src="test_files/figure-html/unnamed-chunk-2-1.png" width="700"></p>
   </div>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
