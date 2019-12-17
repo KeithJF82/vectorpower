@@ -21,7 +21,9 @@ library(vectorpower)
 This is a test of writing data to a file in code in a vignette and whether it can work on Travis CI.
 
 ```{r}
-folder="C:/testing/"
+output_location = "C:/" 
+foldername = "Demo Folder 1/"
+folder=paste(output_location,foldername,sep="")
 if(dir.exists(folder)==FALSE){dir.create(folder)}
 x=c(1:10)
 y=x^2

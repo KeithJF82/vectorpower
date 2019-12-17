@@ -69,6 +69,7 @@ dataset_create <- function (dataset_folder="",EIR_values=c(1.0),param_file="",ag
   assert_numeric(EIR_values)
   assert_single_int(nyears)
   assert_single_bounded(nyears,1,20)
+  # TODO - Find way to check input data exists when files are identified using URLs
   # assert_file_exists(age_file)
   # assert_file_exists(het_file)
   # assert_file_exists(param_file)
@@ -90,16 +91,15 @@ dataset_create <- function (dataset_folder="",EIR_values=c(1.0),param_file="",ag
   
   # Create new steady-state constant-rainfall data for desired EIR [TODO: or mv0] values using parameter [TODO: and age] files
   n_mv_values=length(EIR_values)
-  file_endpoints = paste(dataset_folder,"start_data.txt",sep="")
   age_data=age_data_setup(read.table(age_file_new,header=TRUE,sep="\t")[[1]])
-  het_data = as.list(read.table(paste(dataset_folder,"het_data.txt",sep=""),header=TRUE,sep="\t"))
-  params <- read.table(paste(dataset_folder,"model_parameters.txt",sep=""), header=TRUE) 
+  het_data = read.table(het_file_new,header=TRUE,sep="\t")
+  params <- read.table(param_file_new, header=TRUE) 
   na=length(age_data$age_width)
   num_het=length(het_data$het_x)
   params=c(na=na,num_het=num_het,params,age_data,het_data)
   
   cat("\nGenerating preliminary data (steady state at constant rainfall)")
-  trial_params <- list(EIRy=EIR_values,file_endpoints=file_endpoints)
+  trial_params <- list(EIRy=EIR_values,file_endpoints=start_file_new)
   raw_data <- rcpp_mainpop_ss(params,trial_params)
   mv_values <- raw_data$mv_values
   
@@ -108,14 +108,14 @@ dataset_create <- function (dataset_folder="",EIR_values=c(1.0),param_file="",ag
   n_mv_set=c(1:n_mv_values)
   output_folder=paste(dataset_folder,"Temp/",sep="")
   if(dir.exists(output_folder)==FALSE){dir.create(output_folder)}
-  input_files=list(age_file=age_file_new,het_file=het_file_new,param_file=param_file_new,start_file=file_endpoints,annual_file=NA)
+  input_files=list(age_file=age_file_new,het_file=het_file_new,param_file=param_file_new,start_file=start_file_new,annual_file=NA)
   eq_data <- mainpop(input_files = input_files, output_folder = output_folder,n_mv_set = n_mv_set, int_v_varied = 0, 
                      int_values=c(0.0), start_interval = 0.0, time_values=365*c(0:nyears) )
   plot_mainpop_data(input_list=eq_data,set_n_int=1,benchmark = "EIR",age_start = 0,age_end = 65.0)
   
   # Transfer endpoints as new start data
   cat("\n\nCreating new starting_data.txt file from results.")
-  file.copy(from=paste(output_folder,"endpoints.txt",sep=""),to=paste(dataset_folder,"start_data.txt",sep=""),
+  file.copy(from=paste(output_folder,"endpoints.txt",sep=""),to=start_file_new,
             overwrite = TRUE, copy.mode = TRUE, copy.date = FALSE)
   
   # Run for 1 year with daily data points to produce year-round data
