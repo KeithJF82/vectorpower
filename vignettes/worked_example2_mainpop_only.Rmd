@@ -1,8 +1,8 @@
 ---
-title: "worked_example2_mainpop_only"
+title: "Worked Example 2 - Main Population Calculations"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{worked_example2_mainpop_only}
+  %\VignetteIndexEntry{Worked Example 2 - Main Population Calculations}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -14,11 +14,9 @@ knitr::opts_chunk$set(
 )
 ```
 
-## Worked example 2 - Running main population calculations
-
 This is an example of how to load a dataset and carry out simulations of the progression of malaria in the main (non-cohort) population.
 
-First load the package (install it first if necessary as shown in the Installation article)
+First load the package (install it first if necessary as shown in the Installation article):
 
 ```{r, eval = FALSE}
 library(vectorpower)
@@ -36,22 +34,27 @@ input_files <- list(
                     )
 ```
 
-The parameters defining the trial setup are then supplied to be used by mainpop().
+The parameters defining the trial setup are then supplied to be used by mainpop():
 
 ```{r, eval = FALSE}
-start_interval = 0.0  # Length of time to run main population model from starting date before intervention begins
-time_values = c(0.0,28.0,56.0,84.0,112.0,140.0) # Time points after the end of the starting interval at which benchmark data should be output
-n_mv_set = c(1:5) # List of sets of values to load from starting data
-int_v_varied = 1 # Intervention parameter given variable value (0= None, 1=ATSB kill rate, 2=bednet coverage, 3=IRS coverage)
-int_values = c(0.0,0.1) # List of intervention parameter values
+# Length of time to run main population model from starting date before intervention begins
+start_interval = 0.0  
+# Time points after the end of the starting interval at which benchmark data should be output
+time_values = c(0.0,28.0,56.0,84.0,112.0,140.0) 
+# List of sets of values to load from starting data
+n_mv_set = c(1:5) 
+# Intervention parameter given variable value (0= None, 1=ATSB kill rate, 2=bednet coverage, 3=IRS coverage)
+int_v_varied = 1 
+# List of intervention parameter values
+int_values = c(0.0,0.1) 
 ```
 
 The parameters and list of input files are then passed to the mainpop() function:
 
 
 ```{r, eval = FALSE}
-mainpop_data1 <- mainpop(input_files = input_files, n_mv_set = n_mv_set, int_v_varied = int_v_varied, int_values=int_values,
-                         start_interval = start_interval, time_values=time_values)
+mainpop_data1 <- mainpop(input_files = input_files, n_mv_set = n_mv_set, int_v_varied = int_v_varied, 
+                         int_values=int_values, start_interval = start_interval, time_values=time_values)
 ```
 
 
