@@ -21,6 +21,8 @@ library(vectorpower)
 This is a test of writing data to a file in code in a vignette and whether it can work on Travis CI.
 
 ```{r}
+folder="C:/testing/"
+if(dir.exists(folder)==FALSE){dir.create(folder)}
 x=c(1:10)
 y=x^2
 data1=data.frame(x,y)
