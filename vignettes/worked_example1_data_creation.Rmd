@@ -49,7 +49,7 @@ The location of the folder where the new data set is to be created must also be 
 
 If a folder with the same already exists and contains an existing dataset, the dataset files in that folder will be overwritten.
 
-```{r}
+```{r, eval = FALSE}
 output_location = "C:/" 
 dataset_location = "Demo Folder 1/"
 dataset_folder=paste(output_location,dataset_location,sep="")
@@ -59,19 +59,19 @@ The baseline malaria levels represented by the input data to go in the dataset a
 
 In this example, the EIR values are between 1 and 5 infectious bites per person per year; these represent low baseline malaria levels. High malaria levels require longer computation times to avoid errors; the computation time increases with  approximately the square root of EIR (so an EIR of 100 requires around 10 times the computation time of an EIR of 1).
 
-```{r}
+```{r, eval = FALSE}
 EIR_values=1.0*c(1:5)
 ```
 
 Next, the integer number of years (from 1-20) for which the time-dependent model should be run to reach equilibrium must be specified. The more years for which it is run, the more stable the equilibrium; if the equilibrium is less stable, the malaria level will vary more significantly from year to year in calculations if the model is run for multiple years. For most purposes, running for at least 5 years is sufficient. In this example, nyears is set to 1 for speed.
 
-```{r}
+```{r, eval = FALSE}
 nyears=1
 ```
 
 With all the parameters specified, the dataset_create function is run. This will first set initial conditions using steady-state calculations, then run the time-dependent model for the specified number of years to reach equilibrium. The results will be output as the dataset's starting data. The year-round data output from the starting data (assuming no new interventions) will then be calculated and output as an aid to users of the dataset.
 
-```{r}
+```{r, eval = FALSE}
 data1 <- dataset_create(dataset_folder=dataset_folder,param_file=param_file,age_file=age_file,
                         het_file=het_file,EIR_values=EIR_values,nyears=nyears)
 ```
