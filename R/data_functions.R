@@ -26,8 +26,7 @@ load_dataset <- function (dataset_folder="")
   
   assert_string(dataset_folder)
   
-  # Create file names
-  file_list=list(age_file="",het_file="",param_file="",start_file="",annual_file="")
+  file_list=list(age_file=NA,het_file=NA,param_file=NA,start_file=NA,annual_file=NA)
   if(dir.exists(dataset_folder)==1){
     file_list$age_file=paste(dataset_folder,"age_data.txt",sep="")
     file_list$het_file=paste(dataset_folder,"het_data.txt",sep="")
@@ -70,9 +69,9 @@ dataset_create <- function (dataset_folder="",EIR_values=c(1.0),param_file="",ag
   assert_numeric(EIR_values)
   assert_single_int(nyears)
   assert_single_bounded(nyears,1,20)
-  assert_file_exists(age_file)
-  assert_file_exists(het_file)
-  assert_file_exists(param_file)
+  # assert_file_exists(age_file)
+  # assert_file_exists(het_file)
+  # assert_file_exists(param_file)
   
   if(dir.exists(dataset_folder)==FALSE){dir.create(dataset_folder)}
   
@@ -81,9 +80,10 @@ dataset_create <- function (dataset_folder="",EIR_values=c(1.0),param_file="",ag
   param_data=read.table(param_file,header=TRUE)
   age_data=read.table(age_file,header=TRUE)
   het_data=read.table(het_file,header=TRUE)
-  param_file_new=paste(dataset_folder,"model_parameters.txt",sep="")
   age_file_new=paste(dataset_folder,"age_data.txt",sep="")
   het_file_new=paste(dataset_folder,"het_data.txt",sep="")
+  param_file_new=paste(dataset_folder,"model_parameters.txt",sep="")
+  start_file_new=paste(dataset_folder,"start_data.txt",sep="")
   write.table(param_data,file=param_file_new,col.names=TRUE,sep="\t",quote=FALSE)
   write.table(age_data,file=age_file_new,col.names=TRUE,sep="\t",quote=FALSE)
   write.table(het_data,file=het_file_new,col.names=TRUE,sep="\t",quote=FALSE)
@@ -108,7 +108,7 @@ dataset_create <- function (dataset_folder="",EIR_values=c(1.0),param_file="",ag
   n_mv_set=c(1:n_mv_values)
   output_folder=paste(dataset_folder,"Temp/",sep="")
   if(dir.exists(output_folder)==FALSE){dir.create(output_folder)}
-  input_files=list(age_file=age_file,het_file=het_file,param_file=param_file,start_file=file_endpoints,annual_file="")
+  input_files=list(age_file=age_file_new,het_file=het_file_new,param_file=param_file_new,start_file=file_endpoints,annual_file=NA)
   eq_data <- mainpop(input_files = input_files, output_folder = output_folder,n_mv_set = n_mv_set, int_v_varied = 0, 
                      int_values=c(0.0), start_interval = 0.0, time_values=365*c(0:nyears) )
   plot_mainpop_data(input_list=eq_data,set_n_int=1,benchmark = "EIR",age_start = 0,age_end = 65.0)
@@ -120,7 +120,8 @@ dataset_create <- function (dataset_folder="",EIR_values=c(1.0),param_file="",ag
   
   # Run for 1 year with daily data points to produce year-round data
   cat("\nRunning main population model for 1 year to establish year-round values\n(annual EIR and incidence, annual average prevalences).")
-  annual_data <- mainpop(input_files = load_dataset(dataset_folder),n_mv_set = n_mv_set, int_v_varied = 0, int_values=c(0.0),
+  input_files=list(age_file=age_file_new,het_file=het_file_new,param_file=param_file_new,start_file=start_file_new,annual_file=NA)
+  annual_data <- mainpop(input_files = input_files,n_mv_set = n_mv_set, int_v_varied = 0, int_values=c(0.0),
                          start_interval = 0.0, time_values=1.0*c(0:364) )
   plot_mainpop_data(input_list=annual_data,set_n_int=1,benchmark = "EIR")
   

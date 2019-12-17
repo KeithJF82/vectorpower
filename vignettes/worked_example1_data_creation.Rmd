@@ -50,8 +50,8 @@ The location of the folder where the new data set is to be created must also be 
 If a folder with the same already exists and contains an existing dataset, the dataset files in that folder will be overwritten.
 
 ```{r, eval = FALSE}
-output_location = getwd() 
-dataset_location = "/Demo Folder 1/"
+output_location = "C:/" 
+dataset_location = "Demo Folder 1/"
 dataset_folder=paste(output_location,dataset_location,sep="")
 ```
 

@@ -38,31 +38,34 @@ mainpop <- function (input_files = list(),output_folder = NA,n_mv_set=c(1), int_
   assert_numeric(int_values)
   assert_single_numeric(start_interval)
   assert_numeric(time_values)
-  assert_file_exists(input_files$age_file)
-  assert_file_exists(input_files$het_file)
-  assert_file_exists(input_files$param_file)
-  assert_file_exists(input_files$start_file)
+  # TODO - Change these to something that works with URLs
+  # assert_file_exists(input_files$age_file)
+  # assert_file_exists(input_files$het_file)
+  # assert_file_exists(input_files$param_file)
+  # assert_file_exists(input_files$start_file)
+  # assert_file_exists(input_files$annual_file)
   
-  # Set up parameters (TODO: Check that data inputs properly)
-  age_data=age_data_setup(read.table(input_files$age_file,header=TRUE,sep="\t")[[1]])
-  het_data = as.list(read.table(input_files$het_file,header=TRUE,sep="\t"))  # Read in biting heterogeneity data
-  params <- as.list(read.table(input_files$param_file, header=TRUE))   # Read in model parameters
-  if(file.exists(input_files$annual_file)==1){annual_data <- as.list(read.table(input_files$annual_file, header=TRUE))
-  } else {annual_data <- list()}
-  
-  na=length(age_data$age_width)
-  num_het=length(het_data$het_x)
-  params=c(na=na,num_het=num_het,params,age_data,het_data)
   n_pts=length(time_values)
-  n_cats=na*num_het
   n_days=max(time_values)+1
   n_mv_values=length(n_mv_set)
   n_mv_end=n_mv_set[n_mv_values]
   if(int_v_varied==0) { int_values=c(0.0) }
   n_int_values=length(int_values)
   
+  # Load data from files (TODO: Check that data inputs properly)
+  age_data=age_data_setup(read.table(input_files$age_file,header=TRUE,sep="\t")[[1]]) # Read in age data
+  het_data = as.list(read.table(input_files$het_file,header=TRUE,sep="\t"))   # Read in biting heterogeneity data
+  params <- as.list(read.table(input_files$param_file, header=TRUE))          # Read in model parameters
+  input_data <- read.table(input_files$start_file,header=TRUE,nrows=n_mv_end) # Read in starting data
+  if(is.na(input_files$annual_file)==TRUE){ annual_data <- list()
+  } else { annual_data <- as.list(read.table(input_files$annual_file, header=TRUE)) }
+  
+  na=length(age_data$age_width)
+  num_het=length(het_data$het_x)
+  n_cats=na*num_het
+  params=c(na=na,num_het=num_het,params,age_data,het_data)
+  
   # Read in data from input files
-  input_data <- read.table(input_files$start_file,header=TRUE,nrows=n_mv_end)
   inputs <- list(mv_input=input_data$mv0[n_mv_set], 
                  EL_input=input_data$EL[n_mv_set], LL_input=input_data$LL[n_mv_set], PL_input=input_data$PL[n_mv_set],
                  Sv_input=input_data$Sv1[n_mv_set], Ev_input=input_data$Ev1[n_mv_set], Iv_input=input_data$Iv1[n_mv_set],
