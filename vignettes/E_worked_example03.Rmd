@@ -1,0 +1,27 @@
+---
+title: "Worked Example 3 - Cohort Setup"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Worked Example 3 - Cohort Setup}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+This is an example of how to take data output from main population calculations and use it to set up the details of the trial cohort. In this example, the main population data is loaded from an RDS file.
+
+```{r, eval = FALSE}
+readRDS(file="")
+```
+
+First load the package (install it first if necessary as shown in the Installation article):
+
+```{r setup}
+library(vectorpower)
+```

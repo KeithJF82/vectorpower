@@ -65,6 +65,9 @@
     <li>
       <a href="../articles/D_worked_example02.html">Worked Example 2 - Main Population Calculations</a>
     </li>
+    <li>
+      <a href="../articles/E_worked_example03.html">Worked Example 3 - Cohort Setup</a>
+    </li>
   </ul>
 </li>
       </ul>
@@ -116,6 +119,8 @@
 <p>The parameters and list of input files are then passed to the mainpop() function:</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb4-1" title="1">mainpop_data1 &lt;-<span class="st"> </span><span class="kw"><a href="../reference/mainpop.html">mainpop</a></span>(<span class="dt">input_files =</span> input_files, <span class="dt">n_mv_set =</span> n_mv_set, <span class="dt">int_v_varied =</span> int_v_varied, </a>
 <a class="sourceLine" id="cb4-2" title="2">                         <span class="dt">int_values=</span>int_values, <span class="dt">start_interval =</span> start_interval, <span class="dt">time_values=</span>time_values)</a></code></pre></div>
+<p>The resulting data can be used in cohort calculations or processed on its own. It can be saved to a file so that it can be used again if R is closed.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" title="1"><span class="kw"><a href="https://rdrr.io/r/base/readRDS.html">saveRDS</a></span>(mainpop_data1,<span class="dt">file=</span><span class="st">"mainpop_data1.Rds"</span>)</a></code></pre></div>
   </div>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
