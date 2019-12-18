@@ -14,14 +14,17 @@ knitr::opts_chunk$set(
 )
 ```
 
-This is an example of how to take data output from main population calculations and use it to set up the details of the trial cohort. In this example, the main population data is loaded from an RDS file.
+This is an example of how to take data output from main population calculations and use it to set up the details of the trial cohort. 
 
-```{r, eval = FALSE}
-readRDS(file="")
-```
-
-First load the package (install it first if necessary as shown in the Installation article):
+First load the package (install it first if necessary as shown in the [Installation article](https://keithjf82.github.io/vectorpower/articles/B_installation.html):
 
 ```{r setup}
 library(vectorpower)
 ```
+
+In this example, the main population data is loaded from an RDS file.
+
+```{r, eval = FALSE}
+mainpop_data1 <- readRDS(file=url("https://github.com/KeithJF82/vectorpower/raw/master/inst/extdata/mainpop_data1.Rds"))
+```
+

@@ -95,7 +95,7 @@
     
     
 <p>This is an example of how to create a new dataset folder and populate it with equilibrium starting data for a range of baseline malaria level values. The R code used here can also be found in the create_dataset.R file in the vectorpower/inst/ folder.</p>
-<p>First load the package (install it first if necessary as shown in the Installation article)</p>
+<p>First load the package (install it first if necessary as shown in the <a href="https://keithjf82.github.io/vectorpower/articles/B_installation.html">Installation article</a>:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" title="1"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span>(vectorpower)</a></code></pre></div>
 <p>To create a new data set, it is necessary to specify the files to be used to load the parameter values governing the malaria model. Three files are used:</p>
 <p>-param_file, which contains the main set of model parameters along with the parameters used to calculate rainfall as a function of time (which controls the seasonality of malaria) -age_file, which specifies the age intervals used for the human population -het_file, which specifies the parameter values controlling biting heterogeneity</p>

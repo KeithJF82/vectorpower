@@ -16,7 +16,7 @@ knitr::opts_chunk$set(
 
 This is an example of how to create a new dataset folder and populate it with equilibrium starting data for a range of baseline malaria level values. The R code used here can also be found in the create_dataset.R file in the vectorpower/inst/ folder.
 
-First load the package (install it first if necessary as shown in the Installation article)
+First load the package (install it first if necessary as shown in the [Installation article](https://keithjf82.github.io/vectorpower/articles/B_installation.html):
 
 ```{r}
 library(vectorpower)

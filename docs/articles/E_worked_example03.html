@@ -94,10 +94,11 @@
 
     
     
-<p>This is an example of how to take data output from main population calculations and use it to set up the details of the trial cohort. In this example, the main population data is loaded from an RDS file.</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" title="1"><span class="kw"><a href="https://rdrr.io/r/base/readRDS.html">readRDS</a></span>(<span class="dt">file=</span><span class="st">""</span>)</a></code></pre></div>
-<p>First load the package (install it first if necessary as shown in the Installation article):</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" title="1"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span>(vectorpower)</a></code></pre></div>
+<p>This is an example of how to take data output from main population calculations and use it to set up the details of the trial cohort.</p>
+<p>First load the package (install it first if necessary as shown in the <a href="https://keithjf82.github.io/vectorpower/articles/B_installation.html">Installation article</a>:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" title="1"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span>(vectorpower)</a></code></pre></div>
+<p>In this example, the main population data is loaded from an RDS file.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" title="1">mainpop_data1 &lt;-<span class="st"> </span><span class="kw"><a href="https://rdrr.io/r/base/readRDS.html">readRDS</a></span>(<span class="dt">file=</span><span class="kw"><a href="https://rdrr.io/r/base/connections.html">url</a></span>(<span class="st">"https://github.com/KeithJF82/vectorpower/raw/master/inst/extdata/mainpop_data1.Rds"</span>))</a></code></pre></div>
   </div>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
