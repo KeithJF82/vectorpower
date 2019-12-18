@@ -1,10 +1,5 @@
 pandoc: '2.6'
 pkgdown: 1.4.1
 pkgdown_sha: ~
-articles:
-  01_package_intro: 01_package_intro.html
-  02_installation: 02_installation.html
-  03_worked_example1_data_creation: 03_worked_example1_data_creation.html
-  04_worked_example2_mainpop_only: 04_worked_example2_mainpop_only.html
-  99_test: 99_test.html
+articles: {}
 
