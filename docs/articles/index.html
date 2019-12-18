@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Plot selected main population output data as a function of time — plot_mainpop_data • vectorpower</title>
+<title>Articles • vectorpower</title>
 
 
 <!-- jquery -->
@@ -35,11 +35,7 @@
 
 
 
-<meta property="og:title" content="Plot selected main population output data as a function of time — plot_mainpop_data" />
-<meta property="og:description" content="Function for taking output of mainpop(), selecting the desired benchmark
-             (EIR, slide prevalence, PCR prevalence, clinical incidence) data, and 
-             plotting it on a graph as an aid to setting up clusters" />
-<meta name="twitter:card" content="summary" />
+<meta property="og:title" content="Articles" />
 
 
 
@@ -58,7 +54,7 @@
   </head>
 
   <body>
-    <div class="container template-reference-topic">
+    <div class="container template-article-index">
       <header>
       <div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -123,63 +119,20 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Plot selected main population output data as a function of time</h1>
-    
-    <div class="hidden name"><code>plot_mainpop_data.Rd</code></div>
+      <h1>Articles</h1>
     </div>
 
-    <div class="ref-description">
-    <p>Function for taking output of mainpop(), selecting the desired benchmark
-             (EIR, slide prevalence, PCR prevalence, clinical incidence) data, and 
-             plotting it on a graph as an aid to setting up clusters</p>
+    <div class="section ">
+      <h3>All vignettes</h3>
+      <p class="section-desc"></p>
+
+      <ul>
+        <li><a href="A_package_intro.html">Package introduction</a></li>
+        <li><a href="B_installation.html">Installation</a></li>
+        <li><a href="C_worked_example01.html">Worked Example 1 - Data Creation</a></li>
+        <li><a href="D_worked_example02.html">Worked Example 2 - Main Population Calculations</a></li>
+      </ul>
     </div>
-
-    <pre class="usage"><span class='fu'>plot_mainpop_data</span>(
-  <span class='kw'>input_list</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(),
-  <span class='kw'>benchmark</span> <span class='kw'>=</span> <span class='st'>"EIR"</span>,
-  <span class='kw'>set_n_int</span> <span class='kw'>=</span> <span class='fl'>1</span>,
-  <span class='kw'>age_start</span> <span class='kw'>=</span> <span class='fl'>0</span>,
-  <span class='kw'>age_end</span> <span class='kw'>=</span> <span class='fl'>65</span>
-)</pre>
-
-    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
-    <table class="ref-arguments">
-    <colgroup><col class="name" /><col class="desc" /></colgroup>
-    <tr>
-      <th>input_list</th>
-      <td><p>List containing mainpop output data</p></td>
-    </tr>
-    <tr>
-      <th>benchmark</th>
-      <td><p>Benchmark type to use in choosing clusters ("EIR", "slide_prev", "pcr_prev", or "clin_inc")</p></td>
-    </tr>
-    <tr>
-      <th>set_n_int</th>
-      <td><p>Intervention number to use (1-max)</p></td>
-    </tr>
-    <tr>
-      <th>age_start</th>
-      <td><p>Starting age to use when calculating prevalence or incidence over age range (not used with EIR)</p></td>
-    </tr>
-    <tr>
-      <th>age_end</th>
-      <td><p>End age to use when calculating prevalence or incidence over age range (not used with EIR)</p></td>
-    </tr>
-    </table>
-
-    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
-
-    <p>Takes in detailed benchmark data as a list and plots a graph based on the
-         input parameters ; returns graph x and y values as a list</p>
-
-  </div>
-  <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
-    <h2>Contents</h2>
-    <ul class="nav nav-pills nav-stacked">
-      <li><a href="#arguments">Arguments</a></li>
-      <li><a href="#details">Details</a></li>
-    </ul>
-
   </div>
 </div>
 
