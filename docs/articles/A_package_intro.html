@@ -111,6 +111,7 @@
 <div id="fig--1" class="section level2">
 <h2 class="hasAnchor">
 <a href="#fig--1" class="anchor"></a>Fig. 1</h2>
+<p><img src="https://raw.githubusercontent.com/KeithJF82/vectorpower/master/inst/images/pkgintro_fig01.png" width="50%" style="display: block; margin: auto;"></p>
 <p>The parameter values required by the malaria model are stored as files and can be adjusted manually. The environmental parameters include those used to calculate rainfall (which controls mosquito larval hatching rates) as a function of time of year, and any pre-existing intervention levels.</p>
 <p>Initial population state data is created by calculating values at steady state (constant rainfall), then simulating malaria progression over several years under variable rainfall conditions to reach equilibrium. This is carried out for multiple baseline malaria levels based on user input.</p>
 <p>The user specifies a subset of the initial state data to use, along with a range of values of the varied intervention parameter (coverage of LLINs or IRS, or additional death rate due to ATSBs). Simulation of the mosquito population and main human population (the set of all humans in a group, as opposed to the trial cohort) is then carried out for all parameter combinations over the trial period. These populations are simulated using a deterministic continuum model.</p>
@@ -126,17 +127,20 @@
 <div id="fig--2" class="section level2">
 <h2 class="hasAnchor">
 <a href="#fig--2" class="anchor"></a>Fig. 2</h2>
+<p><img src="https://raw.githubusercontent.com/KeithJF82/vectorpower/master/inst/images/pkgintro_fig02.png" width="75%" style="display: block; margin: auto;"></p>
 <p>The mean and standard deviation of the EIR given above are used to generate a cumulative probability distribution (Fig. 3A) from which to generate clusters. The intervention parameter distribution (Fig. 3B) is based on a mean ATSB killing rate of 0.1/day with a standard deviation of 0.05/day, producing a truncated distribution due to the permitted values being confined to the range used in simulations.</p>
 </div>
 <div id="fig--3" class="section level2">
 <h2 class="hasAnchor">
 <a href="#fig--3" class="anchor"></a>Fig. 3</h2>
+<p><img src="https://raw.githubusercontent.com/KeithJF82/vectorpower/master/inst/images/pkgintro_fig03.png" width="75%" style="display: block; margin: auto;"></p>
 <p>Two sets of clusters representing possible outcomes in the control and intervention arms of the trial are then produced. The control clusters are generated using a mean and standard deviation of 0 for the intervention parameter, so that only data for an ATSB killing rate of 0 is used. The intervention clusters are generated using both distributions, allowing them to be drawn from all 1271 sets of results. This gives each cluster an associated set of daily EIR values like those in Fig. 2, as well as starting patient immunity parameter values.</p>
 <p>The trial cohorts in 10,000 clusters of each type are simulated over the trial period to produce a distribution of outcomes. (This along with the generation of the cluster data requires only a few minutes’ computation time, allowing many different scenarios to be quickly explored using the same main population data.) 100 patients between the ages of 6 months and 10 years are simulated per cluster, and are initially assumed to be malaria-free. Fig. 4 shows how the average malaria prevalence in the cohort measured monthly over the trial period varies across the sets of clusters. Other values output by the simulations can be used as the outcome, such as final prevalence, total incidence over the trial period, etc.</p>
 </div>
 <div id="fig--4" class="section level2">
 <h2 class="hasAnchor">
 <a href="#fig--4" class="anchor"></a>Fig. 4</h2>
+<p><img src="https://raw.githubusercontent.com/KeithJF82/vectorpower/master/inst/images/pkgintro_fig04.png" width="75%" style="display: block; margin: auto;"></p>
 <p>As shown in Fig. 4, the average prevalence measured during the trial in an intervention cluster will generally be significantly lower than that measured in a control cluster, but not 100% of the time due to the overlap between the outcome frequency distributions. The probability β of a type II error (null hypothesis erroneously not rejected) can be estimated by repeatedly comparing one or more random clusters of each type.</p>
 <p>A trial with only one control and one intervention cluster is used with the null hypothesis that the intervention cluster will show less than a 30% drop in average prevalence compared to the control cluster. For 10,000 repetitions, β=0.295, giving a statistical power (1-β) of 70.5%. If the trial is expanded to include 2 control and 2 intervention clusters, with the prevalence values in each pair being added together, the estimated power with the same null hypothesis rises to 76.8%. Other trial design options can also be explored using the package, such as varying the number of patients in each cluster cohort.</p>
 </div>
