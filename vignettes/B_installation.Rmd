@@ -16,7 +16,7 @@ knitr::opts_chunk$set(
 
 In R, ensure that you have the [devtools](https://www.rstudio.com/products/rpackages/devtools/) package installed by running:
 
-```{r, eval = FALSE}
+```{r}
 install.packages("devtools", repos='http://cran.us.r-project.org')
 ```
 
