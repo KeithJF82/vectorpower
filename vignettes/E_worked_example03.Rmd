@@ -28,6 +28,8 @@ In this example, the main population data is loaded from an RDS file.
 mainpop_data1 <- readRDS(file=url("https://github.com/KeithJF82/vectorpower/raw/master/inst/extdata/mainpop_data1.Rds"))
 ```
 
+
+
 ```{r, eval = FALSE}
 par(mfrow=c(1,2))
 plot1 <- plot_mainpop_data(input_list=mainpop_data1,set_n_int=1,benchmark="slide_prev",age_start=0.0,age_end = 65.0)
