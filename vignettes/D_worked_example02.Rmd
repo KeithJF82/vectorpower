@@ -18,13 +18,13 @@ This is an example of how to load a dataset and carry out simulations of the pro
 
 First load the package (install it first if necessary as shown in the [Installation article](https://keithjf82.github.io/vectorpower/articles/B_installation.html):
 
-```{r, eval = FALSE}
+```{r}
 library(vectorpower)
 ```
 
 Next create the list of input file locations to supply to the mainpop() function. If using a dataset folder created using dataset_create(), this can be done automatically by using load_dataset(dataset_folder=[folder location]). Here the files are located online, so the list is created manually:
 
-```{r, eval = FALSE}
+```{r}
 input_files <- list(
   param_file=url("https://raw.githubusercontent.com/KeithJF82/vectorpower/master/inst/extdata/param_examples/model_parameters_const.txt"),
   age_file=url("https://raw.githubusercontent.com/KeithJF82/vectorpower/master/inst/extdata/param_examples/age_data_145.txt"),
@@ -36,7 +36,7 @@ input_files <- list(
 
 The parameters defining the trial setup are then supplied to be used by mainpop():
 
-```{r, eval = FALSE}
+```{r}
 # Length of time to run main population model from starting date before intervention begins
 start_interval = 0.0  
 # Time points after the end of the starting interval at which benchmark data should be output
@@ -51,14 +51,14 @@ int_values = c(0.0,0.1)
 
 The parameters and list of input files are then passed to the mainpop() function:
 
-```{r, eval = FALSE}
+```{r}
 mainpop_data1 <- mainpop(input_files = input_files, n_mv_set = n_mv_set, int_v_varied = int_v_varied, 
                          int_values=int_values, start_interval = start_interval, time_values=time_values)
 ```
 
 The resulting data can be used in cohort calculations or processed on its own. It can be saved to a file so that it can be used again if R is closed.
 
-```{r, eval = FALSE}
+```{r}
 saveRDS(mainpop_data1,file="mainpop_data1.Rds")
 ```
 

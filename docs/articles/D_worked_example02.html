@@ -118,7 +118,28 @@
 <a class="sourceLine" id="cb3-10" title="10">int_values =<span class="st"> </span><span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">0.0</span>,<span class="fl">0.1</span>) </a></code></pre></div>
 <p>The parameters and list of input files are then passed to the mainpop() function:</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb4-1" title="1">mainpop_data1 &lt;-<span class="st"> </span><span class="kw"><a href="../reference/mainpop.html">mainpop</a></span>(<span class="dt">input_files =</span> input_files, <span class="dt">n_mv_set =</span> n_mv_set, <span class="dt">int_v_varied =</span> int_v_varied, </a>
-<a class="sourceLine" id="cb4-2" title="2">                         <span class="dt">int_values=</span>int_values, <span class="dt">start_interval =</span> start_interval, <span class="dt">time_values=</span>time_values)</a></code></pre></div>
+<a class="sourceLine" id="cb4-2" title="2">                         <span class="dt">int_values=</span>int_values, <span class="dt">start_interval =</span> start_interval, <span class="dt">time_values=</span>time_values)</a>
+<a class="sourceLine" id="cb4-3" title="3"><span class="co">#&gt; </span></a>
+<a class="sourceLine" id="cb4-4" title="4"><span class="co">#&gt; Run 1 Mosquito density=0.5272 Intervention number=0</span></a>
+<a class="sourceLine" id="cb4-5" title="5"><span class="co">#&gt; Intervention begun. ATSB kill rate=0</span></a>
+<a class="sourceLine" id="cb4-6" title="6"><span class="co">#&gt; Run 2 Mosquito density=0.5272 Intervention number=1</span></a>
+<a class="sourceLine" id="cb4-7" title="7"><span class="co">#&gt; Intervention begun. ATSB kill rate=0.1</span></a>
+<a class="sourceLine" id="cb4-8" title="8"><span class="co">#&gt; Run 3 Mosquito density=0.8153 Intervention number=0</span></a>
+<a class="sourceLine" id="cb4-9" title="9"><span class="co">#&gt; Intervention begun. ATSB kill rate=0</span></a>
+<a class="sourceLine" id="cb4-10" title="10"><span class="co">#&gt; Run 4 Mosquito density=0.8153 Intervention number=1</span></a>
+<a class="sourceLine" id="cb4-11" title="11"><span class="co">#&gt; Intervention begun. ATSB kill rate=0.1</span></a>
+<a class="sourceLine" id="cb4-12" title="12"><span class="co">#&gt; Run 5 Mosquito density=1.083 Intervention number=0</span></a>
+<a class="sourceLine" id="cb4-13" title="13"><span class="co">#&gt; Intervention begun. ATSB kill rate=0</span></a>
+<a class="sourceLine" id="cb4-14" title="14"><span class="co">#&gt; Run 6 Mosquito density=1.083 Intervention number=1</span></a>
+<a class="sourceLine" id="cb4-15" title="15"><span class="co">#&gt; Intervention begun. ATSB kill rate=0.1</span></a>
+<a class="sourceLine" id="cb4-16" title="16"><span class="co">#&gt; Run 7 Mosquito density=1.341 Intervention number=0</span></a>
+<a class="sourceLine" id="cb4-17" title="17"><span class="co">#&gt; Intervention begun. ATSB kill rate=0</span></a>
+<a class="sourceLine" id="cb4-18" title="18"><span class="co">#&gt; Run 8 Mosquito density=1.341 Intervention number=1</span></a>
+<a class="sourceLine" id="cb4-19" title="19"><span class="co">#&gt; Intervention begun. ATSB kill rate=0.1</span></a>
+<a class="sourceLine" id="cb4-20" title="20"><span class="co">#&gt; Run 9 Mosquito density=1.593 Intervention number=0</span></a>
+<a class="sourceLine" id="cb4-21" title="21"><span class="co">#&gt; Intervention begun. ATSB kill rate=0</span></a>
+<a class="sourceLine" id="cb4-22" title="22"><span class="co">#&gt; Run 10 Mosquito density=1.593 Intervention number=1</span></a>
+<a class="sourceLine" id="cb4-23" title="23"><span class="co">#&gt; Intervention begun. ATSB kill rate=0.1</span></a></code></pre></div>
 <p>The resulting data can be used in cohort calculations or processed on its own. It can be saved to a file so that it can be used again if R is closed.</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" title="1"><span class="kw"><a href="https://rdrr.io/r/base/readRDS.html">saveRDS</a></span>(mainpop_data1,<span class="dt">file=</span><span class="st">"mainpop_data1.Rds"</span>)</a></code></pre></div>
   </div>
