@@ -1,2 +1,0 @@
-n_mv	mv0	EIRy_ss	EIRy	slide_prev_y	clin_inc_y	pcr_prev_y
-1	0.1953356	0.1	0.08497538	0.01126148	0.028435	0.02116019	
