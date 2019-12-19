@@ -165,6 +165,8 @@ dataset_create <- function (dataset_folder="",EIR_values=c(1.0),param_file="",ag
 #' @param set_n_int           Intervention number to use (1-max)
 #' @param age_start           Starting age to use when calculating prevalence or incidence over age range (not used with EIR)
 #' @param age_end             End age to use when calculating prevalence or incidence over age range (not used with EIR)
+#' 
+#' @export
 
 plot_mainpop_data <- function(input_list=list(),benchmark = "EIR", set_n_int=1, age_start = 0, age_end = 65.0){
   
@@ -224,6 +226,8 @@ plot_mainpop_data <- function(input_list=list(),benchmark = "EIR", set_n_int=1, 
 #'          and outputs resulting values as a graph
 #'
 #' @param dataset_folder      Dataset folder
+#' 
+#' @export
 
 plot_rainfall <- function(dataset_folder=""){
   
@@ -282,6 +286,8 @@ plot_rainfall <- function(dataset_folder=""){
 #' @param input_folder      Dataset folder
 #' @param xvalues           Data to display on x-axis ("N_M" for line number, "M" for mosquito density parameter)
 #' @param yvalues           Data to display on y-axis ("M", "EIR", "slide_prev", "pcr_prev", or "clin_inc")
+#' 
+#' @export
 
 plot_folder_data <- function(input_folder="",xvalues="N_M",yvalues = "M"){
   
