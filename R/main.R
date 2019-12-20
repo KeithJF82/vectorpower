@@ -86,10 +86,10 @@ mainpop <- function (input_files = list(),output_folder = NA,n_mv_set=c(1), int_
   
   # TODO - Move the creation of the file names to mainpop.cpp
   if(is.na(output_folder)==FALSE){
-    file_benchmarks = paste(output_folder,"Benchmark_details.txt",sep="")
-    file_EIRd = paste(output_folder,"EIR.txt",sep="")
-    file_imm_start = paste(output_folder,"imm.txt",sep="")
-    file_endpoints = paste(output_folder,"endpoints.txt",sep="")
+    file_benchmarks = paste(output_folder,"Benchmark_details.txt",sep="/")
+    file_EIRd = paste(output_folder,"EIR.txt",sep="/")
+    file_imm_start = paste(output_folder,"imm.txt",sep="/")
+    file_endpoints = paste(output_folder,"endpoints.txt",sep="/")
     flag_file=1
   } else {
     file_benchmarks = NA
@@ -134,7 +134,7 @@ mainpop <- function (input_files = list(),output_folder = NA,n_mv_set=c(1), int_
                       EIR_daily_data=EIR_daily_data,annual_data=annual_data,
                       IB_start_data=IB_start_data,IC_start_data=IC_start_data,ID_start_data=ID_start_data)
   
-  #save(output_data,file=paste(input_folder,"mainpop_output.Rdata",sep=""))
+  #save(output_data,file=paste(input_folder,"mainpop_output.Rdata",sep="/"))
   
   return(output_data)
 }
@@ -335,8 +335,8 @@ cohort <- function(mainpop_data = list(), cluster_data=list(),n_patients = 100,o
   n_clusters=length(cluster_data$n_B)
   if(is.na(output_folder)==FALSE){
     if(dir.exists(output_folder)==FALSE){dir.create(output_folder)}
-    file_summary = paste(output_folder,"summary.txt",sep="")
-    file_frequency = paste(output_folder,"frequency.txt",sep="")
+    file_summary = paste(output_folder,"summary.txt",sep="/")
+    file_frequency = paste(output_folder,"frequency.txt",sep="/")
     flag_file=1
   } else {
     file_summary = NA
@@ -355,10 +355,10 @@ cohort <- function(mainpop_data = list(), cluster_data=list(),n_patients = 100,o
   raw_data <- rcpp_cohort(mainpop_data$params,trial_params,cluster_data)
   results_data <- data.frame(raw_data)
   
-  cluster_names=paste("cluster",c(1:n_clusters),sep="")
-  patient_names=paste("patient",c(1:n_patients),sep="")
+  cluster_names=paste("cluster",c(1:n_clusters),sep="/")
+  patient_names=paste("patient",c(1:n_patients),sep="/")
   n_pts=length(mainpop_data$time_values)
-  n_pt_names=paste("n_pt",c(1:n_pts),sep="")
+  n_pt_names=paste("n_pt",c(1:n_pts),sep="/")
   patients_status_outputs = array(data=raw_data$patients_status_outputs,dim=c(n_pts,n_patients,n_clusters),
                                   dimnames=list(n_pt_names,patient_names,cluster_names))
   

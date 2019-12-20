@@ -22,7 +22,7 @@ First load the package (install it first if necessary as shown in the [Installat
 library(vectorpower)
 ```
 
-Next create the list of input file locations to supply to the mainpop() function. If using a dataset folder created using dataset_create(), this can be done automatically by using load_dataset(dataset_folder=[folder location]). Here the files are located online, so the list is created manually:
+Next create the list of input file locations to supply to the mainpop() function.  Here the files are located online, so the list is created manually:
 
 ```{r}
 input_files <- list(
@@ -34,6 +34,14 @@ input_files <- list(
                     )
 ```
 
+If using a dataset folder created using dataset_create(), this can be done automatically by using the load_dataset() function. Here the example folder in the inst/extdata subfolder, created in the first worked example, is used:
+
+```{r, eval=FALSE}
+dataset_folder=system.file("extdata/Demo Folder 1/",package="vectorpower")
+input_files <- load_dataset(dataset_folder)
+
+```
+
 The parameters defining the trial setup are then supplied to be used by mainpop():
 
 ```{r}
@@ -42,7 +50,7 @@ start_interval = 0.0
 # Time points after the end of the starting interval at which benchmark data should be output
 time_values = c(0.0,28.0,56.0,84.0,112.0,140.0) 
 # List of sets of values to load from starting data
-n_mv_set = c(1:5) 
+n_mv_set = c(1:2) 
 # Intervention parameter given variable value (0= None, 1=ATSB kill rate, 2=bednet coverage, 3=IRS coverage)
 int_v_varied = 1 
 # List of intervention parameter values
@@ -52,14 +60,23 @@ int_values = c(0.0,0.1)
 The parameters and list of input files are then passed to the mainpop() function:
 
 ```{r}
-mainpop_data1 <- mainpop(input_files = input_files, n_mv_set = n_mv_set, int_v_varied = int_v_varied, 
-                         int_values=int_values, start_interval = start_interval, time_values=time_values)
+mainpop_data <- mainpop(input_files = input_files, n_mv_set = n_mv_set, int_v_varied = int_v_varied, 
+                        int_values=int_values, start_interval = start_interval, time_values=time_values)
 ```
 
-The resulting data can be used in cohort calculations or processed on its own. It can be saved to a file so that it can be used again if R is closed.
+The resulting data can be used in cohort calculations or processed on its own. It can be saved to a file so that it can be used again if R is closed. In this example, it is saved to a file inside the inst/extdata sub-folder (overwriting an identical existing file).
 
 ```{r}
-saveRDS(mainpop_data1,file="mainpop_data1.Rds")
+setwd(system.file("extdata",package="vectorpower"))
+saveRDS(mainpop_data,file="mainpop_data1.Rds")
 ```
 
+The plot_mainpop_data() function can be used to plot selected results:
+
+```{r}
+par(mfrow=c(1,2))
+plot1 <- plot_mainpop_data(input_list=mainpop_data,set_n_int=1,benchmark="slide_prev",age_start=0.0,age_end = 65.0)
+plot2 <- plot_mainpop_data(input_list=mainpop_data,set_n_int=2,benchmark="slide_prev",age_start=0.0,age_end = 65.0)
+par(mfrow=c(1,1))
+```
 

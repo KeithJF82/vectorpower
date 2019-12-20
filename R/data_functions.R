@@ -28,11 +28,11 @@ load_dataset <- function (dataset_folder="")
   
   file_list=list(age_file=NA,het_file=NA,param_file=NA,start_file=NA,annual_file=NA)
   if(dir.exists(dataset_folder)==1){
-    file_list$age_file=paste(dataset_folder,"age_data.txt",sep="")
-    file_list$het_file=paste(dataset_folder,"het_data.txt",sep="")
-    file_list$param_file=paste(dataset_folder,"model_parameters.txt",sep="")
-    file_list$start_file=paste(dataset_folder,"start_data.txt",sep="")
-    file_list$annual_file=paste(dataset_folder,"annual_data.txt",sep="")
+    file_list$age_file=paste(dataset_folder,"age_data.txt",sep="/")
+    file_list$het_file=paste(dataset_folder,"het_data.txt",sep="/")
+    file_list$param_file=paste(dataset_folder,"model_parameters.txt",sep="/")
+    file_list$start_file=paste(dataset_folder,"start_data.txt",sep="/")
+    file_list$annual_file=paste(dataset_folder,"annual_data.txt",sep="/")
   }
   else{cat("\nFolder does not exist.\n")}
   
@@ -81,10 +81,10 @@ dataset_create <- function (dataset_folder="",EIR_values=c(1.0),param_file="",ag
   param_data=read.table(param_file,header=TRUE)
   age_data=read.table(age_file,header=TRUE)
   het_data=read.table(het_file,header=TRUE)
-  age_file_new=paste(dataset_folder,"age_data.txt",sep="")
-  het_file_new=paste(dataset_folder,"het_data.txt",sep="")
-  param_file_new=paste(dataset_folder,"model_parameters.txt",sep="")
-  start_file_new=paste(dataset_folder,"start_data.txt",sep="")
+  age_file_new=paste(dataset_folder,"age_data.txt",sep="/")
+  het_file_new=paste(dataset_folder,"het_data.txt",sep="/")
+  param_file_new=paste(dataset_folder,"model_parameters.txt",sep="/")
+  start_file_new=paste(dataset_folder,"start_data.txt",sep="/")
   write.table(param_data,file=param_file_new,col.names=TRUE,sep="\t",quote=FALSE)
   write.table(age_data,file=age_file_new,col.names=TRUE,sep="\t",quote=FALSE)
   write.table(het_data,file=het_file_new,col.names=TRUE,sep="\t",quote=FALSE)
@@ -106,7 +106,7 @@ dataset_create <- function (dataset_folder="",EIR_values=c(1.0),param_file="",ag
   # Run model without interventions from steady-state data for nyears years in one go to achieve equilibrium
   cat("\nBeginning main population calculations to equilibrium.")
   n_mv_set=c(1:n_mv_values)
-  output_folder=paste(dataset_folder,"Temp/",sep="")
+  output_folder=paste(dataset_folder,"Temp",sep="/")
   if(dir.exists(output_folder)==FALSE){dir.create(output_folder)}
   input_files=list(age_file=age_file_new,het_file=het_file_new,param_file=param_file_new,start_file=start_file_new,annual_file=NA)
   eq_data <- mainpop(input_files = input_files, output_folder = output_folder,n_mv_set = n_mv_set, int_v_varied = 0, 
@@ -115,7 +115,7 @@ dataset_create <- function (dataset_folder="",EIR_values=c(1.0),param_file="",ag
   
   # Transfer endpoints as new start data
   cat("\n\nCreating new starting_data.txt file from results.")
-  file.copy(from=paste(output_folder,"endpoints.txt",sep=""),to=start_file_new,
+  file.copy(from=paste(output_folder,"endpoints.txt",sep="/"),to=start_file_new,
             overwrite = TRUE, copy.mode = TRUE, copy.date = FALSE)
   
   # Run for 1 year with daily data points to produce year-round data
@@ -127,7 +127,7 @@ dataset_create <- function (dataset_folder="",EIR_values=c(1.0),param_file="",ag
   
   # Output annual data for reference
   cat("\n\nOutputting annual data.\n")
-  annual_EIR_file=paste(dataset_folder,"annual_data.txt",sep="")
+  annual_EIR_file=paste(dataset_folder,"annual_data.txt",sep="/")
   EIRy_values = rep(0,n_mv_values)
   slide_prevy_values=EIRy_values
   clin_incy_values=EIRy_values
@@ -234,7 +234,7 @@ plot_rainfall <- function(dataset_folder=""){
   assert_string(dataset_folder)
   
   if(dir.exists(dataset_folder)==FALSE){ cat("\nFolder does not exist.\n")} else {
-    params <- read.table(paste(dataset_folder,"model_parameters.txt",sep=""), header=TRUE) 
+    params <- read.table(paste(dataset_folder,"model_parameters.txt",sep="/"), header=TRUE) 
     
     Rnorm=params$Rnorm
     rconst=params$rconst
@@ -295,7 +295,7 @@ plot_folder_data <- function(input_folder="",xvalues="N_M",yvalues = "M"){
   assert_in(xvalues,c("N_M","M"))
   assert_in(yvalues,c("M","EIR","EIR_ss","slide_prev","pcr_prev","clin_inc"))
   
-  annual_data <- as.list(read.table(paste(input_folder,"annual_data.txt",sep=""), header=TRUE))   # Read in annual data
+  annual_data <- as.list(read.table(paste(input_folder,"annual_data.txt",sep="/"), header=TRUE))   # Read in annual data
   n_mv_values=length(annual_data$n_mv)
   
   if(xvalues=="N_M"){ xdata = annual_data$n_mv } else { xdata = annual_data$mv0 }
