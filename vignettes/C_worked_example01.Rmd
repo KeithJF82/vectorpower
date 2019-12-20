@@ -58,7 +58,7 @@ The location of the folder where the new data set is to be created must also be 
 
 ```{r}
 output_location = system.file("extdata",package="vectorpower")
-dataset_location = "Demo Folder 1"
+dataset_location = "DemoFolder1"
 dataset_folder=paste(output_location,dataset_location,sep="/")
 ```
 
@@ -92,7 +92,7 @@ nyears=1
 
 With all the parameters specified, the dataset_create function is run. This will first set initial conditions using steady-state calculations, then run the time-dependent model for the specified number of years to reach equilibrium. The results will be output as the dataset's starting data. The year-round data output from the starting data (assuming no new interventions) will then be calculated and output as an aid to users of the dataset.
 
-```{r, eval=FALSE}
+```{r}
 data1 <- dataset_create(dataset_folder=dataset_folder,param_file=param_file,age_file=age_file,
                         het_file=het_file,EIR_values=EIR_values,nyears=nyears)
 ```
