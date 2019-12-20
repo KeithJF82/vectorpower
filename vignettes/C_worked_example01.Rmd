@@ -73,7 +73,7 @@ dataset_folder=paste(output_location,dataset_location,sep="/")
 Ensure that folder names are separated by a "/". Alternatively, substitute the entire folder name for dataset_folder, e.g.:
 
 ```{r, eval = FALSE}
-dataset_folder="C:/Users/YourName/Documents/VPDatasets/Demo Folder 1"
+dataset_folder="C:/Users/YourName/Documents/VPDatasets/DemoFolder1"
 ```
 
 The baseline malaria levels represented by the input data to go in the dataset are set by specifying a vector of values of steady-state annual entomological inoculation rate (EIR). These values will not exactly match the year-round EIR values represented by the data once the time-dependent model has been run; the final dataset will include a file specifying the year-round EIR at equilibrium under the time-dependent model.
