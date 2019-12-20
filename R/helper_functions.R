@@ -60,8 +60,18 @@ assert_single <- function(x, message = "%s must be a single value", name = depar
 }
 
 #------------------------------------------------
-# x is character string
-#' @noRd
+#' @title Assert String
+#'
+#' @description x is character string
+#'
+#' @details x is character string
+#'
+#' @param x       Value to check if character string
+#' @param message Message to output if x not character string
+#' @param name    Name
+#'
+#' @export
+#' 
 assert_string <- function(x, message = "%s must be character string", name = deparse(substitute(x))) {
   if (!is.character(x)) {
     stop(sprintf(message, name), call. = FALSE)
@@ -98,8 +108,18 @@ assert_single_logical <- function(x, name = deparse(substitute(x))) {
 }
 
 #------------------------------------------------
-# x is numeric
-#' @noRd
+#' @title Assert Numeric
+#'
+#' @description x is numeric
+#'
+#' @details x is numeric
+#'
+#' @param x       Value to check if numeric
+#' @param message Message to output if x not numeric
+#' @param name    Name
+#'
+#' @export
+#' 
 assert_numeric <- function(x, message = "%s must be numeric", name = deparse(substitute(x))) {
   if (!is.numeric(x)) {
     stop(sprintf(message, name), call. = FALSE)
@@ -128,8 +148,17 @@ assert_int <- function(x, message = "%s must be integer valued", name = deparse(
 }
 
 #------------------------------------------------
-# x is single integer
-#' @noRd
+#' @title Assert Single integer
+#'
+#' @description x is single integer
+#'
+#' @details x is single integer
+#'
+#' @param x    Value to check if single integer
+#' @param name Name
+#'
+#' @export
+#' 
 assert_single_int <- function(x, name = deparse(substitute(x))) {
   assert_length(x, n = 1, name = name)
   assert_int(x, name = name)
@@ -181,8 +210,21 @@ assert_single_pos_int <- function(x, zero_allowed = TRUE, name = deparse(substit
 }
 
 #------------------------------------------------
-# x is single value bounded between limits
-#' @noRd
+#' @title Assert Single bounded
+#'
+#' @description x is single value bounded between limits
+#'
+#' @details x is single value bounded between limits
+#'
+#' @param x                 value to check if single value bounded between limits
+#' @param left              left bound
+#' @param right             right bound
+#' @param inclusive_left    True/False is left bound inclusive?
+#' @param inclusive_right   True/False is left bound inclusive?
+#' @param name              Name
+#'
+#' @export
+#' 
 assert_single_bounded <- function(x, left = 0, right = 1, inclusive_left = TRUE, inclusive_right = TRUE, name = deparse(substitute(x))) {
   assert_length(x, n = 1, name = name)
   assert_bounded(x, left = left, right = right, inclusive_left = inclusive_left, inclusive_right = inclusive_right, name = name)
@@ -267,7 +309,7 @@ assert_eq <- function(x, y, message = "%s must equal %s",
 # x and y are unequal in all matched comparisons. x and y can be any type
 #' @noRd
 assert_neq <- function(x, y, message = "%s cannot equal %s",
-                      name_x = deparse(substitute(x)), name_y = nice_format(y)) {
+                       name_x = deparse(substitute(x)), name_y = nice_format(y)) {
   assert_non_null(x, name = name_x)
   assert_non_null(y, name = name_y)
   assert_same_length(x, y, name_x = name_x, name_y = name_y)
