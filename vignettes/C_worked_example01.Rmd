@@ -92,7 +92,95 @@ nyears=1
 
 With all the parameters specified, the dataset_create function is run. This will first set initial conditions using steady-state calculations, then run the time-dependent model for the specified number of years to reach equilibrium. The results will be output as the dataset's starting data. The year-round data output from the starting data (assuming no new interventions) will then be calculated and output as an aid to users of the dataset.
 
-```{r, eval=FALSE}
+```{r}
 data1 <- dataset_create(dataset_folder=dataset_folder,param_file=param_file,age_file=age_file,
                         het_file=het_file,EIR_values=EIR_values,nyears=nyears)
 ```
+
+Test
+
+```{r, eval=FALSE}
+assert_string(dataset_folder)
+  assert_numeric(EIR_values)
+  assert_single_int(nyears)
+  assert_single_bounded(nyears,1,20)
+  # TODO - Find way to check input data exists when files are identified using URLs
+  # assert_file_exists(age_file)
+  # assert_file_exists(het_file)
+  # assert_file_exists(param_file)
+  
+  if(dir.exists(dataset_folder)==FALSE){dir.create(dataset_folder)}
+  
+  # Copy parameter data to new files
+  cat("\nCreating new model_parameters.txt, het_data.txt and age_data.txt files.\n")
+  param_data=read.table(param_file,header=TRUE)
+  age_data=read.table(age_file,header=TRUE)
+  het_data=read.table(het_file,header=TRUE)
+  age_file_new=paste(dataset_folder,"age_data.txt",sep="/")
+  het_file_new=paste(dataset_folder,"het_data.txt",sep="/")
+  param_file_new=paste(dataset_folder,"model_parameters.txt",sep="/")
+  start_file_new=paste(dataset_folder,"start_data.txt",sep="/")
+  write.table(param_data,file=param_file_new,col.names=TRUE,sep="\t",quote=FALSE)
+  write.table(age_data,file=age_file_new,col.names=TRUE,sep="\t",quote=FALSE)
+  write.table(het_data,file=het_file_new,col.names=TRUE,sep="\t",quote=FALSE)
+  
+  # Create new steady-state constant-rainfall data for desired EIR [TODO: or mv0] values using parameter [TODO: and age] files
+  n_mv_values=length(EIR_values)
+  age_data=age_data_setup(read.table(age_file_new,header=TRUE,sep="\t")[[1]])
+  het_data = read.table(het_file_new,header=TRUE,sep="\t")
+  params <- read.table(param_file_new, header=TRUE) 
+  na=length(age_data$age_width)
+  num_het=length(het_data$het_x)
+  params=c(na=na,num_het=num_het,params,age_data,het_data)
+  
+  cat("\nGenerating preliminary data (steady state at constant rainfall)")
+  trial_params <- list(EIRy=EIR_values,file_endpoints=start_file_new)
+  raw_data <- rcpp_mainpop_ss(params,trial_params)
+  mv_values <- raw_data$mv_values
+  
+  # Run model without interventions from steady-state data for nyears years in one go to achieve equilibrium
+  cat("\nBeginning main population calculations to equilibrium.")
+  n_mv_set=c(1:n_mv_values)
+  output_folder=paste(dataset_folder,"Temp",sep="/")
+  if(dir.exists(output_folder)==FALSE){dir.create(output_folder)}
+  input_files=list(age_file=age_file_new,het_file=het_file_new,param_file=param_file_new,start_file=start_file_new,annual_file=NA)
+  eq_data <- mainpop(input_files = input_files, output_folder = output_folder,n_mv_set = n_mv_set, int_v_varied = 0, 
+                     int_values=c(0.0), start_interval = 0.0, time_values=365*c(0:nyears) )
+  plot_mainpop_data(input_list=eq_data,set_n_int=1,benchmark = "EIR",age_start = 0,age_end = 65.0)
+  
+  # Transfer endpoints as new start data
+  cat("\n\nCreating new starting_data.txt file from results.")
+  file.copy(from=paste(output_folder,"endpoints.txt",sep="/"),to=start_file_new,
+            overwrite = TRUE, copy.mode = TRUE, copy.date = FALSE)
+  
+  # Run for 1 year with daily data points to produce year-round data
+  cat("\nRunning main population model for 1 year to establish year-round values\n(annual EIR and incidence, annual average prevalences).")
+  input_files=list(age_file=age_file_new,het_file=het_file_new,param_file=param_file_new,start_file=start_file_new,annual_file=NA)
+  annual_data <- mainpop(input_files = input_files,n_mv_set = n_mv_set, int_v_varied = 0, int_values=c(0.0),
+                         start_interval = 0.0, time_values=1.0*c(0:364) )
+  plot_mainpop_data(input_list=annual_data,set_n_int=1,benchmark = "EIR")
+  
+  # Output annual data for reference
+  cat("\n\nOutputting annual data.\n")
+  annual_EIR_file=paste(dataset_folder,"annual_data.txt",sep="/")
+  EIRy_values = rep(0,n_mv_values)
+  slide_prevy_values=EIRy_values
+  clin_incy_values=EIRy_values
+  pcr_prevy_values=EIRy_values
+  cat("n_mv\tmv0\tEIRy_ss\tEIRy\tslide_prev_y\tclin_inc_y\tpcr_prev_y\n",file=annual_EIR_file)
+  for(i in n_mv_set){
+    if(i==1){cat("n_mv\tmosq_density\tEIRy_ss\tEIRy\tslide_prev_y\tclin_inc_y\tpcr_prev_y\n")}
+    EIRy_values[i]=sum(annual_data$EIR_benchmarks[,1,i])
+    slide_prevy_values[i]=sum(annual_data$slide_prev_benchmarks[,,1,i])/365
+    clin_incy_values[i]=sum(annual_data$clin_inc_benchmarks[,,1,i])
+    pcr_prevy_values[i]=sum(annual_data$pcr_prev_benchmarks[,,1,i])/365
+    cat(i,mv_values[i],EIR_values[i],EIRy_values[i],slide_prevy_values[i],clin_incy_values[i],pcr_prevy_values[i],"\n",sep="\t")
+    cat(i,mv_values[i],EIR_values[i],EIRy_values[i],slide_prevy_values[i],clin_incy_values[i],pcr_prevy_values[i],"\n",
+        file=annual_EIR_file,append=TRUE,sep="\t")
+  }
+  
+  # Delete Temp folder
+  setwd(dataset_folder)
+  unlink("Temp", recursive=TRUE,force=TRUE)
+```
+
