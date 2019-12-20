@@ -10,7 +10,7 @@ Rcpp::List rcpp_mainpop_ss(List params, List trial_params)
         int n_mv, i, j, pos, pos2, n_repeats;
         double mv0, mu_net_irs, prevent_net_irs, av0, muv1, KL, Surv1, EIRd, FOIv0, FOIv1;
         double rN, rNW, dNW, rI, rIW, dIW, dIF, EL, LL, PL, Sv1, Ev1, Iv1, H, H_inv, dev, EIR_cur, FOI_cur, phi_cur;
-        FILE* endpoint_data = NULL;
+		FILE* endpoint_data = NULL;
         //FILE* starting_data = NULL;
 
         //Constants (TODO: Make global)----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
