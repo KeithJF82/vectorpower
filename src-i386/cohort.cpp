@@ -210,7 +210,7 @@ Rcpp::List rcpp_cohort(List params, List trial_params, List cluster_data)
 		data_num = run_data_num[n_c];
 		Rcout << "Processing cluster " << n_c << ":\tmvn=" << mvn << "\tint_num=" << int_num << "\tdata_num=" << data_num; 
 		goto start_run;
-	run_complete:
+		run_complete:
 		Rcout << "\n";
 	}
 
@@ -218,7 +218,7 @@ Rcpp::List rcpp_cohort(List params, List trial_params, List cluster_data)
 
 	//-------------------------------------------------------------------------------------Compute over time--------------------------------------------------------------------------------------------------------
 
-start_run:
+	start_run:
 
 	//Set up cumulative probability distribution from which to draw randomly generated patients
 
@@ -254,7 +254,7 @@ start_run:
 		patient[n].num_het = j;
 	}
 
-restart:
+	restart:
 	for (div = 0; div < n_divs; div++)
 	{
 		clin_inc_values[div] = 0.0;
