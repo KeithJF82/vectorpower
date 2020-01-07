@@ -1,0 +1,31 @@
+---
+title: "Worked Example 4 - Cohort Simulation"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{F_worked_example04}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+This is an example of how to take previously created main population and trial cohort and and run stochastic simulations of the individuals in the cohort. 
+
+First load the package (install it first if necessary as shown in the [Installation article](https://keithjf82.github.io/vectorpower/articles/B_installation.html):
+
+```{r setup}
+library(vectorpower)
+```
+
+In this example, the main population and cohort data is loaded from an RDS file.
+
+```{r, eval = FALSE}
+mainpop_data <- readRDS(file=url(""))
+```
+
+[TBA]

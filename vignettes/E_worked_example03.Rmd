@@ -28,7 +28,7 @@ In this example, the main population data is loaded from an RDS file.
 mainpop_data <- readRDS(file=url("https://github.com/KeithJF82/vectorpower/raw/master/inst/extdata/mainpop_data1.Rds"))
 ```
 
-
+[TBA]
 
 ```{r, eval = FALSE}
 setup_list_con <- cluster_input_setup(input_list=mainpop_data, set_n_pt=1, set_n_int=1,
@@ -37,7 +37,7 @@ cluster_list_con <- clusters_create(input_list=setup_list_con,n_clusters=100,
                                     benchmark_mean=3.1, benchmark_stdev=0.5, int_mean=0.0, int_stdev=0.0)
 ```
 
-
+[TBA]
 
 ```{r, eval = FALSE}
 setup_list_int <- cluster_input_setup(input_list=mainpop_data, set_n_pt=1, set_n_int=1,

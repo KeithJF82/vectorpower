@@ -16,7 +16,7 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 	FILE* data_EIR = NULL;
 	FILE* data_immunity = NULL;
 
-	//Constants ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	// Constants ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	double dy = 365.0;			// Days in a year
 	double tinterval1 = 1.0;	// Interval between calculations of current prevalence / incidence values
 	double KMIN = 0.0005;		// Minimum value of larval birth rate coefficient K0 to prevent zero or negative mosquito numbers
@@ -128,15 +128,16 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 
 	// Load trial parameter data from R--------------------------------------------------------------------------------------------------------------------------------------------
 		
-	int flag_file = rcpp_to_int(trial_params["flag_file"]);						// Flag indicating whether results data to be saved to files
-	int int_v_varied = rcpp_to_int(trial_params["int_v_varied"]);				// Intervention parameter given variable value (0=model parameter set, 1=ATSB kill rate, 2=bednet coverage, 3=IRS coverage)
-	int n_mv_values = rcpp_to_int(trial_params["n_mv_values"]);						// Number of mosquito density values to be used		
-	vector<double> int_values = rcpp_to_vector_double(trial_params["int_values"]);	// Vector of intervention parameter values
-	int n_int_values = int_values.size();											// Number of intervention parameter values to use
-	double date_int = date_start + rcpp_to_double(trial_params["start_interval"]);	// Day of the year when intervention trial starts (period from date_start to date_int used to equilibrate lagged FOI data)
-	vector<double> time_values = rcpp_to_vector_double(trial_params["time_values"]);// Vector of time benchmark points
-	int n_pts = rcpp_to_int(trial_params["n_pts"]);									// Number of data points to be taken 
-
+	
+	//vector<double> mu_atsb_var = rcpp_to_vector_double(trial_params["mu_atsb_var"]);	// Variable mu_atsb for special runs - TODO: Integrate into package
+	int flag_file = rcpp_to_int(trial_params["flag_file"]);								// Flag indicating whether results data to be saved to files
+	int int_v_varied = rcpp_to_int(trial_params["int_v_varied"]);						//  Intervention parameter given variable value (0=model parameter set, 1=ATSB kill rate, 2=bednet coverage, 3=IRS coverage)
+	int n_mv_values = rcpp_to_int(trial_params["n_mv_values"]);							// Number of mosquito density values to be used		
+	vector<double> int_values = rcpp_to_vector_double(trial_params["int_values"]);		// Vector of intervention parameter values
+	int n_int_values = int_values.size();												// Number of intervention parameter values to use
+	double date_int = date_start + rcpp_to_double(trial_params["start_interval"]);		// Day of the year when intervention trial starts (period from date_start to date_int used to equilibrate lagged FOI data)
+	vector<double> time_values = rcpp_to_vector_double(trial_params["time_values"]);	// Vector of time benchmark points
+	int n_pts = rcpp_to_int(trial_params["n_pts"]);										// Number of data points to be taken
 	string file_benchmarks = flag_file == 1 ? rcpp_to_string(trial_params["file_benchmarks"]) : "na";
 	string file_endpoints = flag_file == 1 ? rcpp_to_string(trial_params["file_endpoints"]) : "na";
 	string file_EIRd = flag_file == 1 ? rcpp_to_string(trial_params["file_EIRd"]) : "na";
@@ -180,26 +181,8 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 	double* foi_age = (double*)malloc(size1);
 	int* age20i = (int*)malloc(na * sizeof(int));
 
-	// Set age category parameters
-	/*for (i = 0; i < na; i++)
-	{
-		if (i < 25) { age_width[i] = dy * 0.04; }
-		if (i > 24 && i < 45) { age_width[i] = dy * 0.05; }
-		if (i > 44 && i < 60) { age_width[i] = dy / 15.0; }
-		if (i > 59 && i < 70) { age_width[i] = dy * 0.1; }
-		if (i > 69 && i < 78) { age_width[i] = dy * 0.125; }
-		if (i > 77 && i < 83) { age_width[i] = dy * 0.2; }
-		if (i > 82 && i < 99) { age_width[i] = dy * 0.25; }
-		if (i > 98 && i < 119) { age_width[i] = dy * 0.5; }
-		if (i > 118 && i < 129) { age_width[i] = dy * 1.0; }
-		if (i > 128) { age_width[i] = dy * 2.0; }
-		age_rate[i] = 1.0 / age_width[i];
-		rem_rate[i] = age_rate[i] + eta;
-		age[i] = i == 0 ? 0.0 : (age[i - 1] + age_width[i - 1]);
-	}*/
 	for (i = 0; i < na; i++)
 	{
-		//den[i] = i == 0 ? (1.0 / (1.0 + (age_rate[0] / eta))) : (age_rate[i - 1] * den[i - 1] / (rem_rate[i]));
 		foi_age[i] = 1.0 - (rho * exp(-age[i] / a0));
 		if (i == 0) { age20i[i] = 0; }
 		else
@@ -224,7 +207,7 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 	double* rate_clinaq = (double*)malloc(size3);				//
 	double* rate_detaq = (double*)malloc(size3);				//
 	double* cA = (double*)malloc(size3);						//
-	double* FOIvij = (double*)malloc(size3);					//Force of infection (human -> mosquito)
+	double* FOIvij = (double*)malloc(size3);					// Force of infection (human -> mosquito)
 
 	for (j = 0; j < num_het; j++) { rel_foi[j] = num_het == 0 ? 1.0 : exp(-(sigma2 / 2.0) + (pow(sigma2, 0.5) * het_x[j])); }	// Relative biting rate in heterogeneity category i
 	double omega = 1.0 - ((rho * eta) / (eta + (1.0 / a0)));																	// Normalising constant for biting rate by age
@@ -252,32 +235,32 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 		
 	// Set up additional parameters-------------------------------------------------------------------------------------------------------------------------------------
 
-	double* S = (double*)malloc(size3);								// Susceptible humans
-	double* T = (double*)malloc(size3);								// Humans in treatment for clinical symptoms
-	double* D = (double*)malloc(size3);								// Humans with clinical symptoms not receiving treatment
-	double* A = (double*)malloc(size3);								// Humans with asymptomatic patent infections
-	double* U = (double*)malloc(size3);								// Humans with asymptomatic sub-patent infections
-	double* P = (double*)malloc(size3);								// Humans in post-treatment stage
-	double* slide_prev = (double*)malloc(size3);					// Prevalence
-	double* pcr_prev = (double*)malloc(size3);						// Prevalence (PCR test)
-	double* clin_inc = (double*)malloc(size3);						// Clinical incidence
-	double* ICA = (double*)malloc(size3);							// Immunity level against clinical infection (adult)
-	double* ICM = (double*)malloc(size3);							// Immunity level against clinical infection (maternally inherited)
-	double* IB = (double*)malloc(size3);							// Immunity level against infection from infectious bite
-	double* ID = (double*)malloc(size3);							// Immunity level determining p_det
+	double* S = (double*)malloc(size3);									// Susceptible humans
+	double* T = (double*)malloc(size3);									// Humans in treatment for clinical symptoms
+	double* D = (double*)malloc(size3);									// Humans with clinical symptoms not receiving treatment
+	double* A = (double*)malloc(size3);									// Humans with asymptomatic patent infections
+	double* U = (double*)malloc(size3);									// Humans with asymptomatic sub-patent infections
+	double* P = (double*)malloc(size3);									// Humans in post-treatment stage
+	double* slide_prev = (double*)malloc(size3);						// Prevalence
+	double* pcr_prev = (double*)malloc(size3);							// Prevalence (PCR test)
+	double* clin_inc = (double*)malloc(size3);							// Clinical incidence
+	double* ICA = (double*)malloc(size3);								// Immunity level against clinical infection (adult)
+	double* ICM = (double*)malloc(size3);								// Immunity level against clinical infection (maternally inherited)
+	double* IB = (double*)malloc(size3);								// Immunity level against infection from infectious bite
+	double* ID = (double*)malloc(size3);								// Immunity level determining p_det
 
 	double* FOI_lag = (double*)malloc(n_cats * 5000 * sizeof(double));	// Time-lagged force of mosquito -> human infection (to account for incubation period)
 	double* FOIv_lag = (double*)malloc(5000 * sizeof(double));			// Time-lagged force of human -> mosquito infection (to account for incubation period)
 	double* incv_lag = (double*)malloc(5000 * sizeof(double));			// Time-lagged incubation of malaria in infected mosquito
 
-	vector<double> EIR_benchmarks(n_pts* n_runmax, 0.0);			// Values of entomological inoculation rate at checkpoints
-	vector<double> slide_prev_benchmarks(n_pts* n_runmax* na, 0.0);	// Values of slide prevalence at checkpoints
-	vector<double> pcr_prev_benchmarks(n_pts* n_runmax* na, 0.0);	// Values of PCR prevalence at checkpoints
-	vector<double> clin_inc_benchmarks(n_pts* n_runmax* na, 0.0);	// Values of clinical incidence at checkpoints
-	vector<double> EIR_daily_data((tmax_c_i + 1)* n_runmax, 0.0);	// Daily entomological inoculation rate values saved for cohort calculations
-	vector<double> IB_start_data(n_mv_values* n_cats, 0.0);			// Starting IB values saved for cohort calculations
-	vector<double> IC_start_data(n_mv_values* n_cats, 0.0);			// Starting IC values saved for cohort calculations
-	vector<double> ID_start_data(n_mv_values* n_cats, 0.0);			// Starting ID values saved for cohort calculations
+	vector<double> EIR_benchmarks(n_pts* n_runmax, 0.0);				// Values of entomological inoculation rate at checkpoints
+	vector<double> slide_prev_benchmarks(n_pts* n_runmax* na, 0.0);		// Values of slide prevalence at checkpoints
+	vector<double> pcr_prev_benchmarks(n_pts* n_runmax* na, 0.0);		// Values of PCR prevalence at checkpoints
+	vector<double> clin_inc_benchmarks(n_pts* n_runmax* na, 0.0);		// Values of clinical incidence at checkpoints
+	vector<double> EIR_daily_data((tmax_c_i + 1)* n_runmax, 0.0);		// Daily entomological inoculation rate values saved for cohort calculations
+	vector<double> IB_start_data(n_mv_values* n_cats, 0.0);				// Starting IB values saved for cohort calculations
+	vector<double> IC_start_data(n_mv_values* n_cats, 0.0);				// Starting IC values saved for cohort calculations
+	vector<double> ID_start_data(n_mv_values* n_cats, 0.0);				// Starting ID values saved for cohort calculations
 
 	vector<double> mv_input = rcpp_to_vector_double(inputs["mv_input"]);
 	vector<double> EL_input = rcpp_to_vector_double(inputs["EL_input"]);
@@ -298,10 +281,7 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 	vector<double> ID_input = rcpp_to_vector_double(inputs["ID_input"]);
 
 	// Set up conditions for one or more runs-------------------------------------------------------------------------------------------------------------------------------------
-
-	//Variable mu_atsb for special runs - TODO: Integrate into package
-	//double mu_atsb_var[105] = { 0.1000,0.1009,0.1018,0.1026,0.1034,0.1042,0.1050,0.1058,0.1065,0.1073,0.1080,0.1087,0.1094,0.1101,0.1108,0.1115,0.1122,0.1128,0.1135,0.1141,0.1148,0.1154,0.1160,0.1167,0.1173,0.1179,0.1185,0.1191,0.1197,0.1203,0.1209,0.1215,0.1221,0.1227,0.1233,0.1239,0.1245,0.1251,0.1257,0.1263,0.1269,0.1275,0.1281,0.1287,0.1293,0.1299,0.1305,0.1312,0.1318,0.1324,0.1330,0.1337,0.1343,0.1350,0.1356,0.1363,0.1369,0.1376,0.1383,0.1390,0.1397,0.1404,0.1412,0.1419,0.1427,0.1434,0.1442,0.1450,0.1458,0.1467,0.1475,0.1484,0.1493,0.1502,0.1511,0.1521,0.1531,0.1541,0.1552,0.1563,0.1574,0.1585,0.1597,0.1609,0.1622,0.1636,0.1649,0.1664,0.1679,0.1694,0.1710,0.1728,0.1745,0.1764,0.1784,0.1804,0.1826,0.1849,0.1874,0.1900,0.1900 ,0.1900 ,0.1900 ,0.1900 ,0.1900 };
-		
+			
 	if (flag_file == 1) 
 	{
 		benchmarks_by_age = fopen(file_benchmarks.c_str(), "w");
@@ -340,8 +320,8 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 		}
 	}
 
-	//Rcout << "\n\nDefault trial parameter values:\nCase treatment rate=" << prop_T_def << "\nATSB killing rate=" << mu_atsb_def << "\nBednet coverage=" << cov_nets_def << "\nIRS coverage=" << cov_irs_def;
-	for (n_run = 0; n_run < n_runmax; n_run++)// This for() loop runs all the simulations, jumping to start_run for each one and jumping back to run_complete when it is finished
+	// Rcout << "\n\nDefault trial parameter values:\nCase treatment rate=" << prop_T_def << "\nATSB killing rate=" << mu_atsb_def << "\nBednet coverage=" << cov_nets_def << "\nIRS coverage=" << cov_irs_def;
+	for (n_run = 0; n_run < n_runmax; n_run++) // This for() loop runs all the simulations, jumping to start_run for each one and jumping back to run_complete when it is finished
 	{
 		n_int = n_run % n_int_values;
 		n_mv = (n_run - n_int) / n_int_values;
@@ -354,7 +334,7 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 
 		goto start_run;
 		run_complete:
-		//Rcout << "\nRun " << n_run + 1 << " complete.\n";
+		// Rcout << "\nRun " << n_run + 1 << " complete.\n";
 		R_FlushConsole();
 	}
 
@@ -373,19 +353,18 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 	rIW = cov_irs * p_repel_irs_bed;
 	dIW = cov_irs * p_kill_irs1;
 	dIF = cov_irs * p_kill_irs2;
-	K0 = (mv0 * 2.0 * dl * muv0 * (1.0 + (dp * mup)) * (gammal * (lambda + 1.0))) / term;									//Larval birth rate coefficient, set based on mv0
+	K0 = (mv0 * 2.0 * dl * muv0 * (1.0 + (dp * mup)) * (gammal * (lambda + 1.0))) / term;									// Larval birth rate coefficient, set based on mv0
 	prevent_net_irs = phi_bite_house - ((phi_bite_house - phi_bite_bed) * (1.0 - rI) * (1.0 - rIW - dIW) * (1.0 - dIF)) -	// Proportion of bites prevented by bednets and/or interior residual spraying
 			(phi_bite_bed * (1.0 - rI) * (1.0 - rIW - dIW) * (1.0 - dIF) * (1.0 - rN) * (1.0 - rNW - dNW));
 	mu_net_irs = 0.3333 * Q0 * (((phi_bite_house - phi_bite_bed) * (1.0 - rI) * (dIW + ((1.0 - rIW - dIW) * dIF))) +		// Additional death rate due to bednets and/or interior residual spraying
 			(phi_bite_bed * (1.0 - rI) * (1.0 - rN) * (dIW + ((1.0 - rIW - dIW) * (dNW + ((1.0 - rNW - dNW) * dIF))))));
 	av0 = 0.3333 * Q0 * (1.0 - prevent_net_irs);																			// Biting rate on humans / mosquito
 	muv1 = muv0 + mu_atsb + mu_net_irs;																						// Total mosquito death rate
-	//muv1 = mu_atsb_var[0] + muv0 + mu_net_irs; // Variable muv1 for special runs - TODO: Integrate with package
+	// muv1 = mu_atsb_var[0] + muv0 + mu_net_irs;																			// Variable muv1 for special runs - TODO: Integrate with package
 	Rcout << "\nRun " << n_run + 1 << " Mosquito density=" << mv0 << " Intervention number=" << n_int;
 
 	restart_run:
-	dt2 = dt * 0.1;
-		
+	dt2 = dt * 0.1;		
 	ntmax = intdiv(tmax, dt) + 1;
 	dur_Ei = intdiv(dur_E, dt) + 1;
 	latgami = intdiv(latgam, dt) + 1;
@@ -422,22 +401,13 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 		ID[i] = ID_input[pos];
 	}
 
-	//H = arraysum(S, n_cats) + arraysum(T, n_cats) + arraysum(D, n_cats) + arraysum(A, n_cats) + arraysum(U, n_cats) + arraysum(P, n_cats);
-	//H_inv = 1.0 / H;
 	pos = 0;
 	FOIv0 = 0.0;
-	for (i = 0; i < na; i++) //Run through age categories
+	for (i = 0; i < na; i++) // Run through age categories
 	{
 		foi_age_cur = foi_age[i];
-		for (j = 0; j < num_het; j++) //Run through heterogeneity categories
+		for (j = 0; j < num_het; j++) // Run through heterogeneity categories
 		{
-			// Normalize S,T,D,A,U,P to sum to 1.0
-			/*S[pos] *= H_inv;
-			T[pos] *= H_inv;
-			D[pos] *= H_inv;
-			A[pos] *= H_inv;
-			U[pos] *= H_inv;
-			P[pos] *= H_inv;*/
 			EIR_cur = EIRd * foi_age_cur * rel_foi[j];
 			b[pos] = bh * ((bmin_rev / (1.0 + pow(IB[pos] * inv_IB0, kb))) + bmin);
 			FOI0[pos] = EIR_cur * (IB[pos] > 0.0 ? b[pos] : bh);
@@ -470,16 +440,15 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 	flag_int = 0;
 	for (nt = 0; nt <= ntmax; nt++)
 	{
-		tflag = 0;							//Flag indicates whether dt needs to be altered
+		tflag = 0;								// Flag indicates whether dt needs to be altered
 		t = nt * dt;							// Time since start of simulation
-		t_int = t - int_start_time;			// Time since start of intervention use
+		t_int = t - int_start_time;				// Time since start of intervention use
 		nt_E = nt % dur_Ei;
 		nt_latgam = nt % latgami;
 		nt_latmosq = nt % latmosqi;
 		year_day = fmod(t + date_start, dy);	// Day of the year
-		mv = Sv1 + Ev1 + Iv1;				// Total number of mosquitoes
-
-		if (flag_int == 0 && t_int >= 0.0)	// Value of varied trial parameters set after start of intervention
+		mv = Sv1 + Ev1 + Iv1;					// Total number of mosquitoes
+		if (flag_int == 0 && t_int >= 0.0)		// Value of varied trial parameters set after start of intervention
 		{
 			flag_int = 1;
 			switch (int_v_varied)
@@ -511,7 +480,7 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 					Rcout << "\nIntervention begun. IRS coverage=" << cov_irs;
 				}
 					break;
-				default: {Rcout << "\n\tint_v_varied error\n"; }
+				default: { Rcout << "\n\tint_v_varied error\n"; }
 			}
 			R_FlushConsole();
 			prevent_net_irs = phi_bite_house - ((phi_bite_house - phi_bite_bed) * (1.0 - rI) * (1.0 - rIW - dIW) * (1.0 - dIF)) -
@@ -519,13 +488,13 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 			mu_net_irs = 0.3333 * Q0 * (((phi_bite_house - phi_bite_bed) * (1.0 - rI) * (dIW + ((1.0 - rIW - dIW) * dIF))) +
 								(phi_bite_bed * (1.0 - rI) * (1.0 - rN) * (dIW + ((1.0 - rIW - dIW) * (dNW + ((1.0 - rNW - dNW) * dIF))))));
 			av0 = 0.3333 * Q0 * (1.0 - prevent_net_irs);
+			/*if (t_int >= 0.0 && n_int > 0) // Variable muv1 for special runs - TODO: Integrate into package
+			{
+				int day = t_int;
+				muv1 = mu_atsb_var[day] + muv0 + mu_net_irs;
+			}*/
 			muv1 = muv0 + mu_atsb + mu_net_irs;
 
-			/*if (t_int >= 0.0 && n_int > 0) //Variable muv1 for special runs - TODO: Integrate into package
-			{
-			int day = t_int;
-			muv1 = mu_atsb_var[day] + muv0 + mu_net_irs;
-			}*/
 		}
 
 		rain = rain_coeff * (rconst + (2.0 * (
@@ -542,10 +511,10 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 		for (j = 0; j < num_het; j++) { ICM_init[j] = P_IC_M * (ICA[(age20l * num_het) + j] + age_20_factor * (ICA[(age20u * num_het) + j] - ICA[(age20l * num_het) + j])); }
 		pos = 0;
 		ij = nt_E * n_cats;
-		for (i = 0; i < na; i++) //Run through age categories
+		for (i = 0; i < na; i++) // Run through age categories
 		{
 			foi_age_cur = foi_age[i];
-			for (j = 0; j < num_het; j++) //Run through heterogeneity categories
+			for (j = 0; j < num_het; j++) // Run through heterogeneity categories
 			{
 				EIR_cur = EIRd * foi_age_cur * rel_foi[j];													// Entomological inoculation rate
 				b[pos] = bh * (bmin_rev / (1.0 + pow(IB[pos] * inv_IB0, kb)) + bmin);
@@ -564,8 +533,8 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 			}
 		}
 
-		//Key human data - main population
-		for (i = na - 1; i >= 0; i--) //Run through age categories (backwards, so that forward ageing does not affect the current time point)
+		// Key human data - main population
+		for (i = na - 1; i >= 0; i--) // Run through age categories (backwards, so that forward ageing does not affect the current time point)
 		{
 			age1 = (i < na - 1 ? age_rate[i] : 0.0) + eta;
 			inv_x = inv_x_I[i];
@@ -580,7 +549,7 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 				age0 = 0.0;
 				pos2 = 0;
 			}
-			for (j = 0; j < num_het; j++) //Run through heterogeneity categories
+			for (j = 0; j < num_het; j++) // Run through heterogeneity categories
 			{
 				// Current parameter values
 				S_cur = S[pos];
@@ -606,7 +575,7 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 				delU1 = rU * U_cur;
 				delU2 = FOI_cur * U_cur;
 
-				//Apply changes
+				// Apply changes
 				S[pos] += dt * (-delS + delP + delU1 - (age1 * S_cur) + (age0 * S[pos2]) + (i == 0 ? eta * het_wt[j] : 0.0));
 				T[pos] += dt * ((prop_T * clin_inc_cur) - delT - (age1 * T_cur) + (age0 * T[pos2]));
 				D[pos] += dt * ((prop_T_rev * clin_inc_cur) - delD - (age1 * D_cur) + (age0 * D[pos2]));
@@ -649,7 +618,7 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 		incv_lag[nt_latmosq] = FOIv * Sv1 * Surv1;
 		inv_KL = 1.0 / KL;
 
-		//Larval data calculation; calculated in smaller time increments
+		// Larval data calculation; calculated in smaller time increments
 		for (np = 0; np < 10; np++)
 		{
 			EL_cur = EL;
@@ -662,7 +631,7 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 			PL += dt2 * (dLL - (mup * PL_cur) - (PL_cur / dp));
 		}
 
-		//Adult mosquito data calculation
+		// Adult mosquito data calculation
 		Sv_cur = Sv1;
 		Ev_cur = Ev1;
 		Iv_cur = Iv1;
@@ -674,8 +643,8 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 		// Outputs
 		if (t >= t_mark1)
 		{
-			// Total normalized number of humans; this should always sum to 1.0
-			H = arraysum(S, n_cats) + arraysum(T, n_cats) + arraysum(D, n_cats) + arraysum(A, n_cats) + arraysum(U, n_cats) + arraysum(P, n_cats);
+			t_mark1 += tinterval1;			
+			H = arraysum(S, n_cats) + arraysum(T, n_cats) + arraysum(D, n_cats) + arraysum(A, n_cats) + arraysum(U, n_cats) + arraysum(P, n_cats); // Total normalized number of humans; this should always sum to 1.0
 
 			// Check that time increment has not been set too large
 			if ((H - 1.0) * (H - 1.0) > 0.01) { tflag = 1; }
@@ -685,7 +654,7 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 			{
 				if (dt <= 0.0025) { goto end_run; }
 				dt = max(0.0025, dt * 0.9);
-				//Rcout << "\ntflag = " << tflag << " Adjusting time increment. New dt = " << dt << "\n";
+				// Rcout << "\ntflag = " << tflag << " Adjusting time increment. New dt = " << dt << "\n";
 				goto restart_run;
 			}
 			if (t_int > 0.0)
@@ -695,14 +664,13 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 				increment = 0;
 				interval++;
 			}
-			t_mark1 += tinterval1;
 		}
 
 		if (t_int >= t_mark2)
 		{
 			pos = 0;
 			ij = (n_pts * n_run * na) + (div * na);
-			for (i = 0; i < na; i++) //Run through age categories
+			for (i = 0; i < na; i++) // Run through age categories
 			{
 				slide_prev_age[i] = 0.0;
 				pcr_prev_age[i] = 0.0;
@@ -722,7 +690,6 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 				clin_inc_benchmarks[pos2] = clin_inc_age[i];
 			}
 			EIR_benchmarks[(n_run * n_pts) + div] = EIRd;
-
 			div++;
 			if (div < n_pts) { t_mark2 = time_values[div]; }
 			if (flag_file == 1)
@@ -785,7 +752,7 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 	if (endpoint_data != NULL) { fclose(endpoint_data); }
 	if (data_EIR != NULL) { fclose(data_EIR); }
 	if (data_immunity != NULL) { fclose(data_immunity); }
-	//Rcout << "\nMain population computations complete.\n";
+	// Rcout << "\nMain population computations complete.\n";
 
 	// Return list
 	return List::create(Named("EIR_benchmarks") = EIR_benchmarks, Named("slide_prev_benchmarks")= slide_prev_benchmarks, 

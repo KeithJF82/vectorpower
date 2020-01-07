@@ -68,6 +68,9 @@
     <li>
       <a href="../articles/E_worked_example03.html">Worked Example 3 - Cohort Setup</a>
     </li>
+    <li>
+      <a href="../articles/F_worked_example04.html">Worked Example 4 - Cohort Simulation</a>
+    </li>
   </ul>
 </li>
       </ul>
@@ -99,10 +102,12 @@
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" title="1"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span>(vectorpower)</a></code></pre></div>
 <p>In this example, the main population data is loaded from an RDS file.</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" title="1">mainpop_data &lt;-<span class="st"> </span><span class="kw"><a href="https://rdrr.io/r/base/readRDS.html">readRDS</a></span>(<span class="dt">file=</span><span class="kw"><a href="https://rdrr.io/r/base/connections.html">url</a></span>(<span class="st">"https://github.com/KeithJF82/vectorpower/raw/master/inst/extdata/mainpop_data1.Rds"</span>))</a></code></pre></div>
+<p>[TBA]</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" title="1">setup_list_con &lt;-<span class="st"> </span><span class="kw"><a href="../reference/cluster_input_setup.html">cluster_input_setup</a></span>(<span class="dt">input_list=</span>mainpop_data, <span class="dt">set_n_pt=</span><span class="dv">1</span>, <span class="dt">set_n_int=</span><span class="dv">1</span>,</a>
 <a class="sourceLine" id="cb3-2" title="2">                                      <span class="dt">benchmark =</span> <span class="st">"EIR_annual"</span>, <span class="dt">age_start=</span><span class="fl">0.0</span>, <span class="dt">age_end=</span><span class="fl">65.0</span>)</a>
 <a class="sourceLine" id="cb3-3" title="3">cluster_list_con &lt;-<span class="st"> </span><span class="kw"><a href="../reference/clusters_create.html">clusters_create</a></span>(<span class="dt">input_list=</span>setup_list_con,<span class="dt">n_clusters=</span><span class="dv">100</span>,</a>
 <a class="sourceLine" id="cb3-4" title="4">                                    <span class="dt">benchmark_mean=</span><span class="fl">3.1</span>, <span class="dt">benchmark_stdev=</span><span class="fl">0.5</span>, <span class="dt">int_mean=</span><span class="fl">0.0</span>, <span class="dt">int_stdev=</span><span class="fl">0.0</span>)</a></code></pre></div>
+<p>[TBA]</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb4-1" title="1">setup_list_int &lt;-<span class="st"> </span><span class="kw"><a href="../reference/cluster_input_setup.html">cluster_input_setup</a></span>(<span class="dt">input_list=</span>mainpop_data, <span class="dt">set_n_pt=</span><span class="dv">1</span>, <span class="dt">set_n_int=</span><span class="dv">1</span>,</a>
 <a class="sourceLine" id="cb4-2" title="2">                                      <span class="dt">benchmark =</span> <span class="st">"EIR_annual"</span>, <span class="dt">age_start=</span><span class="fl">0.0</span>, <span class="dt">age_end=</span><span class="fl">65.0</span>)</a>
 <a class="sourceLine" id="cb4-3" title="3">cluster_list_int &lt;-<span class="st"> </span><span class="kw"><a href="../reference/clusters_create.html">clusters_create</a></span>(<span class="dt">input_list=</span>setup_list_int,<span class="dt">n_clusters=</span><span class="dv">100</span>,</a>
