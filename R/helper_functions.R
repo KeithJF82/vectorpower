@@ -584,3 +584,25 @@ assert_decreasing <- function(x, message = "%s must be decreasing", name = depar
   return(TRUE)
 }
 
+
+#------------------------------------------------
+#' @title Find position
+#'
+#' @description Find position of value in set
+#'
+#' @details Find best position of value in set by finding closest value; modification of FindInterval() function
+#'
+#' @param value   Value to locate
+#' @param set     Set of values in which to locate value
+#'
+#' @export
+#' 
+findPosition <- function(value=0,set=c(0,1)) {
+  j=max(1,findInterval(value,set))
+  if(j<length(set)){
+    value_a=set[j]
+    value_b=set[j+1]
+    if(value-value_a>value_b-value){j=j+1}
+  }
+  return(j)
+}

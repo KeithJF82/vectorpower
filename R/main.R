@@ -134,8 +134,6 @@ mainpop <- function (input_files = list(),output_folder = NA,n_mv_set=c(1), int_
                       EIR_daily_data=EIR_daily_data,annual_data=annual_data,
                       IB_start_data=IB_start_data,IC_start_data=IC_start_data,ID_start_data=ID_start_data)
   
-  #save(output_data,file=paste(input_folder,"mainpop_output.Rdata",sep="/"))
-  
   return(output_data)
 }
 
@@ -254,10 +252,10 @@ clusters_create <- function(input_list=list(),n_clusters=100,benchmark_mean=0.25
   mvn_index=prob
   int_index=prob
   for(i in 1:nprobs){
-    if(benchmark_stdev==0.0){v_bm1[i]=benchmark_mean} else {
-      v_bm1[i]=benchmark_mean+(((i-mid)*benchmark_stdev*10)/nprobs)}
-    if(int_stdev==0.0){v_i1[i]=int_mean} else {
-      v_i1[i]=int_mean+(((i-mid)*int_stdev*10)/nprobs)}
+    if(benchmark_stdev==0.0){benchmark_stdev=benchmark_mean/100.0}
+    v_bm1[i]=benchmark_mean+(((i-mid)*benchmark_stdev*10)/nprobs)
+    if(int_stdev==0.0){int_stdev=int_mean/100.0}
+    v_i1[i]=int_mean+(((i-mid)*int_stdev*10)/nprobs)
     prob[i]=exp(-0.5*((i-mid)/sigma0)^2)
   }
   prob=prob/sum(prob)
@@ -267,12 +265,10 @@ clusters_create <- function(input_list=list(),n_clusters=100,benchmark_mean=0.25
   }
   
   for(i in 1:nprobs){
-    j=findInterval(v_bm1[i],input_list$benchmark_values)
-    j=max(1,j)
+    j=findPosition(v_bm1[i],input_list$benchmark_values)
     mvn_index[i]=j
     v_bm2[i]=input_list$benchmark_values[j]
-    j=findInterval(v_i1[i],input_list$int_values)
-    j=max(1,j)
+    j=findPosition(v_i1[i],input_list$int_values)
     int_index[i]=j
     v_i2[i]=input_list$int_values[j]
   }
@@ -280,22 +276,20 @@ clusters_create <- function(input_list=list(),n_clusters=100,benchmark_mean=0.25
   clusters <- data.frame(CP_B=stats::runif(n_clusters,0,1),n_B=rep(0,n_clusters),B=rep(0,n_clusters),
                          CP_I=stats::runif(n_clusters,0,1),n_I=rep(0,n_clusters),I=rep(0,n_clusters),n_run=rep(0,n_clusters))
   for(i in 1:n_clusters){
-    j=findInterval(clusters$CP_B[i],cprob)
-    j=max(1,j)
+    j=findPosition(clusters$CP_B[i],cprob)
     clusters$B[i]=v_bm2[j]
     clusters$n_B[i]=mvn_index[j]
-    j=findInterval(clusters$CP_I[i],cprob)
-    j=max(1,j)
+    j=findPosition(clusters$CP_I[i],cprob)
     clusters$I[i]=v_i2[j]
     clusters$n_I[i]=int_index[j]
   }
   clusters$n_run=((clusters$n_B-1)*nv_I)+clusters$n_I-1
   
   par(mfrow=c(1,2))
-  matplot(cprob,v_bm1,type="l",col=1,xlab="Cumulative probability",ylab=input_list$benchmark)
+  matplot(cprob,v_bm1,type="l",col=1,xlab="Cumulative probability",ylab=input_list$benchmark,ylim=c(min(v_bm2),max(v_bm2)))
   matplot(cprob,v_bm2,type="l",col=2,add=TRUE)
   matplot(clusters$CP_B,clusters$B,type="p",pch=1,col=3,add=TRUE)
-  matplot(cprob,v_i1,type="l",col=1,xlab="Cumulative probability",ylab="Intervention parameter")
+  matplot(cprob,v_i1,type="l",col=1,xlab="Cumulative probability",ylab="Intervention parameter",ylim=c(min(v_i2),max(v_i2)))
   matplot(cprob,v_i2,type="l",col=2,add=TRUE)
   matplot(clusters$CP_I,clusters$I,type="p",pch=1,col=3,add=TRUE)
   par(mfrow=c(1,1))

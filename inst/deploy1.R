@@ -6,7 +6,7 @@ setwd(vectorpower_location)
 load_all("vectorpower")
 
 # Input location of dataset folder to use and view annual EIR data
-dataset_folder = "C:/Users/kjfras16/Documents/0 - R files/vectorpower testing/Demo Folder 1/" 
+dataset_folder = "C:/Users/kjfras16/Documents/0 - R files/vectorpower testing/DemoFolder1/" 
 basedata = plot_folder_data(input_folder=dataset_folder,xvalues="N_M",yvalues="EIR")
 
 # Set inputs
@@ -15,7 +15,7 @@ basedata = plot_folder_data(input_folder=dataset_folder,xvalues="N_M",yvalues="E
                         # before intervention begins
                         # Default start date for Mali parameter data is day 180 - Jul 1st
   time_values = c(0.0,31.0,62.0,92.0,123.0,153.0) # Time points at which benchmark data output
-  n_mv_set = c(1:5) # List of sets of values to load from starting data
+  n_mv_set = c(1:2) # List of sets of values to load from starting data
   int_values = 0.1*c(0:1) # List of intervention parameter values
   control_folder=paste(dataset_folder,"Control/",sep="")   # Folder (inside dataset folder) to send control cluster output
   int_folder=paste(dataset_folder,"Intervention/",sep="") # Folder to send intervention cluster output
@@ -23,13 +23,14 @@ basedata = plot_folder_data(input_folder=dataset_folder,xvalues="N_M",yvalues="E
   benchmark2="EIR_annual" # Malaria benchmark to use to select data for clusters
   age_start_coh=0.5 # Minimum age of cohort patients
   age_end_coh=10.0  # Maximum age of cohort patients
-  n_clusters=100    # Number of clusters to generate
+  n_clusters=1000    # Number of clusters to generate
   n_patients=100    # Number of patients per cluster
-  benchmark_mean=2.5  # Mean value of benchmark2 to use to create distribution
-  benchmark_stdev=1.0  # Standard deviation of benchmark2 to use to create distribution
+  benchmark_mean=0.126  # Mean value of benchmark2 to use to create distribution
+  benchmark_stdev=0.01  # Standard deviation of benchmark2 to use to create distribution
   int_mean=0.1          # Mean value of intervention parameter to use to create distribution
   int_stdev=0.05        # Standard deviation of intervention parameter to use to create distribution
   data_file=paste(dataset_folder,"data_file.rds",sep="")
+  cluster_file=paste(dataset_folder,"cluster_file.rds",sep="")
 }
 
 # Simulate main population

@@ -22,7 +22,7 @@ First load the package (install it first if necessary as shown in the [Installat
 library(vectorpower)
 ```
 
-In this example, the main population data is loaded from an RDS file.
+In this example, the main population data is loaded from an RDS file created by saving the results of running the mainpop() function, as described in [Worked Example 2](https://keithjf82.github.io/vectorpower/articles/D_worked_example02.html).
 
 ```{r, eval = FALSE}
 mainpop_data <- readRDS(file=url("https://github.com/KeithJF82/vectorpower/raw/master/inst/extdata/mainpop_data1.Rds"))
