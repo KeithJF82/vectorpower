@@ -78,10 +78,10 @@ dataset_folder="C:/Users/YourName/Documents/VPDatasets/DemoFolder1"
 
 The baseline malaria levels represented by the input data to go in the dataset are set by specifying a vector of values of steady-state annual entomological inoculation rate (EIR). These values will not exactly match the year-round EIR values represented by the data once the time-dependent model has been run; the final dataset will include a file specifying the year-round EIR at equilibrium under the time-dependent model.
 
-In this example, the EIR values are between 1 and 5 infectious bites per person per year; these represent low baseline malaria levels. High malaria levels require longer computation times to avoid errors; the computation time increases with  approximately the square root of EIR (so an EIR of 100 requires around 10 times the computation time of an EIR of 1).
+In this example, the EIR values are between 0.1 and 0.5 infectious bites per person per year; these represent very low baseline malaria levels. High malaria levels require longer computation times to avoid errors; the computation time increases with  approximately the square root of EIR (so an EIR of 100 requires around 10 times the computation time of an EIR of 1).
 
 ```{r}
-EIR_values=0.1*c(1:2)
+EIR_values=0.1*c(1:5)
 ```
 
 Next, the integer number of years (from 1-20) for which the time-dependent model should be run to reach equilibrium must be specified. The more years for which it is run, the more stable the equilibrium; if the equilibrium is less stable, the malaria level will vary more significantly from year to year in calculations if the model is run for multiple years. For most purposes, running for at least 5 years is sufficient. In this example, nyears is set to 1 for speed.
