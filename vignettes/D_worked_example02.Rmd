@@ -64,9 +64,9 @@ mainpop_data <- mainpop(input_files = input_files, n_mv_set = n_mv_set, int_v_va
                         int_values=int_values, start_interval = start_interval, time_values=time_values)
 ```
 
-The resulting data can be used in cohort calculations or processed on its own. It can be saved to a file so that it can be used again if R is closed. In this example, it is saved to a file inside the inst/extdata sub-folder (overwriting an identical existing file).
+The resulting data can be used in cohort calculations or processed on its own. It can be saved to a file so that it can be used again if R is closed.
 
-```{r}
+```{r, eval=FALSE}
 saveRDS(mainpop_data,file="mainpop_data.Rds")
 ```
 
