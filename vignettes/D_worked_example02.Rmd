@@ -12,6 +12,7 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
+knitr::opts_chunk$set(root.dir = system.file("extdata",package="vectorpower"))
 ```
 
 This is an example of how to load a dataset and carry out simulations of the progression of malaria in the main (non-cohort) population.
@@ -37,9 +38,8 @@ input_files <- list(
 If using a dataset folder created using dataset_create(), this can be done automatically by using the load_dataset() function. Here the example folder in the inst/extdata subfolder, created in the first worked example, is used:
 
 ```{r, eval=FALSE}
-dataset_folder=system.file("extdata/Demo Folder 1/",package="vectorpower")
+dataset_folder=system.file("extdata/DemoFolder1/",package="vectorpower")
 input_files <- load_dataset(dataset_folder)
-
 ```
 
 The parameters defining the trial setup are then supplied to be used by mainpop():
@@ -67,8 +67,7 @@ mainpop_data <- mainpop(input_files = input_files, n_mv_set = n_mv_set, int_v_va
 The resulting data can be used in cohort calculations or processed on its own. It can be saved to a file so that it can be used again if R is closed. In this example, it is saved to a file inside the inst/extdata sub-folder (overwriting an identical existing file).
 
 ```{r}
-setwd(system.file("extdata",package="vectorpower"))
-saveRDS(mainpop_data,file="mainpop_data1.Rds")
+saveRDS(mainpop_data,file="mainpop_data.Rds")
 ```
 
 The plot_mainpop_data() function can be used to plot selected results:

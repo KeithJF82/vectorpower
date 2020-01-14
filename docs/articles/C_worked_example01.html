@@ -132,45 +132,8 @@
 <div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb9-1" title="1">nyears=<span class="dv">1</span></a></code></pre></div>
 <p>With all the parameters specified, the dataset_create function is run. This will first set initial conditions using steady-state calculations, then run the time-dependent model for the specified number of years to reach equilibrium. The results will be output as the dataset’s starting data. The year-round data output from the starting data (assuming no new interventions) will then be calculated and output as an aid to users of the dataset.</p>
 <div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb10-1" title="1">data1 &lt;-<span class="st"> </span><span class="kw"><a href="../reference/dataset_create.html">dataset_create</a></span>(<span class="dt">dataset_folder=</span>dataset_folder,<span class="dt">param_file=</span>param_file,<span class="dt">age_file=</span>age_file,</a>
-<a class="sourceLine" id="cb10-2" title="2">                        <span class="dt">het_file=</span>het_file,<span class="dt">EIR_values=</span>EIR_values,<span class="dt">nyears=</span>nyears)</a>
-<a class="sourceLine" id="cb10-3" title="3"><span class="co">#&gt; </span></a>
-<a class="sourceLine" id="cb10-4" title="4"><span class="co">#&gt; Creating new model_parameters.txt, het_data.txt and age_data.txt files.</span></a>
-<a class="sourceLine" id="cb10-5" title="5"><span class="co">#&gt; </span></a>
-<a class="sourceLine" id="cb10-6" title="6"><span class="co">#&gt; Generating preliminary data (steady state at constant rainfall)</span></a>
-<a class="sourceLine" id="cb10-7" title="7"><span class="co">#&gt; n_mv = 1 Mosquito density = 0.195336</span></a>
-<a class="sourceLine" id="cb10-8" title="8"><span class="co">#&gt; n_mv = 2 Mosquito density = 0.245824</span></a>
-<a class="sourceLine" id="cb10-9" title="9"><span class="co">#&gt; n_mv = 3 Mosquito density = 0.288382</span></a>
-<a class="sourceLine" id="cb10-10" title="10"><span class="co">#&gt; n_mv = 4 Mosquito density = 0.327118</span></a>
-<a class="sourceLine" id="cb10-11" title="11"><span class="co">#&gt; n_mv = 5 Mosquito density = 0.363542</span></a>
-<a class="sourceLine" id="cb10-12" title="12"><span class="co">#&gt; Steady-state calculations complete.</span></a>
-<a class="sourceLine" id="cb10-13" title="13"><span class="co">#&gt; </span></a>
-<a class="sourceLine" id="cb10-14" title="14"><span class="co">#&gt; Beginning main population calculations to equilibrium.</span></a>
-<a class="sourceLine" id="cb10-15" title="15"><span class="co">#&gt; Run 1 Mosquito density=0.19534 Intervention number=0</span></a>
-<a class="sourceLine" id="cb10-16" title="16"><span class="co">#&gt; Run 2 Mosquito density=0.24582 Intervention number=0</span></a>
-<a class="sourceLine" id="cb10-17" title="17"><span class="co">#&gt; Run 3 Mosquito density=0.28838 Intervention number=0</span></a>
-<a class="sourceLine" id="cb10-18" title="18"><span class="co">#&gt; Run 4 Mosquito density=0.32712 Intervention number=0</span></a>
-<a class="sourceLine" id="cb10-19" title="19"><span class="co">#&gt; Run 5 Mosquito density=0.36354 Intervention number=0</span></a></code></pre></div>
-<p><img src="C_worked_example01_files/figure-html/unnamed-chunk-11-1.png" width="700"></p>
-<pre><code>#&gt; 
-#&gt; 
-#&gt; Creating new starting_data.txt file from results.
-#&gt; Running main population model for 1 year to establish year-round values
-#&gt; (annual EIR and incidence, annual average prevalences).
-#&gt; Run 1 Mosquito density=0.1953 Intervention number=0
-#&gt; Run 2 Mosquito density=0.2458 Intervention number=0
-#&gt; Run 3 Mosquito density=0.2884 Intervention number=0
-#&gt; Run 4 Mosquito density=0.3271 Intervention number=0
-#&gt; Run 5 Mosquito density=0.3635 Intervention number=0</code></pre>
-<p><img src="C_worked_example01_files/figure-html/unnamed-chunk-11-2.png" width="700"></p>
-<pre><code>#&gt; 
-#&gt; 
-#&gt; Outputting annual data.
-#&gt; n_mv mosq_density    EIRy_ss EIRy    slide_prev_y    clin_inc_y  pcr_prev_y
-#&gt; 1    0.1953356   0.1 0.08497538  0.01126148  0.028435    0.02116019  
-#&gt; 2    0.245824    0.2 0.1673531   0.01998336  0.05230838  0.03862124  
-#&gt; 3    0.2883817   0.3 0.2489684   0.02752701  0.07297947  0.05403446  
-#&gt; 4    0.3271177   0.4 0.3303375   0.03427995  0.09142918  0.06795503  
-#&gt; 5    0.363542    0.5 0.4117037   0.04044296  0.1081892   0.08071779  </code></pre>
+<a class="sourceLine" id="cb10-2" title="2">                        <span class="dt">het_file=</span>het_file,<span class="dt">EIR_values=</span>EIR_values,<span class="dt">nyears=</span>nyears)</a></code></pre></div>
+<p>[Code block above is not currently evaluated as it returns a Travis error even though it works correctly when the website is built.]</p>
   </div>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
