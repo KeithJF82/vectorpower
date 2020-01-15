@@ -32,9 +32,14 @@ Rcpp::List rcpp_cohort(List params, List trial_params, List cluster_data)
 
 	Rcout << "\nBeginning cluster calculations\n";
 	R_FlushConsole();
+	string output_filename1 = "na";
+	string output_filename2 = "na";
 	int flag_file = rcpp_to_int(trial_params["flag_file"]);								// Flag indicating whether results data to be saved to files
-	string output_filename1 = rcpp_to_string(trial_params["file_summary"]);				// Individual data (fraction in each category) at each specified time point
-	string output_filename2 = rcpp_to_string(trial_params["file_frequency"]);			// Positive PCR test frequency data for each iteration
+	if (flag_file == 1)
+	{
+		output_filename1 = rcpp_to_string(trial_params["file_summary"]);				// Individual data (fraction in each category) at each specified time point
+		output_filename2 = rcpp_to_string(trial_params["file_frequency"]);			// Positive PCR test frequency data for each iteration
+	}
 	vector<double> time_values = rcpp_to_vector_double(trial_params["time_values"]);	// Vector of time benchmark points
 	int n_divs = time_values.size();
 	vector<double> tinterval2(n_divs - 1,0.0);

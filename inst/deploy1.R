@@ -71,14 +71,18 @@ cluster_list_int <- clusters_create(input_list=setup_list,n_clusters=n_clusters,
 saveRDS(cluster_list_con,file=cluster_file1) 
 saveRDS(cluster_list_int,file=cluster_file2)
 
+# Load previously generated cluster data from .rds files
+cluster_list_con <- readRDS(cluster_file1)
+cluster_list_int <- readRDS(cluster_file2)
+
 # ---------------------------------------------------------------------------------------------------------------------------
 
 # Simulate control clusters
-cohort_data_con <- cohort(mainpop_data=mainpop_data1,cluster_data=cluster_list_con,
-                          output_folder=control_folder,prop_T_c = 0.9,n_patients = n_patients,
+cohort_data_con <- cohort(mainpop_data=mainpop_data,cluster_data=cluster_list_con,
+                          output_folder=NA,prop_T_c = 0.9,n_patients = n_patients,
                           age_start = age_start_coh,age_end = age_end_coh)
 
 # Simulate intervention clusters
-cohort_data_int <- cohort(mainpop_data=mainpop_data1,cluster_data=cluster_list_int,
-                          output_folder=int_folder,prop_T_c = 0.9,n_patients = n_patients,
+cohort_data_int <- cohort(mainpop_data=mainpop_data,cluster_data=cluster_list_int,
+                          output_folder=NA,prop_T_c = 0.9,n_patients = n_patients,
                           age_start = age_start_coh,age_end = age_end_coh)

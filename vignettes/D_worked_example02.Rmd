@@ -79,3 +79,4 @@ plot2 <- plot_mainpop_data(input_list=mainpop_data,set_n_int=2,benchmark="slide_
 par(mfrow=c(1,1))
 ```
 
+For the creation of cohort data from main population data, see [Worked Example 3](https://keithjf82.github.io/vectorpower/articles/E_worked_example03.html).

@@ -15,7 +15,7 @@ knitr::opts_chunk$set(
 knitr::opts_chunk$set(root.dir = system.file("extdata",package="vectorpower"))
 ```
 
-This is an example of how to take data output from main population calculations and use it to set up the details of the trial cohort. 
+This is an example of how to take data output from main population calculations and use it to set up the details of the trial cohorts across a series of trial clusters. 
 
 First load the package (install it first if necessary as shown in the [Installation article](https://keithjf82.github.io/vectorpower/articles/B_installation.html):
 
@@ -64,6 +64,6 @@ saveRDS(cluster_list_con,file="cluster_list_con.Rds")
 saveRDS(cluster_list_int,file="cluster_list_int.Rds")
 ```
 
-
+For the simulation of malaria progression in the cohorts in each of the clusters, see [Worked Example 4](https://keithjf82.github.io/vectorpower/articles/F_worked_example04.html).
 
 

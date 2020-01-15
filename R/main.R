@@ -321,7 +321,7 @@ cohort <- function(mainpop_data = list(), cluster_data=list(),n_patients = 100,o
   assert_list(mainpop_data)
   assert_list(cluster_data)
   assert_single_int(n_patients)
-  assert_string(output_folder)
+  if(is.na(output_folder)==FALSE){assert_string(output_folder)}
   assert_single_bounded(prop_T_c,0.0,1.0)
   assert_single_bounded(age_start,0.0,65.0)
   assert_single_bounded(age_end,age_start,65.0)
