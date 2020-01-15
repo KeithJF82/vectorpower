@@ -110,13 +110,13 @@
 <p>Malaria progression in the trial cohort in each cluster is evaluated using the cohort() function, which runs the stochastic individual-based malaria model (the code for which is found in cohort.cpp in the src/ folder). Here the control group of clusters is simulated:</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" title="1"><span class="co"># Simulate control clusters</span></a>
 <a class="sourceLine" id="cb3-2" title="2">cohort_data_con &lt;-<span class="st"> </span><span class="kw"><a href="../reference/cohort.html">cohort</a></span>(<span class="dt">mainpop_data=</span>mainpop_data,<span class="dt">cluster_data=</span>cluster_list_con,</a>
-<a class="sourceLine" id="cb3-3" title="3">                          <span class="dt">output_folder=</span>control_folder,<span class="dt">prop_T_c =</span> <span class="fl">0.9</span>,<span class="dt">n_patients =</span> n_patients,</a>
-<a class="sourceLine" id="cb3-4" title="4">                          <span class="dt">age_start =</span> age_start_coh,<span class="dt">age_end =</span> age_end_coh)</a></code></pre></div>
+<a class="sourceLine" id="cb3-3" title="3">                          <span class="dt">output_folder=</span>control_folder,<span class="dt">prop_T_c =</span> <span class="fl">0.9</span>,<span class="dt">n_patients =</span> <span class="dv">100</span>,</a>
+<a class="sourceLine" id="cb3-4" title="4">                          <span class="dt">age_start =</span> <span class="fl">0.5</span>,<span class="dt">age_end =</span> <span class="fl">10.0</span>)</a></code></pre></div>
 <p>The intervention clusters are simulated in the same way:</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb4-1" title="1"><span class="co"># Simulate intervention clusters</span></a>
 <a class="sourceLine" id="cb4-2" title="2">cohort_data_int &lt;-<span class="st"> </span><span class="kw"><a href="../reference/cohort.html">cohort</a></span>(<span class="dt">mainpop_data=</span>mainpop_data,<span class="dt">cluster_data=</span>cluster_list_int,</a>
-<a class="sourceLine" id="cb4-3" title="3">                          <span class="dt">output_folder=</span>control_folder,<span class="dt">prop_T_c =</span> <span class="fl">0.9</span>,<span class="dt">n_patients =</span> n_patients,</a>
-<a class="sourceLine" id="cb4-4" title="4">                          <span class="dt">age_start =</span> age_start_coh,<span class="dt">age_end =</span> age_end_coh)</a></code></pre></div>
+<a class="sourceLine" id="cb4-3" title="3">                          <span class="dt">output_folder=</span>control_folder,<span class="dt">prop_T_c =</span> <span class="fl">0.9</span>,<span class="dt">n_patients =</span> <span class="dv">100</span>,</a>
+<a class="sourceLine" id="cb4-4" title="4">                          <span class="dt">age_start =</span> <span class="fl">0.5</span>,<span class="dt">age_end =</span> <span class="fl">10.0</span>)</a></code></pre></div>
 <p>[Data handling - TBA]</p>
   </div>
 
