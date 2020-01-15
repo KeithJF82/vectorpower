@@ -26,7 +26,7 @@ basedata = plot_folder_data(input_folder=dataset_folder,xvalues="N_M",yvalues="E
   n_clusters=10    # Number of clusters to generate
   n_patients=100    # Number of patients per cluster
   benchmark_mean=0.25  # Mean value of benchmark2 to use to create distribution
-  benchmark_stdev=0.05  # Standard deviation of benchmark2 to use to create distribution
+  benchmark_stdev=0.085  # Standard deviation of benchmark2 to use to create distribution
   output_folder=paste(vectorpower_location,"vectorpower/inst/extdata/",sep="")
   data_file=paste(output_folder,"mainpop_data.Rds",sep="")
   cluster_file1=paste(output_folder,"cluster_list_con.Rds",sep="")

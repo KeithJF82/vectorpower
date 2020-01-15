@@ -27,11 +27,11 @@ Next create the list of input file locations to supply to the mainpop() function
 
 ```{r}
 input_files <- list(
-  param_file=url("https://raw.githubusercontent.com/KeithJF82/vectorpower/master/inst/extdata/param_examples/model_parameters_const.txt"),
-  age_file=url("https://raw.githubusercontent.com/KeithJF82/vectorpower/master/inst/extdata/param_examples/age_data_145.txt"),
-  het_file=url("https://raw.githubusercontent.com/KeithJF82/vectorpower/master/inst/extdata/param_examples/het_data_9.txt"),
-  start_file=url("https://raw.githubusercontent.com/KeithJF82/vectorpower/master/inst/extdata/param_examples/start_data_example.txt"),
-  annual_file=url("https://raw.githubusercontent.com/KeithJF82/vectorpower/master/inst/extdata/param_examples/annual_data_example.txt")
+  param_file=url("https://raw.githubusercontent.com/KeithJF82/vectorpower/master/inst/extdata/DemoFolder1/model_parameters.txt"),
+  age_file=url("https://raw.githubusercontent.com/KeithJF82/vectorpower/master/inst/extdata/DemoFolder1/age_data.txt"),
+  het_file=url("https://raw.githubusercontent.com/KeithJF82/vectorpower/master/inst/extdata/DemoFolder1/het_data.txt"),
+  start_file=url("https://raw.githubusercontent.com/KeithJF82/vectorpower/master/inst/extdata/DemoFolder1/start_data.txt"),
+  annual_file=url("https://raw.githubusercontent.com/KeithJF82/vectorpower/master/inst/extdata/DemoFolder1/annual_data.txt")
                     )
 ```
 
