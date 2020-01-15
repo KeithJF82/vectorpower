@@ -100,9 +100,24 @@
 <p>This is an example of how to take previously created main population and trial cohort and and run stochastic simulations of the individuals in the cohort.</p>
 <p>First load the package (install it first if necessary as shown in the <a href="https://keithjf82.github.io/vectorpower/articles/B_installation.html">Installation article</a>:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" title="1"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span>(vectorpower)</a></code></pre></div>
-<p>In this example, the main population and cohort data is loaded from an RDS file.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" title="1">mainpop_data &lt;-<span class="st"> </span><span class="kw"><a href="https://rdrr.io/r/base/readRDS.html">readRDS</a></span>(<span class="dt">file=</span><span class="kw"><a href="https://rdrr.io/r/base/connections.html">url</a></span>(<span class="st">""</span>))</a></code></pre></div>
-<p>[TBA]</p>
+<p>In this example, the main population and cohort data sets are loaded from RDS files.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" title="1"><span class="co"># Load main population data</span></a>
+<a class="sourceLine" id="cb2-2" title="2">mainpop_data &lt;-<span class="st"> </span><span class="kw"><a href="https://rdrr.io/r/base/readRDS.html">readRDS</a></span>(<span class="dt">file=</span><span class="kw"><a href="https://rdrr.io/r/base/connections.html">url</a></span>(<span class="st">"https://github.com/KeithJF82/vectorpower/raw/master/inst/extdata/mainpop_data.Rds"</span>))</a>
+<a class="sourceLine" id="cb2-3" title="3"></a>
+<a class="sourceLine" id="cb2-4" title="4"><span class="co"># Load control and intervention cluster data</span></a>
+<a class="sourceLine" id="cb2-5" title="5">cluster_list_con &lt;-<span class="kw"><a href="https://rdrr.io/r/base/readRDS.html">readRDS</a></span>(<span class="dt">file=</span><span class="kw"><a href="https://rdrr.io/r/base/connections.html">url</a></span>(<span class="st">"https://github.com/KeithJF82/vectorpower/raw/master/inst/extdata/cluster_list_con.Rds"</span>))</a>
+<a class="sourceLine" id="cb2-6" title="6">cluster_list_int &lt;-<span class="kw"><a href="https://rdrr.io/r/base/readRDS.html">readRDS</a></span>(<span class="dt">file=</span><span class="kw"><a href="https://rdrr.io/r/base/connections.html">url</a></span>(<span class="st">"https://github.com/KeithJF82/vectorpower/raw/master/inst/extdata/cluster_list_int.Rds"</span>))</a></code></pre></div>
+<p>Malaria progression in the trial cohort in each cluster is evaluated using the cohort() function, which runs the stochastic individual-based malaria model (the code for which is found in cohort.cpp in the src/ folder). Here the control group of clusters is simulated:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" title="1"><span class="co"># Simulate control clusters</span></a>
+<a class="sourceLine" id="cb3-2" title="2">cohort_data_con &lt;-<span class="st"> </span><span class="kw"><a href="../reference/cohort.html">cohort</a></span>(<span class="dt">mainpop_data=</span>mainpop_data,<span class="dt">cluster_data=</span>cluster_list_con,</a>
+<a class="sourceLine" id="cb3-3" title="3">                          <span class="dt">output_folder=</span>control_folder,<span class="dt">prop_T_c =</span> <span class="fl">0.9</span>,<span class="dt">n_patients =</span> n_patients,</a>
+<a class="sourceLine" id="cb3-4" title="4">                          <span class="dt">age_start =</span> age_start_coh,<span class="dt">age_end =</span> age_end_coh)</a></code></pre></div>
+<p>The intervention clusters are simulated in the same way:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb4-1" title="1"><span class="co"># Simulate intervention clusters</span></a>
+<a class="sourceLine" id="cb4-2" title="2">cohort_data_int &lt;-<span class="st"> </span><span class="kw"><a href="../reference/cohort.html">cohort</a></span>(<span class="dt">mainpop_data=</span>mainpop_data,<span class="dt">cluster_data=</span>cluster_list_int,</a>
+<a class="sourceLine" id="cb4-3" title="3">                          <span class="dt">output_folder=</span>control_folder,<span class="dt">prop_T_c =</span> <span class="fl">0.9</span>,<span class="dt">n_patients =</span> n_patients,</a>
+<a class="sourceLine" id="cb4-4" title="4">                          <span class="dt">age_start =</span> age_start_coh,<span class="dt">age_end =</span> age_end_coh)</a></code></pre></div>
+<p>[Data handling - TBA]</p>
   </div>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">

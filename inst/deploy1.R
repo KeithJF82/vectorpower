@@ -23,7 +23,7 @@ basedata = plot_folder_data(input_folder=dataset_folder,xvalues="N_M",yvalues="E
   benchmark2="EIR_annual" # Malaria benchmark to use to select data for clusters
   age_start_coh=0.5 # Minimum age of cohort patients
   age_end_coh=10.0  # Maximum age of cohort patients
-  n_clusters=1000    # Number of clusters to generate
+  n_clusters=10    # Number of clusters to generate
   n_patients=100    # Number of patients per cluster
   benchmark_mean=0.25  # Mean value of benchmark2 to use to create distribution
   benchmark_stdev=0.05  # Standard deviation of benchmark2 to use to create distribution

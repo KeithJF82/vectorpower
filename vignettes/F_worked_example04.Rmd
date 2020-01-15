@@ -38,8 +38,8 @@ Malaria progression in the trial cohort in each cluster is evaluated using the c
 ```{r, eval = FALSE}
 # Simulate control clusters
 cohort_data_con <- cohort(mainpop_data=mainpop_data,cluster_data=cluster_list_con,
-                          output_folder=control_folder,prop_T_c = 0.9,n_patients = n_patients,
-                          age_start = age_start_coh,age_end = age_end_coh)
+                          output_folder=control_folder,prop_T_c = 0.9,n_patients = 100,
+                          age_start = 0.5,age_end = 10.0)
 ```
 
 The intervention clusters are simulated in the same way:
@@ -47,8 +47,8 @@ The intervention clusters are simulated in the same way:
 ```{r, eval = FALSE}
 # Simulate intervention clusters
 cohort_data_int <- cohort(mainpop_data=mainpop_data,cluster_data=cluster_list_int,
-                          output_folder=control_folder,prop_T_c = 0.9,n_patients = n_patients,
-                          age_start = age_start_coh,age_end = age_end_coh)
+                          output_folder=control_folder,prop_T_c = 0.9,n_patients = 100,
+                          age_start = 0.5,age_end = 10.0)
 ```
 
 [Data handling - TBA]
