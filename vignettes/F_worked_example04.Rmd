@@ -22,10 +22,33 @@ First load the package (install it first if necessary as shown in the [Installat
 library(vectorpower)
 ```
 
-In this example, the main population and cohort data is loaded from an RDS file.
+In this example, the main population and cohort data sets are loaded from RDS files.
 
 ```{r, eval = FALSE}
-mainpop_data <- readRDS(file=url(""))
+# Load main population data
+mainpop_data <- readRDS(file=url("https://github.com/KeithJF82/vectorpower/raw/master/inst/extdata/mainpop_data.Rds"))
+
+# Load control and intervention cluster data
+cluster_list_con <-readRDS(file=url("https://github.com/KeithJF82/vectorpower/raw/master/inst/extdata/cluster_list_con.Rds"))
+cluster_list_int <-readRDS(file=url("https://github.com/KeithJF82/vectorpower/raw/master/inst/extdata/cluster_list_int.Rds"))
 ```
 
-[TBA]
+Malaria progression in the trial cohort in each cluster is evaluated using the cohort() function, which runs the stochastic individual-based malaria model (the code for which is found in cohort.cpp in the src/ folder). Here the control group of clusters is simulated:
+
+```{r, eval = FALSE}
+# Simulate control clusters
+cohort_data_con <- cohort(mainpop_data=mainpop_data,cluster_data=cluster_list_con,
+                          output_folder=control_folder,prop_T_c = 0.9,n_patients = n_patients,
+                          age_start = age_start_coh,age_end = age_end_coh)
+```
+
+The intervention clusters are simulated in the same way:
+
+```{r, eval = FALSE}
+# Simulate intervention clusters
+cohort_data_int <- cohort(mainpop_data=mainpop_data,cluster_data=cluster_list_int,
+                          output_folder=control_folder,prop_T_c = 0.9,n_patients = n_patients,
+                          age_start = age_start_coh,age_end = age_end_coh)
+```
+
+[Data handling - TBA]
