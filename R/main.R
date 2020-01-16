@@ -307,41 +307,32 @@ clusters_create <- function(input_list=list(),n_clusters=100,benchmark_mean=0.25
 #' @param mainpop_data    List output by mainpop() containing main population data
 #' @param cluster_data    List output by clusters_create() containing cluster data
 #' @param n_patients      Number of trial cohort patients per cluster
-#' @param output_folder   Folder to send results data (set to NA to omit saving to file)
 #' @param prop_T_c        Treatment probability in cohort
 #' @param age_start       Minimum age of trial cohort patients
 #' @param age_end         Maximum age of trial cohort patients
+#' @param flag_output     Integer indicating whether to show progress of simulation
 #'
 #' @export
 
-cohort <- function(mainpop_data = list(), cluster_data=list(),n_patients = 100,output_folder = NA,
-                   prop_T_c = 0.9,age_start = 0.5,age_end = 10.0){
+cohort <- function(mainpop_data = list(), cluster_data=list(), n_patients = 1,
+                   prop_T_c = 0.9,age_start = 0.5,age_end = 10.0, flag_output=0){
   
   # Input error checking (TODO - finish)
   assert_list(mainpop_data)
   assert_list(cluster_data)
   assert_single_int(n_patients)
-  if(is.na(output_folder)==FALSE){assert_string(output_folder)}
   assert_single_bounded(prop_T_c,0.0,1.0)
   assert_single_bounded(age_start,0.0,65.0)
   assert_single_bounded(age_end,age_start,65.0)
+  assert_single_int(flag_output)
+  assert_in(flag_output,0,1)
   
-  n_clusters=length(cluster_data$n_B)
-  if(is.na(output_folder)==FALSE){
-    if(dir.exists(output_folder)==FALSE){dir.create(output_folder)}
-    file_summary = paste(output_folder,"summary.txt",sep="/")
-    file_frequency = paste(output_folder,"frequency.txt",sep="/")
-    flag_file=1
-  } else {
-    file_summary = NA
-    file_frequency = NA
-    flag_file=0
-  }
-  
-  trial_params <- list(file_summary = file_summary,file_frequency = file_frequency,n_patients = n_patients,n_clusters=n_clusters,
-                       time_values=mainpop_data$time_values,tmax_i=length(mainpop_data$EIR_daily_data[,1,1]),
+  n_clusters=length(cluster_data$n_run)
+  time_values=mainpop_data$time_values
+  trial_params <- list(n_patients = n_patients,n_clusters=n_clusters,
+                       time_values=time_values,tmax_i=length(mainpop_data$EIR_daily_data[,1,1]),
                        prop_T_c = prop_T_c,age_start = age_start,age_end = age_end,
-                       flag_file = flag_file, EIR_daily_data = as.vector(mainpop_data$EIR_daily_data),
+                       flag_output = flag_output, EIR_daily_data = as.vector(mainpop_data$EIR_daily_data),
                        IB_start_data = as.vector(mainpop_data$IB_start_data),
                        IC_start_data = as.vector(mainpop_data$IC_start_data),
                        ID_start_data = as.vector(mainpop_data$ID_start_data))
@@ -355,7 +346,12 @@ cohort <- function(mainpop_data = list(), cluster_data=list(),n_patients = 100,o
   n_pt_names=paste("n_pt",c(1:n_pts),sep="/")
   patients_status_outputs = array(data=raw_data$patients_status_outputs,dim=c(n_pts,n_patients,n_clusters),
                                   dimnames=list(n_pt_names,patient_names,cluster_names))
+  p_det = array(data=raw_data$p_det,dim=c(n_pts,n_patients,n_clusters),
+                                  dimnames=list(n_pt_names,patient_names,cluster_names))
+  
+  results=list(n_clusters=n_clusters,n_patients=n_patients,n_pts=n_pts,time_values=time_values,
+               patients_status_outputs=patients_status_outputs,p_det=p_det)
   
   
-  return(patients_status_outputs)
+  return(results)
 }

@@ -315,6 +315,7 @@ plot_folder_data <- function(input_folder="",xvalues="N_M",yvalues = "M"){
   
   return(output)
 }
+
 #------------------------------------------------
 #' @title Set up age data from age distribution data
 #'
@@ -359,4 +360,98 @@ age_data_setup <- function(age_width_years=c()){
                    age_rate=age_rate,rem_rate=rem_rate,den=den,den_norm=den_norm)
   
   return(age_data)
+}
+
+#------------------------------------------------
+#' @title Display results of cohort simulations
+#'
+#' @description Function which takes the output of the cohort() function and displays selected results
+#'
+#' @details Takes in a data frame of the form output by the cohort() function, calculates selected 
+#' benchmark values and plots them on a graph
+#'
+#' @param cohort_data List of form output by cohort() function
+#' @param benchmark Benchmark type to output ("slide_prev", "pcr_prev", or "clin_inc")
+#' @param flag_output Integer indicating how to present data (1: all clusters, 
+#'                            2: average over all clusters)
+#'
+#' @export
+
+plot_cohort_data <- function(cohort_data = list(), benchmark="slide_prev",flag_output=1){
+
+  assert_list(cohort_data)
+  assert_in(benchmark,c("slide_prev","pcr_prev","clin_inc"))
+  assert_single_int(flag_output)
+  assert_in(flag_output,c(1,2))
+  
+  n_pts=cohort_data$n_pts
+  n_patients=cohort_data$n_patients
+  n_clusters=cohort_data$n_clusters
+  nvalues=n_pts*n_clusters
+  dv=1.0/n_patients
+  
+  # benchmark_values=array(data=rep(0.0,nvalues),dim=c(n_pts,n_clusters))
+  # for(i in 1:n_pts){
+  #   for(j in 1:n_clusters){
+  #     #patient_status_outputs[npt,patient,cluster]
+  #     status=patient_status_outputs[i,,j]
+  #     if(benchmark="clin_inc"){benchmark[i,j]=1}
+  #     if(benchmark="pcr_prev"){benchmark[i,j]=1}
+  #     if(benchmark="slide_prev"){benchmark[i,j]=1}
+  #   }
+  # }
+  
+  # if(flag_output==1){
+  #   for(i in 1:n_clusters){
+  #     
+  #   }
+  # } else {
+  #   
+  # }
+  
+  # for (n = 0; n < n_patients; n++)
+  # {
+  #   patients_status_outputs[pos2] = patient[n].status;
+  #   switch (patient[n].status)
+  #   {
+  #     case 1: //T
+  #     {
+  #       pcr_test_results[pos] = 1;
+  #       pcr_prev_values[div] += dv_p1;
+  #       slide_prev_values[div] += dv_p1;
+  #     }
+  #     break;
+  #     case 2: //D
+  #     {
+  #       pcr_test_results[pos] = 1;
+  #       pcr_prev_values[div] += dv_p1;
+  #       slide_prev_values[div] += dv_p1;
+  #     }
+  #     break;
+  #     case 3: //A
+  #     {
+  #       pcr_test_results[pos] = 1;
+  #       pcr_prev_values[div] += dv_p1;
+  #       if (runif1() <= dmin + (dmin_rev / (1.0 + (fd[patient[n].na] * pow(patient[n].ID * inv_ID0, kd))))) { slide_prev_values[div] += dv_p1; }
+  #     }
+  #     break;
+  #     case 4: //U
+  #     {
+  #       pcr_test_results[pos] = 1;
+  #       pcr_prev_values[div] += dv_p1;
+  #     }
+  #     break;
+  #     default: {pcr_test_results[pos] = 0; }
+  #   }
+  # }
+  # 
+  # div++;
+  # if (div < n_divs) { t_mark2 = time_values[div]; }
+  # for (n = 0; n < n_patients; n++)
+  # {
+  #   j = 0;
+  #   for (i = 0; i < n_divs; i++) { if (pcr_test_results[(i * n_patients) + n] == 1) { j++; } }
+  #   pcr_distribution[j] += dv_p1;
+  # }
+    
 }

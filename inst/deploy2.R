@@ -1,12 +1,8 @@
-
-# Input location of 'vectorpower' folder, e.g. "C:/Users/Name/Documents/GitHub/"
-vectorpower_location = "C:/Users/kjfras16/Documents/0 - Git repositories/"  
-library(devtools)
-setwd(vectorpower_location)
-load_all("vectorpower")
+library(vectorpower)
+data_location=system.file("extdata/",package="vectorpower")
 
 # Input location of dataset folder to use and view annual EIR data
-dataset_folder = paste(vectorpower_location,"vectorpower/inst/extdata/DemoFolder1/",sep="")
+dataset_folder = paste(data_location,"/DemoFolder1/",sep="")
 basedata = plot_folder_data(input_folder=dataset_folder,xvalues="N_M",yvalues="EIR")
 
 # Set inputs
@@ -27,10 +23,9 @@ basedata = plot_folder_data(input_folder=dataset_folder,xvalues="N_M",yvalues="E
   n_patients=100    # Number of patients per cluster
   benchmark_mean=0.25  # Mean value of benchmark2 to use to create distribution
   benchmark_stdev=0.085  # Standard deviation of benchmark2 to use to create distribution
-  output_folder=paste(vectorpower_location,"vectorpower/inst/extdata/",sep="")
-  data_file=paste(output_folder,"mainpop_data.Rds",sep="")
-  cluster_file1=paste(output_folder,"cluster_list_con.Rds",sep="")
-  cluster_file2=paste(output_folder,"cluster_list_int.Rds",sep="")
+  data_file=paste(data_location,"mainpop_data.Rds",sep="")
+  cluster_file1=paste(data_location,"cluster_list_con.Rds",sep="")
+  cluster_file2=paste(data_location,"cluster_list_int.Rds",sep="")
 }
 
 # Simulate main population
