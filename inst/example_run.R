@@ -21,7 +21,7 @@ basedata = plot_folder_data(input_folder=dataset_folder,xvalues="N_M",yvalues="E
   age_end_coh=10.0  # Maximum age of cohort patients
   n_clusters=10    # Number of clusters to generate
   n_patients=100    # Number of patients per cluster
-  benchmark_mean=0.25  # Mean value of benchmark2 to use to create distribution
+  benchmark_mean=0.36  # Mean value of benchmark2 to use to create distribution
   benchmark_stdev=0.085  # Standard deviation of benchmark2 to use to create distribution
   data_file=paste(data_location,"mainpop_data.Rds",sep="")
   cluster_file1=paste(data_location,"cluster_list_con.Rds",sep="")
@@ -73,11 +73,9 @@ cluster_list_int <- readRDS(cluster_file2)
 # ---------------------------------------------------------------------------------------------------------------------------
 
 # Simulate control clusters
-cohort_data_con <- cohort(mainpop_data=mainpop_data,cluster_data=cluster_list_con,
-                          flag_output=0,prop_T_c = 0.9,n_patients = n_patients,
-                          age_start = age_start_coh,age_end = age_end_coh)
+cohort_data_con <- cohort(mainpop_data=mainpop_data,cluster_data=cluster_list_con,prop_T_c = 0.9,n_patients = n_patients,
+                          age_start = age_start_coh,age_end = age_end_coh,flag_output=0)
 
 # Simulate intervention clusters
-cohort_data_int <- cohort(mainpop_data=mainpop_data,cluster_data=cluster_list_int,
-                          flag_output=0,prop_T_c = 0.9,n_patients = n_patients,
-                          age_start = age_start_coh,age_end = age_end_coh)
+cohort_data_int <- cohort(mainpop_data=mainpop_data,cluster_data=cluster_list_int,prop_T_c = 0.9,n_patients = n_patients,
+                          age_start = age_start_coh,age_end = age_end_coh,flag_output=0)

@@ -7,11 +7,11 @@
 cohort(
   mainpop_data = list(),
   cluster_data = list(),
-  n_patients = 100,
-  output_folder = NA,
+  n_patients = 1,
   prop_T_c = 0.9,
   age_start = 0.5,
-  age_end = 10
+  age_end = 10,
+  flag_output = 0
 )
 }
 \arguments{
@@ -21,13 +21,13 @@ cohort(
 
 \item{n_patients}{Number of trial cohort patients per cluster}
 
-\item{output_folder}{Folder to send results data (set to NA to omit saving to file)}
-
 \item{prop_T_c}{Treatment probability in cohort}
 
 \item{age_start}{Minimum age of trial cohort patients}
 
 \item{age_end}{Maximum age of trial cohort patients}
+
+\item{flag_output}{Integer indicating whether to show progress of simulation}
 }
 \description{
 Run stochastic individual model across trial cohort individuals in one or more clusters

@@ -329,10 +329,10 @@ cohort <- function(mainpop_data = list(), cluster_data=list(), n_patients = 1,
   
   n_clusters=length(cluster_data$n_run)
   time_values=mainpop_data$time_values
-  trial_params <- list(n_patients = n_patients,n_clusters=n_clusters,
+  trial_params <- list(n_patients = n_patients,n_clusters=n_clusters, flag_output = flag_output,
                        time_values=time_values,tmax_i=length(mainpop_data$EIR_daily_data[,1,1]),
                        prop_T_c = prop_T_c,age_start = age_start,age_end = age_end,
-                       flag_output = flag_output, EIR_daily_data = as.vector(mainpop_data$EIR_daily_data),
+                       EIR_daily_data = as.vector(mainpop_data$EIR_daily_data),
                        IB_start_data = as.vector(mainpop_data$IB_start_data),
                        IC_start_data = as.vector(mainpop_data$IC_start_data),
                        ID_start_data = as.vector(mainpop_data$ID_start_data))
