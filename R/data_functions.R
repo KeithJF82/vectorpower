@@ -396,69 +396,19 @@ plot_cohort_data <- function(cohort_data = list(), benchmark="slide_prev",flag_o
       #patient_status_outputs[npt,patient,cluster]
       if(benchmark=="clin_inc"){ benchmark_values[i,j]=cohort_data$clin_inc_outputs[i,j] } else {
         
-        frequencies=as.vector(table(cohort_data$patient_status_outputs[i,,j]))
+        frequencies=rep(0,6)
+        for(k in 1:n_patients){
+          status=cohort_data$patients_status_outputs[i,k,j]+1
+          frequencies[status]=frequencies[status]+1
+        }
         
-        if(benchmark=="pcr_prev"){benchmark_values[i,j]=sum(frequencies[2:5])}
-        if(benchmark=="slide_prev"){benchmark_values[i,j]=sum(frequencies[2:3])
+        if(benchmark=="pcr_prev"){benchmark_values[i,j]=sum(frequencies[2:5])*dv}
         
-        A_sum=sum(cohort_data$p_det_outputs[i,,j])
-        benchmark_values[i,j]=benchmark_values[i,j]+A_sum
+        if(benchmark=="slide_prev"){benchmark_values[i,j]=(sum(frequencies[2:3])+sum(cohort_data$p_det_outputs[i,,j]))*dv
         }
       }
     }
   }
   
-  # if(flag_output==1){
-  #   for(i in 1:n_clusters){
-  #     
-  #   }
-  # } else {
-  #   
-  # }
-  
-  # for (n = 0; n < n_patients; n++)
-  # {
-  #   patients_status_outputs[pos2] = patient[n].status;
-  #   switch (patient[n].status)
-  #   {
-  #     case 1: //T
-  #     {
-  #       pcr_test_results[pos] = 1;
-  #       pcr_prev_values[div] += dv_p1;
-  #       slide_prev_values[div] += dv_p1;
-  #     }
-  #     break;
-  #     case 2: //D
-  #     {
-  #       pcr_test_results[pos] = 1;
-  #       pcr_prev_values[div] += dv_p1;
-  #       slide_prev_values[div] += dv_p1;
-  #     }
-  #     break;
-  #     case 3: //A
-  #     {
-  #       pcr_test_results[pos] = 1;
-  #       pcr_prev_values[div] += dv_p1;
-  #       if (runif1() <= dmin + (dmin_rev / (1.0 + (fd[patient[n].na] * pow(patient[n].ID * inv_ID0, kd))))) { slide_prev_values[div] += dv_p1; }
-  #     }
-  #     break;
-  #     case 4: //U
-  #     {
-  #       pcr_test_results[pos] = 1;
-  #       pcr_prev_values[div] += dv_p1;
-  #     }
-  #     break;
-  #     default: {pcr_test_results[pos] = 0; }
-  #   }
-  # }
-  # 
-  # div++;
-  # if (div < n_divs) { t_mark2 = time_values[div]; }
-  # for (n = 0; n < n_patients; n++)
-  # {
-  #   j = 0;
-  #   for (i = 0; i < n_divs; i++) { if (pcr_test_results[(i * n_patients) + n] == 1) { j++; } }
-  #   pcr_distribution[j] += dv_p1;
-  # }
-    
+  return(benchmark_values)
 }

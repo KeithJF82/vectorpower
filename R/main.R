@@ -346,11 +346,13 @@ cohort <- function(mainpop_data = list(), cluster_data=list(), n_patients = 1,
   n_pt_names=paste("n_pt",c(1:n_pts),sep="/")
   patients_status_outputs = array(data=raw_data$patients_status_outputs,dim=c(n_pts,n_patients,n_clusters),
                                   dimnames=list(n_pt_names,patient_names,cluster_names))
-  p_det = array(data=raw_data$p_det,dim=c(n_pts,n_patients,n_clusters),
+  p_det_outputs = array(data=raw_data$p_det_outputs,dim=c(n_pts,n_patients,n_clusters),
                                   dimnames=list(n_pt_names,patient_names,cluster_names))
+  clin_inc_outputs = array(data=raw_data$clin_inc_outputs,dim=c(n_pts,n_clusters),
+                        dimnames=list(n_pt_names,cluster_names))
   
   results=list(n_clusters=n_clusters,n_patients=n_patients,n_pts=n_pts,time_values=time_values,
-               patients_status_outputs=patients_status_outputs,p_det=p_det)
+               patients_status_outputs=patients_status_outputs,p_det_outputs=p_det_outputs,clin_inc_outputs=clin_inc_outputs)
   
   
   return(results)

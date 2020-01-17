@@ -26,11 +26,8 @@ Rcpp::List rcpp_cohort(List params, List trial_params, List cluster_data)
 	//Load input parameter data from R------------------------------------------------------------------------------------------------------------------------------------------
 
 	int flag_output = rcpp_to_int(trial_params["flag_output"]);
-	if (flag_output == 1)
-	{
-		Rcout << "\nBeginning cluster calculations\n";
-		R_FlushConsole();
-	}
+	Rcout << "\nBeginning cluster calculations\n";
+	R_FlushConsole();
 	vector<double> time_values = rcpp_to_vector_double(trial_params["time_values"]);	// Vector of time benchmark points
 	int n_divs = time_values.size();
 	vector<double> tinterval2(n_divs - 1, 0.0);
@@ -408,7 +405,7 @@ end:
 
 finish:
 
-	if (flag_output == 1) { Rcout << "\nCluster calculations complete\n"; }
+	Rcout << "\nCluster calculations complete\n";
 
 	// Return list
 	return List::create(Named("patients_status_outputs") = patients_status_outputs, Named("p_det_outputs") = p_det_outputs, Named("clin_inc_outputs") = clin_inc_outputs);
