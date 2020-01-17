@@ -167,7 +167,8 @@ Rcpp::List rcpp_cohort(List params, List trial_params, List cluster_data)
 	double* cprob = (double*)malloc(n_cats_c * sizeof(double));						//Cumulative probability distribution used to determine age/heterogenity category to place randomly generated patients
 	double* clin_inc_values = (double*)malloc(n_divs * sizeof(double));             //Values of clinical incidence (cohort) at checkpoints
 	vector<int> patients_status_outputs(n_clusters * n_patients * n_divs, 0);		//All patient statuses across all clusters at each time point, for output to R
-	vector<double> p_det(n_clusters * n_patients * n_divs, 0.0);					//Probability of asymptomatic infection being detected, where relevant
+	vector<double> p_det_outputs(n_clusters * n_patients * n_divs, 0.0);			//Probability of asymptomatic infection being detected, where relevant, for all patients across all clusters at each time point, for output to R
+	vector<double> clin_inc_outputs(n_clusters * n_divs, 0.0);						//Clinical incidence per person per day in each cluster at each time point (averaged over time up to that point from previous point), for output to R
 
 	//Load input data------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -386,10 +387,11 @@ restart:
 		if (t >= t_mark2)
 		{
 			pos = (n_c * n_patients * n_divs) + div;
+			clin_inc_outputs[(n_c * n_divs) + div] = clin_inc_values[div];
 			for (n = 0; n < n_patients; n++)
 			{
 				patients_status_outputs[pos] = patient[n].status;
-				if (patient[n].status == 3) { p_det[pos] = dmin + (dmin_rev / (1.0 + (fd[patient[n].na] * pow(patient[n].ID * inv_ID0, kd)))); }
+				if (patient[n].status == 3) { p_det_outputs[pos] = dmin + (dmin_rev / (1.0 + (fd[patient[n].na] * pow(patient[n].ID * inv_ID0, kd)))); }
 				pos += n_divs;
 			}
 
@@ -409,5 +411,5 @@ finish:
 	if (flag_output == 1) { Rcout << "\nCluster calculations complete\n"; }
 
 	// Return list
-	return List::create(Named("patients_status_outputs") = patients_status_outputs, Named("p_det") = p_det);
+	return List::create(Named("patients_status_outputs") = patients_status_outputs, Named("p_det_outputs") = p_det_outputs, Named("clin_inc_outputs") = clin_inc_outputs);
 }

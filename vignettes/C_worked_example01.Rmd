@@ -40,7 +40,7 @@ het_file=system.file("extdata/", "/param_examples/het_data_9.txt", package = 've
 To specify online file locations, use url() as shown:
 
 ```{r, eval = FALSE}
-param_file=url("https://raw.githubusercontent.com/KeithJF82/vectorpower/master/inst/extdata/param_examples/model_parameters_Mali.txt")
+param_file=url("https://raw.githubusercontent.com/KeithJF82/vectorpower/master/inst/extdata/param_examples/model_parameters_const.txt")
 age_file=url("https://raw.githubusercontent.com/KeithJF82/vectorpower/master/inst/extdata/param_examples/age_data_145.txt")
 het_file=url("https://raw.githubusercontent.com/KeithJF82/vectorpower/master/inst/extdata/param_examples/het_data_9.txt")
 ```

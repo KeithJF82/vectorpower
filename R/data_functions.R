@@ -390,16 +390,23 @@ plot_cohort_data <- function(cohort_data = list(), benchmark="slide_prev",flag_o
   nvalues=n_pts*n_clusters
   dv=1.0/n_patients
   
-  # benchmark_values=array(data=rep(0.0,nvalues),dim=c(n_pts,n_clusters))
-  # for(i in 1:n_pts){
-  #   for(j in 1:n_clusters){
-  #     #patient_status_outputs[npt,patient,cluster]
-  #     status=patient_status_outputs[i,,j]
-  #     if(benchmark="clin_inc"){benchmark[i,j]=1}
-  #     if(benchmark="pcr_prev"){benchmark[i,j]=1}
-  #     if(benchmark="slide_prev"){benchmark[i,j]=1}
-  #   }
-  # }
+  benchmark_values=array(data=rep(0.0,nvalues),dim=c(n_pts,n_clusters))
+  for(i in 1:n_pts){
+    for(j in 1:n_clusters){
+      #patient_status_outputs[npt,patient,cluster]
+      if(benchmark=="clin_inc"){ benchmark_values[i,j]=cohort_data$clin_inc_outputs[i,j] } else {
+        
+        frequencies=as.vector(table(cohort_data$patient_status_outputs[i,,j]))
+        
+        if(benchmark=="pcr_prev"){benchmark_values[i,j]=sum(frequencies[2:5])}
+        if(benchmark=="slide_prev"){benchmark_values[i,j]=sum(frequencies[2:3])
+        
+        A_sum=sum(cohort_data$p_det_outputs[i,,j])
+        benchmark_values[i,j]=benchmark_values[i,j]+A_sum
+        }
+      }
+    }
+  }
   
   # if(flag_output==1){
   #   for(i in 1:n_clusters){

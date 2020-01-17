@@ -325,7 +325,7 @@ cohort <- function(mainpop_data = list(), cluster_data=list(), n_patients = 1,
   assert_single_bounded(age_start,0.0,65.0)
   assert_single_bounded(age_end,age_start,65.0)
   assert_single_int(flag_output)
-  assert_in(flag_output,0,1)
+  assert_in(flag_output,c(0,1))
   
   n_clusters=length(cluster_data$n_run)
   time_values=mainpop_data$time_values
