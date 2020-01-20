@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Function reference • vectorpower</title>
+<title>Display results of cohort simulations — plot_cohort_data • vectorpower</title>
 
 
 <!-- jquery -->
@@ -35,7 +35,9 @@
 
 
 
-<meta property="og:title" content="Function reference" />
+<meta property="og:title" content="Display results of cohort simulations — plot_cohort_data" />
+<meta property="og:description" content="Function which takes the output of the cohort() function and displays selected results" />
+<meta name="twitter:card" content="summary" />
 
 
 
@@ -54,7 +56,7 @@
   </head>
 
   <body>
-    <div class="container template-reference-index">
+    <div class="container template-reference-topic">
       <header>
       <div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -123,138 +125,54 @@
       </header>
 
 <div class="row">
-  <div class="contents col-md-9">
+  <div class="col-md-9 contents">
     <div class="page-header">
-      <h1>Reference</h1>
+    <h1>Display results of cohort simulations</h1>
+    
+    <div class="hidden name"><code>plot_cohort_data.Rd</code></div>
     </div>
 
-    <table class="ref-index">
+    <div class="ref-description">
+    <p>Function which takes the output of the cohort() function and displays selected results</p>
+    </div>
 
-    <colgroup>
-      
-      <col class="alias" />
-      <col class="title" />
-    </colgroup>
+    <pre class="usage"><span class='fu'>plot_cohort_data</span>(
+  <span class='kw'>cohort_data</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(),
+  <span class='kw'>benchmark</span> <span class='kw'>=</span> <span class='st'>"slide_prev"</span>,
+  <span class='kw'>flag_output</span> <span class='kw'>=</span> <span class='fl'>1</span>
+)</pre>
 
-    <tbody>
-      <tr>
-        <th colspan="2">
-          <h2 id="section-all-functions" class="hasAnchor"><a href="#section-all-functions" class="anchor"></a>All functions</h2>
-          <p class="section-desc"></p>
-        </th>
-      </tr>
-      <tr>
-        
-        <td>
-          <p><code><a href="age_data_setup.html">age_data_setup()</a></code> </p>
-        </td>
-        <td><p>Set up age data from age distribution data</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="assert_numeric.html">assert_numeric()</a></code> </p>
-        </td>
-        <td><p>Assert Numeric</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="assert_single_bounded.html">assert_single_bounded()</a></code> </p>
-        </td>
-        <td><p>Assert Single bounded</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="assert_single_int.html">assert_single_int()</a></code> </p>
-        </td>
-        <td><p>Assert Single integer</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="assert_string.html">assert_string()</a></code> </p>
-        </td>
-        <td><p>Assert String</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="clusters_create.html">clusters_create()</a></code> </p>
-        </td>
-        <td><p>Create clusters</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="cluster_input_setup.html">cluster_input_setup()</a></code> </p>
-        </td>
-        <td><p>Cluster input setup</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="cohort.html">cohort()</a></code> </p>
-        </td>
-        <td><p>Cohort evaluation</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="dataset_create.html">dataset_create()</a></code> </p>
-        </td>
-        <td><p>Create new data set</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="findPosition.html">findPosition()</a></code> </p>
-        </td>
-        <td><p>Find position</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="load_dataset.html">load_dataset()</a></code> </p>
-        </td>
-        <td><p>Load data set from folder</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="mainpop.html">mainpop()</a></code> </p>
-        </td>
-        <td><p>Main population evaluation</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="plot_cohort_data.html">plot_cohort_data()</a></code> </p>
-        </td>
-        <td><p>Display results of cohort simulations</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="plot_folder_data.html">plot_folder_data()</a></code> </p>
-        </td>
-        <td><p>Plot pre-calculated data from dataset folder</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="plot_mainpop_data.html">plot_mainpop_data()</a></code> </p>
-        </td>
-        <td><p>Plot selected main population output data as a function of time</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="plot_rainfall.html">plot_rainfall()</a></code> </p>
-        </td>
-        <td><p>Plot year-round rainfall based on parameter file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="vectorpower.html">vectorpower</a></code> </p>
-        </td>
-        <td><p>Power Calculation for Cluster Randomised Vector Control Trials</p></td>
-      </tr>
-    </tbody>
+    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
+    <table class="ref-arguments">
+    <colgroup><col class="name" /><col class="desc" /></colgroup>
+    <tr>
+      <th>cohort_data</th>
+      <td><p>List of form output by cohort() function</p></td>
+    </tr>
+    <tr>
+      <th>benchmark</th>
+      <td><p>Benchmark type to output ("slide_prev", "pcr_prev", or "clin_inc")</p></td>
+    </tr>
+    <tr>
+      <th>flag_output</th>
+      <td><p>Integer indicating how to present data (1: all clusters, 
+2: average over all clusters)</p></td>
+    </tr>
     </table>
-  </div>
 
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
+
+    <p>Takes in a data frame of the form output by the cohort() function, calculates selected 
+benchmark values and plots them on a graph</p>
+
+  </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
-      <li><a href="#section-all-functions">All functions</a></li>
+      <li><a href="#arguments">Arguments</a></li>
+      <li><a href="#details">Details</a></li>
     </ul>
+
   </div>
 </div>
 

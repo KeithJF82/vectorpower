@@ -30,8 +30,9 @@ Rcpp::List rcpp_cohort(List params, List trial_params, List cluster_data)
 	R_FlushConsole();
 	vector<double> time_values = rcpp_to_vector_double(trial_params["time_values"]);	// Vector of time benchmark points
 	int n_divs = time_values.size();
-	vector<double> tinterval2(n_divs - 1, 0.0);
-	for (div = 0; div < n_divs; div++) { tinterval2[div] = time_values[div + 1] - time_values[div]; }
+	vector<double> tinterval2(n_divs, 0.0);
+	tinterval2[0] = time_values[0] = 0.0 ? 1.0 : time_values[0];
+	for (div = 1; div < n_divs; div++) { tinterval2[div] = time_values[div] - time_values[div-1]; }
 	int tmax_i = rcpp_to_int(trial_params["tmax_i"]);
 	double tmax = tmax_i * 1.0;
 	int n_clusters = rcpp_to_int(trial_params["n_clusters"]);					// Number of lines in cluster data input file (number of clusters)
@@ -162,7 +163,7 @@ Rcpp::List rcpp_cohort(List params, List trial_params, List cluster_data)
 	//Set up additional arrays-------------------------------------------------------------------------------------------------------------------------------------
 
 	double* cprob = (double*)malloc(n_cats_c * sizeof(double));						//Cumulative probability distribution used to determine age/heterogenity category to place randomly generated patients
-	double* clin_inc_values = (double*)malloc(n_divs * sizeof(double));             //Values of clinical incidence (cohort) at checkpoints
+	double* clin_inc_values = (double*)malloc(n_divs * sizeof(double));             //Values of clinical incidence (cohort) between checkpoints
 	vector<int> patients_status_outputs(n_clusters * n_patients * n_divs, 0);		//All patient statuses across all clusters at each time point, for output to R
 	vector<double> p_det_outputs(n_clusters * n_patients * n_divs, 0.0);			//Probability of asymptomatic infection being detected, where relevant, for all patients across all clusters at each time point, for output to R
 	vector<double> clin_inc_outputs(n_clusters * n_divs, 0.0);						//Clinical incidence per person per day in each cluster at each time point (averaged over time up to that point from previous point), for output to R
@@ -261,6 +262,23 @@ restart:
 	for (nt = 0; nt <= ntmax; nt++)
 	{
 		t = nt * dt;
+
+		//Output patient data and benchmarks
+		if (t >= t_mark2)
+		{
+			pos = (n_c * n_patients * n_divs) + div;
+			clin_inc_outputs[(n_c * n_divs) + div] = clin_inc_values[div];
+			for (n = 0; n < n_patients; n++)
+			{
+				patients_status_outputs[pos] = patient[n].status;
+				if (patient[n].status == 3) { p_det_outputs[pos] = dmin + (dmin_rev / (1.0 + (fd[patient[n].na] * pow(patient[n].ID * inv_ID0, kd)))); }
+				pos += n_divs;
+			}
+
+			div++;
+			if (div < n_divs) { t_mark2 = time_values[div]; }
+		}
+
 		EIRd = EIR_input[(data_num * tmax_i) + interval];
 		EIRt = EIRd * dt;
 		for (n = 0; n < n_patients; n++)
@@ -378,22 +396,6 @@ restart:
 		{
 			interval++;
 			t_mark1 += tinterval1;
-		}
-
-		//Output patient data and benchmarks
-		if (t >= t_mark2)
-		{
-			pos = (n_c * n_patients * n_divs) + div;
-			clin_inc_outputs[(n_c * n_divs) + div] = clin_inc_values[div];
-			for (n = 0; n < n_patients; n++)
-			{
-				patients_status_outputs[pos] = patient[n].status;
-				if (patient[n].status == 3) { p_det_outputs[pos] = dmin + (dmin_rev / (1.0 + (fd[patient[n].na] * pow(patient[n].ID * inv_ID0, kd)))); }
-				pos += n_divs;
-			}
-
-			div++;
-			if (div < n_divs) { t_mark2 = time_values[div]; }
 		}
 	}
 	

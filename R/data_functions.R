@@ -410,5 +410,33 @@ plot_cohort_data <- function(cohort_data = list(), benchmark="slide_prev",flag_o
     }
   }
   
-  return(benchmark_values)
+  if(flag_output==1){
+    if(n_clusters>1){
+      matplot(cohort_data$time_values,benchmark_values[,1],type="p",pch=2,col=2,xlab="time (days)",ylab=benchmark,
+              ylim=c(0,max(benchmark_values)))
+      for(i in 2:n_clusters){
+        matplot(cohort_data$time_values,benchmark_values[,i],type="p",pch=2,col=1+i, xaxt="n",xlab="",ylab="",add=TRUE)
+      }
+    }else{
+      matplot(cohort_data$time_values,benchmark_values,type="p",pch=2,col=2,xlab="time (days)",ylab=benchmark,
+              ylim=c(0,max(benchmark_values)))
+    }
+    legend("bottomleft", inset=0.01, legend=c(1:n_clusters), lwd=1.0,col=1+c(1:n_clusters),
+           horiz=FALSE,bg='white',cex=1.0)
+    output=benchmark_values
+  } else {
+    if(n_clusters>1){
+      benchmark_values_mean=rep(0,n_pts)
+      for(i in 1:n_pts){
+        benchmark_values_mean[i]=mean(benchmark_values[i,])
+      }
+    }else{
+      benchmark_values_mean=benchmark_values
+    }
+    matplot(cohort_data$time_values,benchmark_values_mean,type="p",pch=2,col=2,xlab="time (days)",ylab=benchmark,
+            ylim=c(0,max(benchmark_values_mean)))
+    output=benchmark_values_mean
+  }
+  
+  return(output)
 }

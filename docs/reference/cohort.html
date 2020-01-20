@@ -139,11 +139,11 @@
     <pre class="usage"><span class='fu'>cohort</span>(
   <span class='kw'>mainpop_data</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(),
   <span class='kw'>cluster_data</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(),
-  <span class='kw'>n_patients</span> <span class='kw'>=</span> <span class='fl'>100</span>,
-  <span class='kw'>output_folder</span> <span class='kw'>=</span> <span class='fl'>NA</span>,
+  <span class='kw'>n_patients</span> <span class='kw'>=</span> <span class='fl'>1</span>,
   <span class='kw'>prop_T_c</span> <span class='kw'>=</span> <span class='fl'>0.9</span>,
   <span class='kw'>age_start</span> <span class='kw'>=</span> <span class='fl'>0.5</span>,
-  <span class='kw'>age_end</span> <span class='kw'>=</span> <span class='fl'>10</span>
+  <span class='kw'>age_end</span> <span class='kw'>=</span> <span class='fl'>10</span>,
+  <span class='kw'>flag_output</span> <span class='kw'>=</span> <span class='fl'>0</span>
 )</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -162,10 +162,6 @@
       <td><p>Number of trial cohort patients per cluster</p></td>
     </tr>
     <tr>
-      <th>output_folder</th>
-      <td><p>Folder to send results data (set to NA to omit saving to file)</p></td>
-    </tr>
-    <tr>
       <th>prop_T_c</th>
       <td><p>Treatment probability in cohort</p></td>
     </tr>
@@ -176,6 +172,10 @@
     <tr>
       <th>age_end</th>
       <td><p>Maximum age of trial cohort patients</p></td>
+    </tr>
+    <tr>
+      <th>flag_output</th>
+      <td><p>Integer indicating whether to show progress of simulation</p></td>
     </tr>
     </table>
 
