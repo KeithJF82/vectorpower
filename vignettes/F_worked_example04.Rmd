@@ -51,11 +51,15 @@ cohort_data_int <- cohort(mainpop_data=mainpop_data,cluster_data=cluster_list_in
 
 The results of the cohort simulations can be viewed using the plot_cohort_data() function:
 
-```{r}
+```{r, eval=FALSE}
 # Display average prevalence across control clusters
 control_plot <- plot_cohort_data(cohort_data = cohort_data_con,benchmark = "slide_prev",flag_output=2)
+```
+```{r, eval=FALSE}
 # Display average prevalence across intervention clusters
 int_plot <- plot_cohort_data(cohort_data = cohort_data_int,benchmark = "slide_prev",flag_output=2)
+```
+```{r, eval=FALSE}
 # Compare prevalence progression in control and intervention clusters on same set of axes
 matplot(mainpop_data$time_values,control_plot,type="p",pch=1,col=1,xlab="time (days)",ylab="Average prevalence")
 matplot(mainpop_data$time_values,int_plot,type="p",pch=2,col=2,add=TRUE)
