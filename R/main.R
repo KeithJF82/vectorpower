@@ -52,7 +52,7 @@ mainpop <- function (input_files = list(),output_folder = NA,n_mv_set=c(1), int_
   if(int_v_varied==0) { int_values=c(0.0) }
   n_int_values=length(int_values)
   
-  # Load data from files (TODO: Check that data inputs properly)
+  # Load data from files
   age_data=age_data_setup(read.table(input_files$age_file,header=TRUE,sep="\t")[[1]]) # Read in age data
   het_data = as.list(read.table(input_files$het_file,header=TRUE,sep="\t"))   # Read in biting heterogeneity data
   params <- as.list(read.table(input_files$param_file, header=TRUE))          # Read in model parameters
@@ -117,10 +117,13 @@ mainpop <- function (input_files = list(),output_folder = NA,n_mv_set=c(1), int_
     n_mv_names=paste("n_mv",c(1:n_mv_values),sep="")
     n_int_names=paste("n_int",c(1:n_int_values),sep="")
     dimnames_list=list(na_names,n_pt_names,n_int_names,n_mv_names)
+    dimnames_list2=list(n_pt_names,n_int_names,n_mv_names)
     EIR_benchmarks = array(data=raw_data$EIR_benchmarks,dim=c(n_pts,n_int_values,n_mv_values),dimnames=list(n_pt_names,n_int_names,n_mv_names))
     slide_prev_benchmarks = array(data=raw_data$slide_prev_benchmarks,dim=c(na,n_pts,n_int_values,n_mv_values),dimnames=dimnames_list)
     pcr_prev_benchmarks = array(data=raw_data$pcr_prev_benchmarks,dim=c(na,n_pts,n_int_values,n_mv_values),dimnames=dimnames_list)
     clin_inc_benchmarks = array(data=raw_data$clin_inc_benchmarks,dim=c(na,n_pts,n_int_values,n_mv_values),dimnames=dimnames_list)
+    M_benchmarks = array(data=raw_data$M_benchmarks,dim=c(n_pts,n_int_values,n_mv_values),dimnames=dimnames_list2)
+    M_spor_benchmarks = array(data=raw_data$M_spor_benchmarks,dim=c(n_pts,n_int_values,n_mv_values),dimnames=dimnames_list2)
     EIR_daily_data = array(data=raw_data$EIR_daily_data,dim=c(n_days,n_int_values,n_mv_values),dimnames=list(n_days_names,n_int_names,n_mv_names))
     IB_start_data = array(data=raw_data$IB_start_data,dim=c(n_cats,n_mv_values),dimnames=list(n_cat_names,n_mv_names))
     IC_start_data = array(data=raw_data$IC_start_data,dim=c(n_cats,n_mv_values),dimnames=list(n_cat_names,n_mv_names))
@@ -131,6 +134,7 @@ mainpop <- function (input_files = list(),output_folder = NA,n_mv_set=c(1), int_
                       time_values=time_values,int_values=int_values,
                       EIR_benchmarks=EIR_benchmarks,slide_prev_benchmarks=slide_prev_benchmarks,
                       pcr_prev_benchmarks=pcr_prev_benchmarks,clin_inc_benchmarks=clin_inc_benchmarks,
+                      M_benchmarks=M_benchmarks,M_spor_benchmarks=M_spor_benchmarks,
                       EIR_daily_data=EIR_daily_data,annual_data=annual_data,
                       IB_start_data=IB_start_data,IC_start_data=IC_start_data,ID_start_data=ID_start_data)
   
