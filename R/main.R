@@ -348,6 +348,10 @@ cohort <- function(mainpop_data = list(), cluster_data=list(), n_patients = 1,
   patient_names=paste("patient",c(1:n_patients),sep="/")
   n_pts=length(mainpop_data$time_values)
   n_pt_names=paste("n_pt",c(1:n_pts),sep="/")
+  patients_age_outputs = array(data=raw_data$patients_age_outputs,dim=c(n_patients,n_clusters),
+                               dimnames=list(patient_names,cluster_names))
+  patients_het_outputs = array(data=raw_data$patients_het_outputs,dim=c(n_patients,n_clusters),
+                               dimnames=list(patient_names,cluster_names))
   patients_status_outputs = array(data=raw_data$patients_status_outputs,dim=c(n_pts,n_patients,n_clusters),
                                   dimnames=list(n_pt_names,patient_names,cluster_names))
   p_det_outputs = array(data=raw_data$p_det_outputs,dim=c(n_pts,n_patients,n_clusters),
@@ -356,8 +360,8 @@ cohort <- function(mainpop_data = list(), cluster_data=list(), n_patients = 1,
                         dimnames=list(n_pt_names,cluster_names))
   
   results=list(n_clusters=n_clusters,n_patients=n_patients,n_pts=n_pts,time_values=time_values,
+               patients_age_outputs=patients_age_outputs,patients_het_outputs=patients_het_outputs,
                patients_status_outputs=patients_status_outputs,p_det_outputs=p_det_outputs,clin_inc_outputs=clin_inc_outputs)
-  
   
   return(results)
 }
