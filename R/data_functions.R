@@ -165,6 +165,7 @@ dataset_create <- function (dataset_folder="",EIR_values=c(1.0),param_file="",ag
 #'
 #' @param input_list          List containing mainpop output data
 #' @param benchmark           Benchmark type to use in choosing clusters ("EIR", "slide_prev", "pcr_prev", or "clin_inc")
+#'                            Represents annual total in case of EIR, year-round average for others
 #' @param set_n_int           Intervention number to use (1-max)
 #' @param age_start           Starting age to use when calculating prevalence or incidence over age range (not used with EIR)
 #' @param age_end             End age to use when calculating prevalence or incidence over age range (not used with EIR)
@@ -289,6 +290,7 @@ plot_rainfall <- function(dataset_folder=""){
 #' @param input_folder      Dataset folder
 #' @param xvalues           Data to display on x-axis ("N_M" for line number, "M" for mosquito density parameter)
 #' @param yvalues           Data to display on y-axis ("M", "EIR", "slide_prev", "pcr_prev", or "clin_inc")
+#'                          EIR represents annual total, prevalences and incidence represent year-round averages
 #' 
 #' @export
 
