@@ -108,7 +108,8 @@ dataset_create <- function (dataset_folder="",EIR_values=c(1.0),param_file="",ag
   n_mv_set=c(1:n_mv_values)
   output_folder=paste(dataset_folder,"Temp",sep="/")
   if(dir.exists(output_folder)==FALSE){dir.create(output_folder)}
-  input_files=list(age_file=age_file_new,het_file=het_file_new,param_file=param_file_new,start_file=start_file_new,annual_file=NA)
+  input_files=list(age_file=age_file_new,het_file=het_file_new,param_file=param_file_new,
+                   start_file=start_file_new,annual_file=NA)
   eq_data <- mainpop(input_files = input_files, output_folder = output_folder,n_mv_set = n_mv_set, int_v_varied = 0, 
                      int_values=c(0.0), start_interval = 0.0, time_values=365*c(0:nyears) )
   plot_mainpop_data(input_list=eq_data,set_n_int=1,benchmark = "EIR",age_start = 0,age_end = 65.0)
@@ -119,8 +120,10 @@ dataset_create <- function (dataset_folder="",EIR_values=c(1.0),param_file="",ag
             overwrite = TRUE, copy.mode = TRUE, copy.date = FALSE)
   
   # Run for 1 year with daily data points to produce year-round data
-  cat("\nRunning main population model for 1 year to establish year-round values\n(annual EIR and incidence, annual average prevalences).")
-  input_files=list(age_file=age_file_new,het_file=het_file_new,param_file=param_file_new,start_file=start_file_new,annual_file=NA)
+  cat("\nRunning main population model for 1 year to establish year-round values")
+  cat("\n(annual EIR and incidence, annual average prevalences).")
+  input_files=list(age_file=age_file_new,het_file=het_file_new,param_file=param_file_new,
+                   start_file=start_file_new,annual_file=NA)
   annual_data <- mainpop(input_files = input_files,n_mv_set = n_mv_set, int_v_varied = 0, int_values=c(0.0),
                          start_interval = 0.0, time_values=1.0*c(0:364) )
   plot_mainpop_data(input_list=annual_data,set_n_int=1,benchmark = "EIR")
@@ -162,6 +165,7 @@ dataset_create <- function (dataset_folder="",EIR_values=c(1.0),param_file="",ag
 #'
 #' @param input_list          List containing mainpop output data
 #' @param benchmark           Benchmark type to use in choosing clusters ("EIR", "slide_prev", "pcr_prev", or "clin_inc")
+#'                            Represents annual total in case of EIR, year-round average for others
 #' @param set_n_int           Intervention number to use (1-max)
 #' @param age_start           Starting age to use when calculating prevalence or incidence over age range (not used with EIR)
 #' @param age_end             End age to use when calculating prevalence or incidence over age range (not used with EIR)
@@ -286,6 +290,7 @@ plot_rainfall <- function(dataset_folder=""){
 #' @param input_folder      Dataset folder
 #' @param xvalues           Data to display on x-axis ("N_M" for line number, "M" for mosquito density parameter)
 #' @param yvalues           Data to display on y-axis ("M", "EIR", "slide_prev", "pcr_prev", or "clin_inc")
+#'                          EIR represents annual total, prevalences and incidence represent year-round averages
 #' 
 #' @export
 
@@ -319,7 +324,7 @@ plot_folder_data <- function(input_folder="",xvalues="N_M",yvalues = "M"){
 #------------------------------------------------
 #' @title Set up age data from age distribution data
 #'
-#' @description Function which uses the age distribution data (width of each age category in years) from an age_data.txt file 
+#' @description Function which uses the age distribution data (width of each age category in years) from an age_data.txt file
 #'              to set up all static age-related parameter values
 #'
 #' @details     Takes in a vector of age width data and outputs a list of vectors of age parameter values
@@ -390,6 +395,7 @@ plot_cohort_data <- function(cohort_data = list(), benchmark="slide_prev",flag_o
   nvalues=n_pts*n_clusters
   dv=1.0/n_patients
   
+  # Extract/calculate values of chosen benchmark
   benchmark_values=array(data=rep(0.0,nvalues),dim=c(n_pts,n_clusters))
   for(i in 1:n_pts){
     for(j in 1:n_clusters){
@@ -410,6 +416,7 @@ plot_cohort_data <- function(cohort_data = list(), benchmark="slide_prev",flag_o
     }
   }
   
+  # Plot graph
   if(flag_output==1){
     if(n_clusters>1){
       matplot(cohort_data$time_values,benchmark_values[,1],type="p",pch=2,col=2,xlab="time (days)",ylab=benchmark,
@@ -439,4 +446,71 @@ plot_cohort_data <- function(cohort_data = list(), benchmark="slide_prev",flag_o
   }
   
   return(output)
+}
+
+#------------------------------------------------
+#' @title Tabulate results of cohort simulations
+#'
+#' @description Function which takes the output of the cohort() function and tabulates results
+#'
+#' @details Takes the output of the cohort() function and tabulates results by cluster, patient and time point for 
+#'          processing using statistical models. Each patient across all clusters will have a unique ID number
+#'          (patient_ID = (patient's number in their cluster) + (patient's cluster number - 1)*(number of patients per cluster))
+#'
+#' @param cohort_data List of form output by cohort() function
+#' @param file        Location/name of file to send results
+#'
+#' @export
+
+tabulate_cohort_data <- function(cohort_data = list(), file="dummy.txt"){
+  assert_list(cohort_data)
+  
+  # Set up data frame
+  npts_time=length(cohort_data$time_values)
+  n_patients=cohort_data$n_patients
+  n_clusters=cohort_data$n_clusters
+  n_lines=n_clusters*npts_time*n_patients
+  cluster_output=data.frame(n_cluster=rep(0,n_lines),n_patient=rep(0,n_lines),patient_ID=rep(0,n_lines),time=rep(0,n_lines),
+                            age=rep(0,n_lines),het_category=rep(0,n_lines),S=rep(0,n_lines),T=rep(0,n_lines),D=rep(0,n_lines),
+                            A=rep(0,n_lines),U=rep(0,n_lines),P=rep(0,n_lines),p_det=rep(0,n_lines))
+  
+  # Transfer cohort results data to data frame
+  line=0
+  for(n_c in 1:n_clusters){
+    for(i in 1:n_patients){
+      patient_ID=((n_c-1)*n_patients)+i
+      for(j in 1:npts_time){
+        line=line+1
+        cluster_output$patient_ID[line]=patient_ID
+        cluster_output$time[line]=cohort_data$time_values[j]
+        state=cohort_data$patients_status_outputs[j,i,n_c]
+        if(state==0){cluster_output$S[line]=1}
+        else{
+          if(state==1){cluster_output$T[line]=1}
+          else{
+            if(state==2){cluster_output$D[line]=1}
+            else{
+              if(state==3){
+                cluster_output$A[line]=1
+                cluster_output$p_det[line]=cohort_data$p_det_outputs[j,i,n_c]
+              }
+              else{
+                if(state==4){cluster_output$U[line]=1}
+                else{cluster_output$P[line]=1}
+              }
+            }
+          }
+        }
+        cluster_output$n_cluster[line]=n_c
+        cluster_output$n_patient[line]=i
+        cluster_output$age[line]=cohort_data$patients_age_outputs[i,n_c]
+        cluster_output$het_category[line]=cohort_data$patients_het_outputs[i,n_c]
+      }
+    }
+  }
+  
+  # Write data frame to file
+  write.table(cluster_output,row.names=FALSE,file=file)
+  
+  return(NULL)
 }
