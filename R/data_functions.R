@@ -284,21 +284,23 @@ plot_rainfall <- function(dataset_folder=""){
 #'
 #' @description Function for displaying pre-calculated annual data or mosquito density parameter values from dataset folder
 #'
-#' @details Reads data from annual_data.txt in dataset folder and outputs chosen benchmark values as a graph; returns graph 
-#'          x and y values as a list
+#' @details Reads data from annual_data.txt in dataset folder and outputs chosen benchmark values as a graph if desired; 
+#'          returns list of x and y values as a list
 #'
 #' @param input_folder      Dataset folder
 #' @param xvalues           Data to display on x-axis ("N_M" for line number, "M" for mosquito density parameter)
 #' @param yvalues           Data to display on y-axis ("M", "EIR", "slide_prev", "pcr_prev", or "clin_inc")
 #'                          EIR represents annual total, prevalences and incidence represent year-round averages
+#' @param plot_flag         Logical operator indicating whether or not to plot graph of read values
 #' 
 #' @export
 
-plot_folder_data <- function(input_folder="",xvalues="N_M",yvalues = "M"){
+get_folder_data <- function(input_folder="",xvalues="N_M",yvalues = "M", plot_flag = TRUE){
   
   # Input error checking (TODO - finish)
   assert_in(xvalues,c("N_M","M"))
   assert_in(yvalues,c("M","EIR","EIR_ss","slide_prev","pcr_prev","clin_inc"))
+  assert_logical(plot_flag)
   
   annual_data <- as.list(read.table(paste(input_folder,"annual_data.txt",sep="/"), header=TRUE))   # Read in annual data
   n_mv_values=length(annual_data$n_mv)
@@ -312,7 +314,9 @@ plot_folder_data <- function(input_folder="",xvalues="N_M",yvalues = "M"){
   if(yvalues=="clin_inc"){ydata = annual_data$clin_inc_y}
   if(yvalues=="pcr_prev"){ydata = annual_data$pcr_prev_y}
   
-  matplot(xdata,ydata,type="p",pch=2,col=2,xlab=xvalues,ylab=yvalues,ylim=c(0,max(ydata)))
+  if(plot_flag==TRUE){
+    matplot(xdata,ydata,type="p",pch=2,col=2,xlab=xvalues,ylab=yvalues,ylim=c(0,max(ydata)))
+  }
   
   output <- list(xdata,ydata)
   names(output)[[1]]=xvalues

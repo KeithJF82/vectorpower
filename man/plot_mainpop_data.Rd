@@ -15,7 +15,8 @@ plot_mainpop_data(
 \arguments{
 \item{input_list}{List containing mainpop output data}
 
-\item{benchmark}{Benchmark type to use in choosing clusters ("EIR", "slide_prev", "pcr_prev", or "clin_inc")}
+\item{benchmark}{Benchmark type to use in choosing clusters ("EIR", "slide_prev", "pcr_prev", or "clin_inc")
+Represents annual total in case of EIR, year-round average for others}
 
 \item{set_n_int}{Intervention number to use (1-max)}
 
