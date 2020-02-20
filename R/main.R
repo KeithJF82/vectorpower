@@ -159,10 +159,12 @@ mainpop <- function (input_files = list(),output_folder = NA,n_mv_set=c(1), int_
 #' @param set_n_int           Intervention number to use (1-max)
 #' @param age_start           Starting age to use when calculating prevalence or incidence over age range (not used with EIR)
 #' @param age_end             End age to use when calculating prevalence or incidence over age range (not used with EIR)
+#' @param plot_flag           Logical operator indicating whether or not to plot graph of read values
 #'
 #' @export
 
-cluster_input_setup <- function(input_list=list(), benchmark = "EIR",set_n_pt = 1,set_n_int=1,age_start = 0,age_end = 65.0){
+cluster_input_setup <- function(input_list=list(), benchmark = "EIR",set_n_pt = 1,set_n_int=1,age_start = 0,age_end = 65.0,
+                                plot_flag=TRUE){
   
   # Input error checking
   assert_list(input_list)
@@ -173,6 +175,7 @@ cluster_input_setup <- function(input_list=list(), benchmark = "EIR",set_n_pt = 
   assert_in(set_n_int,c(1:input_list$n_int_values))
   assert_bounded(age_start,0.0,65.0)
   assert_bounded(age_end,age_start,65.0)
+  assert_logical(plot_flag)
   
   n_age_start = findInterval(age_start,input_list$params$age_years)
   n_age_end = findInterval(age_end,input_list$params$age_years)
@@ -188,9 +191,9 @@ cluster_input_setup <- function(input_list=list(), benchmark = "EIR",set_n_pt = 
   if(n_AE==12){benchmark_values = input_list$annual_data$EIRy[input_list$n_mv_set]}
   if(n_AE==21){
     density_sum = 0
-    if(benchmark == "slide_prev"){ benchmark_data = input_list$slide_prev_benchmarks[,set_n_pt,set_n_int,input_list$n_mv_set]}
-    if(benchmark == "pcr_prev"){ benchmark_data = input_list$pcr_prev_benchmarks[,set_n_pt,set_n_int,input_list$n_mv_set]}
-    if(benchmark == "clin_inc"){ benchmark_data = input_list$clin_inc_benchmarks[,set_n_pt,set_n_int,input_list$n_mv_set] }
+    if(benchmark == "slide_prev"){ benchmark_data = input_list$slide_prev_benchmarks[,set_n_pt,set_n_int,c(1:input_list$n_mv_values)]}
+    if(benchmark == "pcr_prev"){ benchmark_data = input_list$pcr_prev_benchmarks[,set_n_pt,set_n_int,c(1:input_list$n_mv_values)]}
+    if(benchmark == "clin_inc"){ benchmark_data = input_list$clin_inc_benchmarks[,set_n_pt,set_n_int,c(1:input_list$n_mv_values)] }
     for(i in n_age_start:n_age_end){
       density_sum = density_sum + input_list$params$den_norm[i]
       benchmark_values = benchmark_values + benchmark_data[i,]
@@ -203,12 +206,13 @@ cluster_input_setup <- function(input_list=list(), benchmark = "EIR",set_n_pt = 
     if(benchmark == "clin_inc_annual"){ benchmark_values = input_list$annual_data$clin_inc_y[input_list$n_mv_set] }
   }
   
-  if(n_annual==1){ matplot(c(1:input_list$n_mv_values),benchmark_values,type="p",pch=2,col=2,xlab="N_M",ylab=benchmark)}
-  else{ matplot(input_list$n_mv_set,benchmark_values,type="p",pch=2,col=2,xlab="N_M",ylab=benchmark) }
-  
+  if(plot_flag==TRUE){
+    if(n_annual==1){ matplot(c(1:input_list$n_mv_values),benchmark_values,type="p",pch=2,col=2,xlab="N_M",ylab=benchmark)}
+    else{ matplot(c(1:input_list$n_mv_values),benchmark_values,type="p",pch=2,col=2,xlab="N_M",ylab=benchmark) }
+  }
   
   output <- list(benchmark=benchmark,set_n_pt = set_n_pt,set_n_int=set_n_int,age_start = age_start,age_end = age_end,
-                 benchmark_values=benchmark_values,int_values=input_list$int_values,n_mv_set=input_list$n_mv_set)
+                 benchmark_values=benchmark_values,int_values=input_list$int_values,n_mv_set=c(1:input_list$n_mv_values))
   
   return(output)
 }
