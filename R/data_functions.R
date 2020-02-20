@@ -154,11 +154,11 @@ dataset_create <- function (dataset_folder="",EIR_values=c(1.0),param_file="",ag
   return(annual_data)
 }
 #------------------------------------------------
-#' @title Plot selected main population output data as a function of time
+#' @title Get selected main population output data as a function of time
 #'
 #' @description Function for taking output of mainpop(), selecting the desired benchmark
 #'              (EIR, slide prevalence, PCR prevalence, clinical incidence) data, and 
-#'              plotting it on a graph as an aid to setting up clusters
+#'              plotting it on a graph if desired as an aid to setting up clusters
 #'
 #' @details Takes in detailed benchmark data as a list and plots a graph based on the
 #'          input parameters ; returns graph x and y values as a list
@@ -169,10 +169,12 @@ dataset_create <- function (dataset_folder="",EIR_values=c(1.0),param_file="",ag
 #' @param set_n_int           Intervention number to use (1-max)
 #' @param age_start           Starting age to use when calculating prevalence or incidence over age range (not used with EIR)
 #' @param age_end             End age to use when calculating prevalence or incidence over age range (not used with EIR)
+#' @param plot_flag           Logical operator indicating whether or not to plot graph of read values
 #' 
 #' @export
 
-plot_mainpop_data <- function(input_list=list(),benchmark = "EIR", set_n_int=1, age_start = 0, age_end = 65.0){
+get_mainpop_data <- function(input_list=list(),benchmark = "EIR", set_n_int=1, age_start = 0, age_end = 65.0,
+                              plot_flag=TRUE){
   
   # Input error checking (TODO - finish)
   assert_list(input_list)
@@ -181,6 +183,7 @@ plot_mainpop_data <- function(input_list=list(),benchmark = "EIR", set_n_int=1, 
   assert_bounded(age_start,0.0,65.0)
   assert_bounded(age_end,age_start,65.0)
   assert_in(set_n_int,c(1:input_list$n_int_values))
+  assert_logical(plot_flag)
   
   n_age_start = findInterval(age_start,input_list$params$age_years)
   n_age_end = findInterval(age_end,input_list$params$age_years)
@@ -200,19 +203,20 @@ plot_mainpop_data <- function(input_list=list(),benchmark = "EIR", set_n_int=1, 
     }
     benchmark_values = benchmark_values/density_sum
   }
-  
-  if(input_list$n_mv_values>1){
-    matplot(input_list$time_values,benchmark_values[,1],type="p",pch=2,col=2,xlab="time (days)",ylab=benchmark,
-            ylim=c(0,max(benchmark_values)))
-    for(i in 2:input_list$n_mv_values){
-      matplot(input_list$time_values,benchmark_values[,i],type="p",pch=2,col=1+i, xaxt="n",xlab="",ylab="",add=TRUE)
+  if(plot_flag==TRUE){
+    if(input_list$n_mv_values>1){
+      matplot(input_list$time_values,benchmark_values[,1],type="p",pch=2,col=2,xlab="time (days)",ylab=benchmark,
+              ylim=c(0,max(benchmark_values)))
+      for(i in 2:input_list$n_mv_values){
+        matplot(input_list$time_values,benchmark_values[,i],type="p",pch=2,col=1+i, xaxt="n",xlab="",ylab="",add=TRUE)
+      }
+    }else{
+      matplot(input_list$time_values,benchmark_values,type="p",pch=2,col=2,xlab="time (days)",ylab=benchmark,
+              ylim=c(0,max(benchmark_values)))
     }
-  }else{
-    matplot(input_list$time_values,benchmark_values,type="p",pch=2,col=2,xlab="time (days)",ylab=benchmark,
-            ylim=c(0,max(benchmark_values)))
+    legend("bottomleft", inset=0.01, legend=c(1:input_list$n_mv_values), lwd=1.0,col=1+c(1:input_list$n_mv_values),
+           horiz=FALSE,bg='white',cex=1.0)
   }
-  legend("bottomleft", inset=0.01, legend=c(1:input_list$n_mv_values), lwd=1.0,col=1+c(1:input_list$n_mv_values),
-         horiz=FALSE,bg='white',cex=1.0)
   
   output <- list(input_list$time_values,benchmark_values)
   names(output)[[1]]="time (days)"
