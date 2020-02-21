@@ -45,6 +45,9 @@ mainpop <- function (input_files = list(),output_folder = NA,n_mv_set=c(1), int_
   # assert_file_exists(input_files$start_file)
   # assert_file_exists(input_files$annual_file)
   
+  # Add dummy change to check upload to beta
+  beta_value=1
+  
   n_pts=length(time_values)
   n_days=max(time_values)+1
   n_mv_values=length(n_mv_set)
