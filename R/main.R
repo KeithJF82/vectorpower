@@ -45,8 +45,6 @@ mainpop <- function (input_files = list(),output_folder = NA,n_mv_set=c(1), int_
   # assert_file_exists(input_files$start_file)
   # assert_file_exists(input_files$annual_file)
   
-  # Add dummy change to check upload to beta
-  beta_value=1
   
   n_pts=length(time_values)
   n_days=max(time_values)+1
@@ -55,7 +53,7 @@ mainpop <- function (input_files = list(),output_folder = NA,n_mv_set=c(1), int_
   if(int_v_varied==0) { int_values=c(0.0) }
   n_int_values=length(int_values)
   
-  # Load data from files
+  # Read in parameter data from files
   age_data=age_data_setup(read.table(input_files$age_file,header=TRUE,sep="\t")[[1]]) # Read in age data
   het_data = as.list(read.table(input_files$het_file,header=TRUE,sep="\t"))   # Read in biting heterogeneity data
   params <- as.list(read.table(input_files$param_file, header=TRUE))          # Read in model parameters
@@ -68,7 +66,6 @@ mainpop <- function (input_files = list(),output_folder = NA,n_mv_set=c(1), int_
   n_cats=na*num_het
   params=c(na=na,num_het=num_het,params,age_data,het_data)
   
-  # Read in data from input files
   inputs <- list(mv_input=input_data$mv0[n_mv_set], 
                  EL_input=input_data$EL[n_mv_set], LL_input=input_data$LL[n_mv_set], PL_input=input_data$PL[n_mv_set],
                  Sv_input=input_data$Sv1[n_mv_set], Ev_input=input_data$Ev1[n_mv_set], Iv_input=input_data$Iv1[n_mv_set],
@@ -133,13 +130,13 @@ mainpop <- function (input_files = list(),output_folder = NA,n_mv_set=c(1), int_
     ID_start_data = array(data=raw_data$ID_start_data,dim=c(n_cats,n_mv_values),dimnames=list(n_cat_names,n_mv_names))
   }
   
-  output_data <- list(params=params,n_mv_values=n_mv_values,n_int_values=n_int_values,n_pts=n_pts,n_mv_set=n_mv_set,
+  output_data <- list(n_mv_values=n_mv_values,n_int_values=n_int_values,n_pts=n_pts,n_mv_set=n_mv_set,
                       time_values=time_values,int_values=int_values,
                       EIR_benchmarks=EIR_benchmarks,slide_prev_benchmarks=slide_prev_benchmarks,
                       pcr_prev_benchmarks=pcr_prev_benchmarks,clin_inc_benchmarks=clin_inc_benchmarks,
                       M_benchmarks=M_benchmarks,M_spor_benchmarks=M_spor_benchmarks,
                       EIR_daily_data=EIR_daily_data,annual_data=annual_data,
-                      IB_start_data=IB_start_data,IC_start_data=IC_start_data,ID_start_data=ID_start_data)
+                      IB_start_data=IB_start_data,IC_start_data=IC_start_data,ID_start_data=ID_start_data,params=params)
   
   return(output_data)
 }

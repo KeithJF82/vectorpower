@@ -21,7 +21,7 @@ NULL
 #'
 #' @export
 
-load_dataset <- function (dataset_folder="")
+load_dataset_folder <- function (dataset_folder="")
 {
   
   assert_string(dataset_folder)
@@ -44,6 +44,70 @@ load_dataset <- function (dataset_folder="")
   return(file_list)
 }
 #------------------------------------------------
+#' @title Load input data from list of files
+#'
+#' @description Function which takes a list of files and creates list of input data
+#'
+#' @details     Takes a list of files (as file locations or URLS, created by load_dataset_folder or set manually)
+#'              and creates list of input data, including starting model data and parameter values                            
+#'
+#' @param input_files     List of files containing parameter values, age and heterogeneity data, starting data, 
+#'                        and (if applicable) annual data
+#' @param n_mv_set        Vector of mosquito density number values to use (must be increasing order)
+#'
+#' @export
+
+load_inputs <- function (input_files="",n_mv_set=c())
+{
+  assert_list(input_files)
+  assert_numeric(n_mv_set)
+  # TODO - Change these to something that works with URLs
+  # assert_file_exists(input_files$age_file)
+  # assert_file_exists(input_files$het_file)
+  # assert_file_exists(input_files$param_file)
+  # assert_file_exists(input_files$start_file)
+  # assert_file_exists(input_files$annual_file)
+  
+  n_mv_values=length(n_mv_set)
+  n_mv_end=n_mv_set[n_mv_values]
+  
+  # Read in parameter data from files
+  age_data=age_data_setup(read.table(input_files$age_file,header=TRUE,sep="\t")[[1]]) # Read in age data
+  het_data = as.list(read.table(input_files$het_file,header=TRUE,sep="\t"))   # Read in biting heterogeneity data
+  params <- as.list(read.table(input_files$param_file, header=TRUE))          # Read in model parameters
+  input_data <- read.table(input_files$start_file,header=TRUE,nrows=n_mv_end) # Read in starting data
+  if(is.na(input_files$annual_file)==TRUE){ annual_data <- list()
+  } else { annual_data <- as.list(read.table(input_files$annual_file, header=TRUE)) }
+  
+  na=length(age_data$age_width)
+  num_het=length(het_data$het_x)
+  n_cats=na*num_het
+  params=c(na=na,num_het=num_het,params,age_data,het_data)
+  
+  start_data <- list(mv_input=input_data$mv0[n_mv_set], 
+                 EL_input=input_data$EL[n_mv_set], LL_input=input_data$LL[n_mv_set], PL_input=input_data$PL[n_mv_set],
+                 Sv_input=input_data$Sv1[n_mv_set], Ev_input=input_data$Ev1[n_mv_set], Iv_input=input_data$Iv1[n_mv_set],
+                 S_input=c(), T_input=c(), D_input=c(), A_input=c(), U_input=c(), P_input=c(),
+                 ICA_input=c(), ICM_input=c(), IB_input=c(), ID_input=c())
+  for(i in 1:n_cats){
+    start_data$S_input <- append(start_data$S_input,input_data[[8+i]][n_mv_set])
+    start_data$T_input <- append(start_data$T_input,input_data[[8+i+n_cats]][n_mv_set])
+    start_data$D_input <- append(start_data$D_input,input_data[[8+i+(2*n_cats)]][n_mv_set])
+    start_data$A_input <- append(start_data$A_input,input_data[[8+i+(3*n_cats)]][n_mv_set])
+    start_data$U_input <- append(start_data$U_input,input_data[[8+i+(4*n_cats)]][n_mv_set])
+    start_data$P_input <- append(start_data$P_input,input_data[[8+i+(5*n_cats)]][n_mv_set])
+    start_data$ICA_input <- append(start_data$ICA_input,input_data[[8+i+(6*n_cats)]][n_mv_set])
+    start_data$ICM_input <- append(start_data$ICM_input,input_data[[8+i+(7*n_cats)]][n_mv_set])
+    start_data$IB_input <- append(start_data$IB_input,input_data[[8+i+(8*n_cats)]][n_mv_set])
+    start_data$ID_input <- append(start_data$ID_input,input_data[[8+i+(9*n_cats)]][n_mv_set])
+  }
+  
+  inputs <- list(start_data = start_data, params = params)
+  
+  return(inputs)
+  
+}
+#------------------------------------------------
 #' @title Create new data set
 #'
 #' @description Function which sets up a folder containing new data in the correct formats which can be used for
@@ -62,7 +126,7 @@ load_dataset <- function (dataset_folder="")
 #'
 #' @export
 
-dataset_create <- function (dataset_folder="",EIR_values=c(1.0),param_file="",age_file="",het_file="",nyears=10)
+create_data_folder <- function (dataset_folder="",EIR_values=c(1.0),param_file="",age_file="",het_file="",nyears=10)
 {
   # Error checking
   assert_string(dataset_folder)
@@ -112,7 +176,7 @@ dataset_create <- function (dataset_folder="",EIR_values=c(1.0),param_file="",ag
                    start_file=start_file_new,annual_file=NA)
   eq_data <- mainpop(input_files = input_files, output_folder = output_folder,n_mv_set = n_mv_set, int_v_varied = 0, 
                      int_values=c(0.0), start_interval = 0.0, time_values=365*c(0:nyears) )
-  plot_mainpop_data(input_list=eq_data,set_n_int=1,benchmark = "EIR",age_start = 0,age_end = 65.0)
+  get_mainpop_data(input_list=eq_data,set_n_int=1,benchmark = "EIR",age_start = 0,age_end = 65.0)
   
   # Transfer endpoints as new start data
   cat("\n\nCreating new starting_data.txt file from results.")
@@ -126,7 +190,7 @@ dataset_create <- function (dataset_folder="",EIR_values=c(1.0),param_file="",ag
                    start_file=start_file_new,annual_file=NA)
   annual_data <- mainpop(input_files = input_files,n_mv_set = n_mv_set, int_v_varied = 0, int_values=c(0.0),
                          start_interval = 0.0, time_values=1.0*c(0:364) )
-  plot_mainpop_data(input_list=annual_data,set_n_int=1,benchmark = "EIR")
+  get_mainpop_data(input_list=annual_data,set_n_int=1,benchmark = "EIR")
   
   # Output annual data for reference
   cat("\n\nOutputting annual data.\n")
