@@ -112,7 +112,7 @@ dataset_create <- function (dataset_folder="",EIR_values=c(1.0),param_file="",ag
                    start_file=start_file_new,annual_file=NA)
   eq_data <- mainpop(input_files = input_files, output_folder = output_folder,n_mv_set = n_mv_set, int_v_varied = 0, 
                      int_values=c(0.0), start_interval = 0.0, time_values=365*c(0:nyears) )
-  plot_mainpop_data(input_list=eq_data,set_n_int=1,benchmark = "EIR",age_start = 0,age_end = 65.0)
+  get_mainpop_data(input_list=eq_data,set_n_int=1,benchmark = "EIR",age_start = 0,age_end = 65.0, plot_flag = TRUE)
   
   # Transfer endpoints as new start data
   cat("\n\nCreating new starting_data.txt file from results.")
@@ -126,7 +126,7 @@ dataset_create <- function (dataset_folder="",EIR_values=c(1.0),param_file="",ag
                    start_file=start_file_new,annual_file=NA)
   annual_data <- mainpop(input_files = input_files,n_mv_set = n_mv_set, int_v_varied = 0, int_values=c(0.0),
                          start_interval = 0.0, time_values=1.0*c(0:364) )
-  plot_mainpop_data(input_list=annual_data,set_n_int=1,benchmark = "EIR")
+  get_mainpop_data(input_list=annual_data,set_n_int=1,benchmark = "EIR", plot_flag = TRUE)
   
   # Output annual data for reference
   cat("\n\nOutputting annual data.\n")
