@@ -102,7 +102,7 @@ load_inputs <- function (input_files="",n_mv_set=c())
     start_data$ID_input <- append(start_data$ID_input,input_data[[8+i+(9*n_cats)]][n_mv_set])
   }
   
-  inputs <- list(start_data = start_data, params = params)
+  inputs <- list(n_mv_set = n_mv_set, start_data = start_data, params = params, annual_data = annual_data)
   
   return(inputs)
   

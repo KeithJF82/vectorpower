@@ -14,8 +14,7 @@ NULL
 #'
 #' @details Takes a list of parameters, returns a list of raw data (data also saved to files as backup). 
 #'
-#' @param input_files     List of files containing parameter values, age and heterogeneity data, starting data, 
-#'                        and (if applicable) annual data
+#' @param input_data      List containing parameters, starting data etc. created by load_inputs function
 #' @param output_folder   Folder to send output files (no files saved if set to NA)
 #' @param n_mv_set        Vector of mosquito density number values to use (must be increasing order)
 #' @param int_v_varied    Intervention parameter given variable value 
@@ -26,13 +25,12 @@ NULL
 #'
 #' @export
 
-mainpop <- function (input_files = list(),output_folder = NA,n_mv_set=c(1), int_v_varied=0, int_values= c(0.0),
+mainpop <- function (input_data = list(),output_folder = NA,n_mv_set=c(1), int_v_varied=0, int_values= c(0.0),
                      start_interval = 31.0, time_values=c(0.0,7.0))
 {
   # Input error checking
-  assert_list(input_files)
+  assert_list(input_data)
   if(is.na(output_folder)==0){assert_string(output_folder)}
-  assert_numeric(n_mv_set)
   assert_int(int_v_varied)
   assert_in(int_v_varied,0:3)
   assert_numeric(int_values)
@@ -45,46 +43,18 @@ mainpop <- function (input_files = list(),output_folder = NA,n_mv_set=c(1), int_
   # assert_file_exists(input_files$start_file)
   # assert_file_exists(input_files$annual_file)
   
-  
+  n_mv_set=input_data$n_mv_set
   n_pts=length(time_values)
   n_days=max(time_values)+1
   n_mv_values=length(n_mv_set)
   n_mv_end=n_mv_set[n_mv_values]
   if(int_v_varied==0) { int_values=c(0.0) }
   n_int_values=length(int_values)
-  
-  # Read in parameter data from files
-  age_data=age_data_setup(read.table(input_files$age_file,header=TRUE,sep="\t")[[1]]) # Read in age data
-  het_data = as.list(read.table(input_files$het_file,header=TRUE,sep="\t"))   # Read in biting heterogeneity data
-  params <- as.list(read.table(input_files$param_file, header=TRUE))          # Read in model parameters
-  input_data <- read.table(input_files$start_file,header=TRUE,nrows=n_mv_end) # Read in starting data
-  if(is.na(input_files$annual_file)==TRUE){ annual_data <- list()
-  } else { annual_data <- as.list(read.table(input_files$annual_file, header=TRUE)) }
-  
-  na=length(age_data$age_width)
-  num_het=length(het_data$het_x)
+  na=input_data$params$na
+  num_het=input_data$params$num_het
   n_cats=na*num_het
-  params=c(na=na,num_het=num_het,params,age_data,het_data)
   
-  inputs <- list(mv_input=input_data$mv0[n_mv_set], 
-                 EL_input=input_data$EL[n_mv_set], LL_input=input_data$LL[n_mv_set], PL_input=input_data$PL[n_mv_set],
-                 Sv_input=input_data$Sv1[n_mv_set], Ev_input=input_data$Ev1[n_mv_set], Iv_input=input_data$Iv1[n_mv_set],
-                 S_input=c(), T_input=c(), D_input=c(), A_input=c(), U_input=c(), P_input=c(),
-                 ICA_input=c(), ICM_input=c(), IB_input=c(), ID_input=c())
-  for(i in 1:n_cats){
-    inputs$S_input <- append(inputs$S_input,input_data[[8+i]][n_mv_set])
-    inputs$T_input <- append(inputs$T_input,input_data[[8+i+n_cats]][n_mv_set])
-    inputs$D_input <- append(inputs$D_input,input_data[[8+i+(2*n_cats)]][n_mv_set])
-    inputs$A_input <- append(inputs$A_input,input_data[[8+i+(3*n_cats)]][n_mv_set])
-    inputs$U_input <- append(inputs$U_input,input_data[[8+i+(4*n_cats)]][n_mv_set])
-    inputs$P_input <- append(inputs$P_input,input_data[[8+i+(5*n_cats)]][n_mv_set])
-    inputs$ICA_input <- append(inputs$ICA_input,input_data[[8+i+(6*n_cats)]][n_mv_set])
-    inputs$ICM_input <- append(inputs$ICM_input,input_data[[8+i+(7*n_cats)]][n_mv_set])
-    inputs$IB_input <- append(inputs$IB_input,input_data[[8+i+(8*n_cats)]][n_mv_set])
-    inputs$ID_input <- append(inputs$ID_input,input_data[[8+i+(9*n_cats)]][n_mv_set])
-  }
-  
-  # TODO - Move the creation of the file names to mainpop.cpp
+  # TODO - Move creation of output file names to mainpop.cpp
   if(is.na(output_folder)==FALSE){
     file_benchmarks = paste(output_folder,"Benchmark_details.txt",sep="/")
     file_EIRd = paste(output_folder,"EIR.txt",sep="/")
@@ -100,13 +70,13 @@ mainpop <- function (input_files = list(),output_folder = NA,n_mv_set=c(1), int_
   }
   
   # Organize trial parameters into list
-  trial_params <- list(age_data=age_data, n_mv_values=n_mv_values, int_v_varied=int_v_varied, int_values=int_values,
+  trial_params <- list(age_data=input_data$age_data, n_mv_values=n_mv_values, int_v_varied=int_v_varied, int_values=int_values,
                        start_interval=start_interval, time_values=time_values, n_pts=n_pts, flag_file=flag_file,
                        file_benchmarks=file_benchmarks,file_endpoints=file_endpoints, file_EIRd=file_EIRd, 
                        file_imm_start=file_imm_start)
   
   # Run simulation of main population
-  raw_data <- rcpp_mainpop(params,inputs,trial_params)
+  raw_data <- rcpp_mainpop(params=input_data$params,inputs=input_data$start_data,trial_params)
   
   # process raw output data
   {
@@ -135,8 +105,9 @@ mainpop <- function (input_files = list(),output_folder = NA,n_mv_set=c(1), int_
                       EIR_benchmarks=EIR_benchmarks,slide_prev_benchmarks=slide_prev_benchmarks,
                       pcr_prev_benchmarks=pcr_prev_benchmarks,clin_inc_benchmarks=clin_inc_benchmarks,
                       M_benchmarks=M_benchmarks,M_spor_benchmarks=M_spor_benchmarks,
-                      EIR_daily_data=EIR_daily_data,annual_data=annual_data,
-                      IB_start_data=IB_start_data,IC_start_data=IC_start_data,ID_start_data=ID_start_data,params=params)
+                      EIR_daily_data=EIR_daily_data,annual_data=input_data$annual_data,
+                      IB_start_data=IB_start_data,IC_start_data=IC_start_data,ID_start_data=ID_start_data,
+                      params=input_data$params)
   
   return(output_data)
 }
