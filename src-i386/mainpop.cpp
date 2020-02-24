@@ -126,8 +126,7 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 	double gammal = rcpp_to_double(params["gammal"]);							// Density dependence term
 	double dgon = rcpp_to_double(params["dgon"]);								// Gonotrophic cycle length
 
-	// Load trial parameter data from R--------------------------------------------------------------------------------------------------------------------------------------------
-		
+	// Load trial parameter data from R--------------------------------------------------------------------------------------------------------------------------------------------		
 	
 	//vector<double> mu_atsb_var = rcpp_to_vector_double(trial_params["mu_atsb_var"]);	// Variable mu_atsb for special runs - TODO: Integrate into package
 	int flag_file = rcpp_to_int(trial_params["flag_file"]);								// Flag indicating whether results data to be saved to files
@@ -257,6 +256,8 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 	vector<double> slide_prev_benchmarks(n_pts* n_runmax* na, 0.0);		// Values of slide prevalence at checkpoints
 	vector<double> pcr_prev_benchmarks(n_pts* n_runmax* na, 0.0);		// Values of PCR prevalence at checkpoints
 	vector<double> clin_inc_benchmarks(n_pts* n_runmax* na, 0.0);		// Values of clinical incidence at checkpoints
+	vector<double> M_benchmarks(n_pts * n_runmax, 0.0);					// Values of total relative mosquito population (Sv+Ev+Iv) at checkpoints
+	vector<double> M_spor_benchmarks(n_pts * n_runmax, 0.0);			// Values of sporozoite rate in mosquitoes (Iv/(Sv+Ev+Iv)) at checkpoints
 	vector<double> EIR_daily_data((tmax_c_i + 1)* n_runmax, 0.0);		// Daily entomological inoculation rate values saved for cohort calculations
 	vector<double> IB_start_data(n_mv_values* n_cats, 0.0);				// Starting IB values saved for cohort calculations
 	vector<double> IC_start_data(n_mv_values* n_cats, 0.0);				// Starting IC values saved for cohort calculations
@@ -669,6 +670,9 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 		if (t_int >= t_mark2)
 		{
 			pos = 0;
+			pos2 = (n_pts * n_run) + div;
+			M_benchmarks[pos2] = Sv1 + Ev1 + Iv1;
+			M_spor_benchmarks[pos2] = Iv1 / M_benchmarks[pos2];
 			ij = (n_pts * n_run * na) + (div * na);
 			for (i = 0; i < na; i++) // Run through age categories
 			{
@@ -757,6 +761,7 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 	// Return list
 	return List::create(Named("EIR_benchmarks") = EIR_benchmarks, Named("slide_prev_benchmarks")= slide_prev_benchmarks, 
 						Named("pcr_prev_benchmarks")= pcr_prev_benchmarks, Named("clin_inc_benchmarks")= clin_inc_benchmarks, 
+						Named("M_benchmarks") = M_benchmarks, Named("M_spor_benchmarks") = M_spor_benchmarks,
 						Named("EIR_daily_data")= EIR_daily_data, Named("IB_start_data") = IB_start_data, 
 						Named("IC_start_data") = IC_start_data, Named("ID_start_data") = ID_start_data);
 }

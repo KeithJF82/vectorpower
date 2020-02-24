@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Main population evaluation — mainpop • vectorpower</title>
+<title>Load input data from list of files — load_inputs • vectorpower</title>
 
 
 <!-- jquery -->
@@ -35,11 +35,8 @@
 
 
 
-<meta property="og:title" content="Main population evaluation — mainpop" />
-<meta property="og:description" content="Function which takes in trial parameters for one or more populations, sends to C++ for computation 
-of changes over time using deterministic continuum model, then collects and organizes results (EIR over time + 
-starting immunity data for intervention computation or endpoint population data for control population, 
-benchmark values for both)" />
+<meta property="og:title" content="Load input data from list of files — load_inputs" />
+<meta property="og:description" content="Function which takes a list of files and creates list of input data" />
 <meta name="twitter:card" content="summary" />
 
 
@@ -130,65 +127,35 @@ benchmark values for both)" />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Main population evaluation</h1>
+    <h1>Load input data from list of files</h1>
     
-    <div class="hidden name"><code>mainpop.Rd</code></div>
+    <div class="hidden name"><code>load_inputs.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Function which takes in trial parameters for one or more populations, sends to C++ for computation 
-of changes over time using deterministic continuum model, then collects and organizes results (EIR over time + 
-starting immunity data for intervention computation or endpoint population data for control population, 
-benchmark values for both)</p>
+    <p>Function which takes a list of files and creates list of input data</p>
     </div>
 
-    <pre class="usage"><span class='fu'>mainpop</span>(
-  <span class='kw'>input_data</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(),
-  <span class='kw'>output_folder</span> <span class='kw'>=</span> <span class='fl'>NA</span>,
-  <span class='kw'>n_mv_set</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>1</span>),
-  <span class='kw'>int_v_varied</span> <span class='kw'>=</span> <span class='fl'>0</span>,
-  <span class='kw'>int_values</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>0</span>),
-  <span class='kw'>start_interval</span> <span class='kw'>=</span> <span class='fl'>31</span>,
-  <span class='kw'>time_values</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>0</span>, <span class='fl'>7</span>)
-)</pre>
+    <pre class="usage"><span class='fu'>load_inputs</span>(<span class='kw'>input_files</span> <span class='kw'>=</span> <span class='st'>""</span>, <span class='kw'>n_mv_set</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>())</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>input_data</th>
-      <td><p>List containing parameters, starting data etc. created by load_inputs function</p></td>
-    </tr>
-    <tr>
-      <th>output_folder</th>
-      <td><p>Folder to send output files (no files saved if set to NA)</p></td>
+      <th>input_files</th>
+      <td><p>List of files containing parameter values, age and heterogeneity data, starting data, 
+and (if applicable) annual data</p></td>
     </tr>
     <tr>
       <th>n_mv_set</th>
       <td><p>Vector of mosquito density number values to use (must be increasing order)</p></td>
     </tr>
-    <tr>
-      <th>int_v_varied</th>
-      <td><p>Intervention parameter given variable value 
-(0= None, 1=ATSB kill rate, 2=bednet coverage, 3=IRS coverage)</p></td>
-    </tr>
-    <tr>
-      <th>int_values</th>
-      <td><p>Vector of values of varied intervention parameter (will be unused if int_v_varied=0)</p></td>
-    </tr>
-    <tr>
-      <th>start_interval</th>
-      <td><p>Period from start date before intervention starts (used to equilibrate lagged FOI data)</p></td>
-    </tr>
-    <tr>
-      <th>time_values</th>
-      <td><p>Vector of time checkpoints</p></td>
-    </tr>
     </table>
 
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>Takes a list of parameters, returns a list of raw data (data also saved to files as backup).</p>
+    <p>Takes a list of files (as file locations or URLS, created by load_dataset_folder or set manually)
+             and creates list of input data, including starting model data and parameter values</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">

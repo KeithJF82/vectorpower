@@ -19,13 +19,13 @@ This is an example of how to load a dataset and carry out simulations of the pro
 
 First load the package (install it first if necessary as shown in the [Installation article](https://keithjf82.github.io/vectorpower/articles/B_installation.html):
 
-```{r}
+```{r, eval=FALSE}
 library(vectorpower)
 ```
 
 Next create the list of input file locations to supply to the mainpop() function.  Here the files are located online, so the list is created manually:
 
-```{r}
+```{r, eval=FALSE}
 input_files <- list(
   param_file=url("https://raw.githubusercontent.com/KeithJF82/vectorpower/master/inst/extdata/DemoFolder1/model_parameters.txt"),
   age_file=url("https://raw.githubusercontent.com/KeithJF82/vectorpower/master/inst/extdata/DemoFolder1/age_data.txt"),
@@ -44,7 +44,7 @@ input_files <- load_dataset(dataset_folder)
 
 The parameters defining the trial setup are then supplied to be used by mainpop():
 
-```{r}
+```{r, eval=FALSE}
 # Length of time to run main population model from starting date before intervention begins
 start_interval = 0.0  
 # Time points after the end of the starting interval at which benchmark data should be output
@@ -57,9 +57,15 @@ int_v_varied = 1
 int_values = c(0.0,0.1) 
 ```
 
-The parameters and list of input files are then passed to the mainpop() function, which runs the deterministic continuum malaria model, the code for which is found in mainpop.cpp in the src/ folder.
+The parameters and list of input files are passed to the load_inputs function, which creates a set of data for input.
 
-```{r}
+```{r, eval=FALSE}
+input_data <- load_inputs(input_files=input_files, n_mv_set=n_mv_set)
+```
+
+The input data set and the other trial parameters are then passed to the mainpop() function, which runs the deterministic continuum malaria model, the code for which is found in mainpop.cpp in the src/ folder.
+
+```{r, eval=FALSE}
 mainpop_data <- mainpop(input_files = input_files, n_mv_set = n_mv_set, int_v_varied = int_v_varied, 
                         int_values=int_values, start_interval = start_interval, time_values=time_values)
 ```
@@ -72,7 +78,7 @@ saveRDS(mainpop_data,file="mainpop_data.Rds")
 
 The get_mainpop_data() function can be used to plot selected results:
 
-```{r}
+```{r, eval=FALSE}
 par(mfrow=c(1,2))
 plot1 <- get_mainpop_data(input_list=mainpop_data,set_n_int=1,benchmark="slide_prev",age_start=0.0,age_end = 65.0,plot_flag=TRUE)
 plot2 <- get_mainpop_data(input_list=mainpop_data,set_n_int=2,benchmark="slide_prev",age_start=0.0,age_end = 65.0,plot_flag=TRUE)

@@ -174,7 +174,8 @@ create_data_folder <- function (dataset_folder="",EIR_values=c(1.0),param_file="
   if(dir.exists(output_folder)==FALSE){dir.create(output_folder)}
   input_files=list(age_file=age_file_new,het_file=het_file_new,param_file=param_file_new,
                    start_file=start_file_new,annual_file=NA)
-  eq_data <- mainpop(input_files = input_files, output_folder = output_folder,n_mv_set = n_mv_set, int_v_varied = 0, 
+  input_data <- load_inputs(input_files=input_files, n_mv_set=n_mv_set)
+  eq_data <- mainpop(input_data = input_data, output_folder = output_folder,int_v_varied = 0, 
                      int_values=c(0.0), start_interval = 0.0, time_values=365*c(0:nyears) )
   get_mainpop_data(input_list=eq_data,set_n_int=1,benchmark = "EIR",age_start = 0,age_end = 65.0)
   
@@ -188,7 +189,8 @@ create_data_folder <- function (dataset_folder="",EIR_values=c(1.0),param_file="
   cat("\n(annual EIR and incidence, annual average prevalences).")
   input_files=list(age_file=age_file_new,het_file=het_file_new,param_file=param_file_new,
                    start_file=start_file_new,annual_file=NA)
-  annual_data <- mainpop(input_files = input_files,n_mv_set = n_mv_set, int_v_varied = 0, int_values=c(0.0),
+  input_data <- load_inputs(input_files=input_files, n_mv_set=n_mv_set)
+  annual_data <- mainpop(input_data = input_data, int_v_varied = 0, int_values=c(0.0),
                          start_interval = 0.0, time_values=1.0*c(0:364) )
   get_mainpop_data(input_list=annual_data,set_n_int=1,benchmark = "EIR")
   
@@ -447,10 +449,9 @@ age_data_setup <- function(age_width_years=c()){
 #' @details Takes in a data frame of the form output by the cohort() function, calculates selected 
 #' benchmark values and plots them on a graph
 #'
-#' @param cohort_data List of form output by cohort() function
-#' @param benchmark Benchmark type to output ("slide_prev", "pcr_prev", or "clin_inc")
-#' @param flag_output Integer indicating how to present data (1: all clusters, 
-#'                            2: average over all clusters)
+#' @param cohort_data   List of form output by cohort() function
+#' @param benchmark     Benchmark type to output ("slide_prev", "pcr_prev", or "clin_inc")
+#' @param flag_output   Integer indicating how to present data (1: all clusters, 2: average over all clusters)
 #'
 #' @export
 
