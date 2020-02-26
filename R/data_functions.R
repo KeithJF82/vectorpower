@@ -21,7 +21,7 @@ NULL
 #'
 #' @export
 
-load_dataset <- function (dataset_folder="")
+load_dataset_folder <- function (dataset_folder="")
 {
   
   assert_string(dataset_folder)
@@ -44,6 +44,70 @@ load_dataset <- function (dataset_folder="")
   return(file_list)
 }
 #------------------------------------------------
+#' @title Load input data from list of files
+#'
+#' @description Function which takes a list of files and creates list of input data
+#'
+#' @details     Takes a list of files (as file locations or URLS, created by load_dataset_folder or set manually)
+#'              and creates list of input data, including starting model data and parameter values                            
+#'
+#' @param input_files     List of files containing parameter values, age and heterogeneity data, starting data, 
+#'                        and (if applicable) annual data
+#' @param n_mv_set        Vector of mosquito density number values to use (must be increasing order)
+#'
+#' @export
+
+load_inputs <- function (input_files="",n_mv_set=c())
+{
+  assert_list(input_files)
+  assert_numeric(n_mv_set)
+  # TODO - Change these to something that works with URLs
+  # assert_file_exists(input_files$age_file)
+  # assert_file_exists(input_files$het_file)
+  # assert_file_exists(input_files$param_file)
+  # assert_file_exists(input_files$start_file)
+  # assert_file_exists(input_files$annual_file)
+  
+  n_mv_values=length(n_mv_set)
+  n_mv_end=n_mv_set[n_mv_values]
+  
+  # Read in parameter data from files
+  age_data=age_data_setup(read.table(input_files$age_file,header=TRUE,sep="\t")[[1]]) # Read in age data
+  het_data = as.list(read.table(input_files$het_file,header=TRUE,sep="\t"))   # Read in biting heterogeneity data
+  params <- as.list(read.table(input_files$param_file, header=TRUE))          # Read in model parameters
+  input_data <- read.table(input_files$start_file,header=TRUE,nrows=n_mv_end) # Read in starting data
+  if(is.na(input_files$annual_file)==TRUE){ annual_data <- list()
+  } else { annual_data <- as.list(read.table(input_files$annual_file, header=TRUE)) }
+  
+  na=length(age_data$age_width)
+  num_het=length(het_data$het_x)
+  n_cats=na*num_het
+  params=c(na=na,num_het=num_het,params,age_data,het_data)
+  
+  start_data <- list(mv_input=input_data$mv0[n_mv_set], 
+                 EL_input=input_data$EL[n_mv_set], LL_input=input_data$LL[n_mv_set], PL_input=input_data$PL[n_mv_set],
+                 Sv_input=input_data$Sv1[n_mv_set], Ev_input=input_data$Ev1[n_mv_set], Iv_input=input_data$Iv1[n_mv_set],
+                 S_input=c(), T_input=c(), D_input=c(), A_input=c(), U_input=c(), P_input=c(),
+                 ICA_input=c(), ICM_input=c(), IB_input=c(), ID_input=c())
+  for(i in 1:n_cats){
+    start_data$S_input <- append(start_data$S_input,input_data[[8+i]][n_mv_set])
+    start_data$T_input <- append(start_data$T_input,input_data[[8+i+n_cats]][n_mv_set])
+    start_data$D_input <- append(start_data$D_input,input_data[[8+i+(2*n_cats)]][n_mv_set])
+    start_data$A_input <- append(start_data$A_input,input_data[[8+i+(3*n_cats)]][n_mv_set])
+    start_data$U_input <- append(start_data$U_input,input_data[[8+i+(4*n_cats)]][n_mv_set])
+    start_data$P_input <- append(start_data$P_input,input_data[[8+i+(5*n_cats)]][n_mv_set])
+    start_data$ICA_input <- append(start_data$ICA_input,input_data[[8+i+(6*n_cats)]][n_mv_set])
+    start_data$ICM_input <- append(start_data$ICM_input,input_data[[8+i+(7*n_cats)]][n_mv_set])
+    start_data$IB_input <- append(start_data$IB_input,input_data[[8+i+(8*n_cats)]][n_mv_set])
+    start_data$ID_input <- append(start_data$ID_input,input_data[[8+i+(9*n_cats)]][n_mv_set])
+  }
+  
+  inputs <- list(n_mv_set = n_mv_set, start_data = start_data, params = params, annual_data = annual_data)
+  
+  return(inputs)
+  
+}
+#------------------------------------------------
 #' @title Create new data set
 #'
 #' @description Function which sets up a folder containing new data in the correct formats which can be used for
@@ -62,7 +126,7 @@ load_dataset <- function (dataset_folder="")
 #'
 #' @export
 
-dataset_create <- function (dataset_folder="",EIR_values=c(1.0),param_file="",age_file="",het_file="",nyears=10)
+create_data_folder <- function (dataset_folder="",EIR_values=c(1.0),param_file="",age_file="",het_file="",nyears=10)
 {
   # Error checking
   assert_string(dataset_folder)
@@ -110,9 +174,10 @@ dataset_create <- function (dataset_folder="",EIR_values=c(1.0),param_file="",ag
   if(dir.exists(output_folder)==FALSE){dir.create(output_folder)}
   input_files=list(age_file=age_file_new,het_file=het_file_new,param_file=param_file_new,
                    start_file=start_file_new,annual_file=NA)
-  eq_data <- mainpop(input_files = input_files, output_folder = output_folder,n_mv_set = n_mv_set, int_v_varied = 0, 
+  input_data <- load_inputs(input_files=input_files, n_mv_set=n_mv_set)
+  eq_data <- mainpop(input_data = input_data, output_folder = output_folder,int_v_varied = 0, 
                      int_values=c(0.0), start_interval = 0.0, time_values=365*c(0:nyears) )
-  get_mainpop_data(input_list=eq_data,set_n_int=1,benchmark = "EIR",age_start = 0,age_end = 65.0, plot_flag = TRUE)
+  get_mainpop_data(input_list=eq_data,set_n_int=1,benchmark = "EIR",age_start = 0,age_end = 65.0)
   
   # Transfer endpoints as new start data
   cat("\n\nCreating new starting_data.txt file from results.")
@@ -124,9 +189,10 @@ dataset_create <- function (dataset_folder="",EIR_values=c(1.0),param_file="",ag
   cat("\n(annual EIR and incidence, annual average prevalences).")
   input_files=list(age_file=age_file_new,het_file=het_file_new,param_file=param_file_new,
                    start_file=start_file_new,annual_file=NA)
-  annual_data <- mainpop(input_files = input_files,n_mv_set = n_mv_set, int_v_varied = 0, int_values=c(0.0),
+  input_data <- load_inputs(input_files=input_files, n_mv_set=n_mv_set)
+  annual_data <- mainpop(input_data = input_data, int_v_varied = 0, int_values=c(0.0),
                          start_interval = 0.0, time_values=1.0*c(0:364) )
-  get_mainpop_data(input_list=annual_data,set_n_int=1,benchmark = "EIR", plot_flag = TRUE)
+  get_mainpop_data(input_list=annual_data,set_n_int=1,benchmark = "EIR")
   
   # Output annual data for reference
   cat("\n\nOutputting annual data.\n")
@@ -156,34 +222,35 @@ dataset_create <- function (dataset_folder="",EIR_values=c(1.0),param_file="",ag
 #------------------------------------------------
 #' @title Get selected main population output data as a function of time
 #'
-#' @description Function for taking output of mainpop(), selecting the desired benchmark
-#'              (EIR, slide prevalence, PCR prevalence, clinical incidence) data, and 
-#'              plotting it on a graph if desired as an aid to setting up clusters
+#' @description Takes in detailed benchmark data as a list and  returns selected benchmark values as a list
 #'
-#' @details Takes in detailed benchmark data as a list and plots a graph based on the
-#'          input parameters ; returns graph x and y values as a list
+#' @details Function for taking output of mainpop(), selecting the desired benchmark
+#'          (EIR, slide prevalence, PCR prevalence, clinical incidence) data, and outputting
+#'          values of the benchmark as a function of time for the desired baseline malaria level(s)
+#'          and intervention parameter value(s)
 #'
 #' @param input_list          List containing mainpop output data
 #' @param benchmark           Benchmark type to use in choosing clusters ("EIR", "slide_prev", "pcr_prev", or "clin_inc")
 #'                            Represents annual total in case of EIR, year-round average for others
-#' @param set_n_int           Intervention number to use (1-max)
+#' @param set_n_mv            Baseline malaria level number(s) to output data for (from numbers in main population data, not
+#'                            original data set)
+#' @param set_n_int           Intervention number(s) to output data for (from numbers in main population data)
 #' @param age_start           Starting age to use when calculating prevalence or incidence over age range (not used with EIR)
 #' @param age_end             End age to use when calculating prevalence or incidence over age range (not used with EIR)
-#' @param plot_flag           Logical operator indicating whether or not to plot graph of read values
 #' 
 #' @export
 
-get_mainpop_data <- function(input_list=list(),benchmark = "EIR", set_n_int=1, age_start = 0, age_end = 65.0,
-                              plot_flag=TRUE){
+get_mainpop_data <- function(input_list=list(),benchmark = "EIR", set_n_mv=1, set_n_int=1, age_start = 0, age_end = 65.0){
   
-  # Input error checking (TODO - finish)
+  # Input error checking
   assert_list(input_list)
   assert_in(benchmark,c("EIR","slide_prev","pcr_prev","clin_inc"))
+  assert_int(set_n_mv)
   assert_int(set_n_int)
   assert_bounded(age_start,0.0,65.0)
   assert_bounded(age_end,age_start,65.0)
+  assert_in(set_n_mv,c(1:length(input_list$n_mv_set)))
   assert_in(set_n_int,c(1:input_list$n_int_values))
-  assert_logical(plot_flag)
   
   n_age_start = findInterval(age_start,input_list$params$age_years)
   n_age_end = findInterval(age_end,input_list$params$age_years)
@@ -191,7 +258,7 @@ get_mainpop_data <- function(input_list=list(),benchmark = "EIR", set_n_int=1, a
   density_sum = 0
   benchmark_values = 0
   if(benchmark == "EIR"){
-    benchmark_values = input_list$EIR_benchmarks[,set_n_int,]
+    benchmark_values = input_list$EIR_benchmarks[,set_n_int,set_n_mv]
   }else{
     if(benchmark == "slide_prev"){ benchmark_data = input_list$slide_prev_benchmarks}
     if(benchmark == "pcr_prev"){ benchmark_data = input_list$pcr_prev_benchmarks}
@@ -199,30 +266,77 @@ get_mainpop_data <- function(input_list=list(),benchmark = "EIR", set_n_int=1, a
     
     for(i in n_age_start:n_age_end){
       density_sum = density_sum + input_list$params$den_norm[i]
-      benchmark_values = benchmark_values + benchmark_data[i,,set_n_int,]
+      benchmark_values = benchmark_values + benchmark_data[i,,set_n_int,set_n_mv]
     }
     benchmark_values = benchmark_values/density_sum
   }
-  if(plot_flag==TRUE){
-    if(input_list$n_mv_values>1){
-      matplot(input_list$time_values,benchmark_values[,1],type="p",pch=2,col=2,xlab="time (days)",ylab=benchmark,
-              ylim=c(0,max(benchmark_values)))
-      for(i in 2:input_list$n_mv_values){
-        matplot(input_list$time_values,benchmark_values[,i],type="p",pch=2,col=1+i, xaxt="n",xlab="",ylab="",add=TRUE)
-      }
-    }else{
-      matplot(input_list$time_values,benchmark_values,type="p",pch=2,col=2,xlab="time (days)",ylab=benchmark,
-              ylim=c(0,max(benchmark_values)))
-    }
-    legend("bottomleft", inset=0.01, legend=c(1:input_list$n_mv_values), lwd=1.0,col=1+c(1:input_list$n_mv_values),
-           horiz=FALSE,bg='white',cex=1.0)
-  }
   
-  output <- list(input_list$time_values,benchmark_values)
-  names(output)[[1]]="time (days)"
-  names(output)[[2]]=benchmark
+  output <- list(data = list(), set_n_mv = set_n_mv, set_n_int = set_n_int)
+  output$data <- list(input_list$time_values,benchmark_values)
+  names(output$data)[[1]]="time (days)"
+  names(output$data)[[2]]=benchmark
   
   return(output)
+}
+
+
+#------------------------------------------------
+#' @title Plot graph of main population data
+#'
+#' @description Plot graph of main population data selected using get_mainpop_data function
+#'
+#' @details Plot graph of main population data selected using get_mainpop_data function
+#'
+#' @param input_list List containing main population benchmark data selected using get_mainpop_data
+#' 
+#' @export
+
+plot_mainpop_data <- function(input_list=list()){
+  
+  # Input error checking
+  assert_list(input_list)
+  assert_list(input_list$data)
+  benchmark=names(input_list$data[2])
+  assert_in(benchmark,c("EIR","slide_prev","pcr_prev","clin_inc"))
+  
+  set_n_mv = input_list$set_n_mv
+  set_n_int = input_list$set_n_int
+  n_mv_values=length(set_n_mv)
+  n_int_values=length(set_n_int)
+  n_curves=n_mv_values*n_int_values
+  time_values=input_list$data[[1]]
+  benchmark_values=input_list$data[[2]]
+  ylim=c(min(benchmark_values),max(benchmark_values))
+  
+  if(is.na(dim(benchmark_values)[3])){
+    xlim=c(min(time_values),max(time_values)*1.25)
+    titles=rep(" ",n_curves)
+    colours=1+c(1:n_curves)
+    for(i in 1:n_curves){
+      titles[i]=paste("n_mv=",set_n_mv[i],sep="")
+    }
+    matplot(time_values,benchmark_values,type="p",pch=1,col=colours,xlab="time (days)",ylab=benchmark,
+            xlim=xlim,ylim=ylim)
+    legend("bottomright", inset=0.01, legend=titles, pch=1,col=colours,horiz=FALSE,bg='white',cex=1.0)
+  } else {
+    xlim=c(min(time_values),max(time_values)*1.4)
+    titles=rep(" ",n_curves)
+    colours=1+c(1:n_mv_values)
+    points=rep(0,n_curves)
+    for(i in 1:n_int_values){
+      for(j in 1:n_mv_values){
+        nt=((i-1)*n_mv_values)+j
+        titles[nt]=paste("n_int=",set_n_int[i],", n_mv=",set_n_mv[j],sep="")
+        points[nt]=i
+      }
+    }
+    matplot(time_values,benchmark_values[,1,],type="p",pch=1,col=colours,xlab="time (days)",ylab=benchmark,xlim=xlim,ylim=ylim)
+    for(i in 2:n_int_values){
+      matplot(time_values,benchmark_values[,i,],type="p",pch=i,col=1+c(1:n_mv_values),xlab="time (days)",ylab=benchmark,add=TRUE)
+    }
+    legend("bottomright", inset=0.01, legend=titles, pch=points,col=rep(colours,n_int_values), horiz=FALSE,bg='white',cex=1.0)
+  }
+  
 }
 
 #------------------------------------------------
@@ -383,10 +497,9 @@ age_data_setup <- function(age_width_years=c()){
 #' @details Takes in a data frame of the form output by the cohort() function, calculates selected 
 #' benchmark values and plots them on a graph
 #'
-#' @param cohort_data List of form output by cohort() function
-#' @param benchmark Benchmark type to output ("slide_prev", "pcr_prev", or "clin_inc")
-#' @param flag_output Integer indicating how to present data (1: all clusters, 
-#'                            2: average over all clusters)
+#' @param cohort_data   List of form output by cohort() function
+#' @param benchmark     Benchmark type to output ("slide_prev", "pcr_prev", or "clin_inc")
+#' @param flag_output   Integer indicating how to present data (1: all clusters, 2: average over all clusters)
 #'
 #' @export
 
