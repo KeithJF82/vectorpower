@@ -22,16 +22,11 @@ ui <- fluidPage(
 
 # Define server logic ----
 server <- function(input, output, session) {
-  library(vectorpower) # TODO: switch to library() before pushing to repository
-  # library(devtools)
-  # setwd("C:/Users/kjfras16/Documents/0 - Git repositories")
-  # load_all("vectorpower")
+  library(vectorpower)
   
   input_list <- reactive({
     input_list <- readRDS(file=
-                        url("https://github.com/KeithJF82/vectorpower/raw/beta/inst/extdata/examples/mainpop_data_example.Rds"))
-    # input_list <- 
-    #   readRDS("C:/Users/kjfras16/Documents/0 - Git repositories/vectorpower/inst/extdata/examples/mainpop_data_example.Rds")
+                        url("https://github.com/KeithJF82/vectorpower/raw/master/inst/extdata/mainpop_data.Rds"))
     return(input_list)
     })
   

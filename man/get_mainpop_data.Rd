@@ -7,10 +7,10 @@
 get_mainpop_data(
   input_list = list(),
   benchmark = "EIR",
+  set_n_mv = 1,
   set_n_int = 1,
   age_start = 0,
-  age_end = 65,
-  plot_flag = TRUE
+  age_end = 65
 )
 }
 \arguments{
@@ -19,20 +19,21 @@ get_mainpop_data(
 \item{benchmark}{Benchmark type to use in choosing clusters ("EIR", "slide_prev", "pcr_prev", or "clin_inc")
 Represents annual total in case of EIR, year-round average for others}
 
-\item{set_n_int}{Intervention number to use (1-max)}
+\item{set_n_mv}{Baseline malaria level number(s) to output data for (from numbers in main population data, not
+original data set)}
+
+\item{set_n_int}{Intervention number(s) to output data for (from numbers in main population data)}
 
 \item{age_start}{Starting age to use when calculating prevalence or incidence over age range (not used with EIR)}
 
 \item{age_end}{End age to use when calculating prevalence or incidence over age range (not used with EIR)}
-
-\item{plot_flag}{Logical operator indicating whether or not to plot graph of read values}
 }
 \description{
-Function for taking output of mainpop(), selecting the desired benchmark
-             (EIR, slide prevalence, PCR prevalence, clinical incidence) data, and 
-             plotting it on a graph if desired as an aid to setting up clusters
+Takes in detailed benchmark data as a list and  returns selected benchmark values as a list
 }
 \details{
-Takes in detailed benchmark data as a list and plots a graph based on the
-         input parameters ; returns graph x and y values as a list
+Function for taking output of mainpop(), selecting the desired benchmark
+         (EIR, slide prevalence, PCR prevalence, clinical incidence) data, and outputting
+         values of the benchmark as a function of time for the desired baseline malaria level(s)
+         and intervention parameter value(s)
 }
