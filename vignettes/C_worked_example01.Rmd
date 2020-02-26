@@ -31,7 +31,7 @@ rainfall as a function of time (which controls the seasonality of malaria)
 
 In this example, the three parameter files are located in the vectorpower repository itself and their locations input using the system.file() commaand. 
 
-```{r, eval=FALSE} 
+```{r} 
 param_file=system.file("extdata/", "/param_examples/model_parameters_Mali.txt", package = 'vectorpower', mustWork = TRUE)
 age_file=system.file("extdata/", "/param_examples/age_data_145.txt", package = 'vectorpower', mustWork = TRUE)
 het_file=system.file("extdata/", "/param_examples/het_data_9.txt", package = 'vectorpower', mustWork = TRUE)
@@ -47,7 +47,7 @@ het_file=url("https://raw.githubusercontent.com/KeithJF82/vectorpower/master/ins
 
 To load from a location on the computer where **vectorpower** is being run, give the file names and location in the hierarchy of data folders as shown below:
 
-```{r, eval = FALSE}
+```{r}
 input_folder="C:/Users/YourName/Documents/GitHub/vectorpower/inst/extdata/param_examples"
 param_file=paste(input_folder,"model_parameters_Mali.txt",sep="/")
 age_file=paste(input_folder,"age_data_145.txt",sep="/")
@@ -56,7 +56,7 @@ het_file=paste(input_folder,"het_data_9.txt",sep="/")
 
 The location of the folder where the new data set is to be created must also be specified. If a folder with the same already exists and contains an existing dataset, the dataset files in that folder will be overwritten. In this example, the output location is placed in the inst/extdata sub-folder in the **vectorpower** package folder (and will overwrite an existing, identical dataset).
 
-```{r, eval=FALSE}
+```{r}
 output_location = system.file("extdata",package="vectorpower")
 dataset_location = "DemoFolder1"
 dataset_folder=paste(output_location,dataset_location,sep="/")
@@ -64,7 +64,7 @@ dataset_folder=paste(output_location,dataset_location,sep="/")
 
 To change the output, change output_location to another existing folder, e.g.:
 
-```{r, eval = FALSE}
+```{r}
 output_location = "C:/Users/YourName/Documents/VPDatasets"
 dataset_location = "Demo Folder 1"
 dataset_folder=paste(output_location,dataset_location,sep="/")
@@ -72,7 +72,7 @@ dataset_folder=paste(output_location,dataset_location,sep="/")
 
 Ensure that folder names are separated by a "/". Alternatively, substitute the entire folder name for dataset_folder, e.g.:
 
-```{r, eval = FALSE}
+```{r}
 dataset_folder="C:/Users/YourName/Documents/VPDatasets/DemoFolder1"
 ```
 
@@ -80,13 +80,13 @@ The baseline malaria levels represented by the input data to go in the dataset a
 
 In this example, the EIR values are between 0.1 and 0.5 infectious bites per person per year; these represent very low baseline malaria levels. High malaria levels require longer computation times to avoid errors; the computation time increases with  approximately the square root of EIR (so an EIR of 100 requires around 10 times the computation time of an EIR of 1).
 
-```{r, eval=FALSE}
+```{r}
 EIR_values=0.1*c(1:5)
 ```
 
 Next, the integer number of years (from 1-20) for which the time-dependent model should be run to reach equilibrium must be specified. The more years for which it is run, the more stable the equilibrium; if the equilibrium is less stable, the malaria level will vary more significantly from year to year in calculations if the model is run for multiple years. For most purposes, running for at least 5 years is sufficient. In this example, nyears is set to 1 for speed.
 
-```{r, eval=FALSE}
+```{r}
 nyears=1
 ```
 

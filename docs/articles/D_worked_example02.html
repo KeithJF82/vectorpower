@@ -84,7 +84,7 @@
 
       
 
-      </header><div class="row">
+      </header><script src="D_worked_example02_files/header-attrs-2.1/header-attrs.js"></script><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1>Worked Example 2 - Main Population Calculations</h1>
@@ -99,41 +99,65 @@
     
 <p>This is an example of how to load a dataset and carry out simulations of the progression of malaria in the main (non-cohort) population.</p>
 <p>First load the package (install it first if necessary as shown in the <a href="https://keithjf82.github.io/vectorpower/articles/B_installation.html">Installation article</a>:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" title="1"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span>(vectorpower)</a></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span>(vectorpower)</span></code></pre></div>
 <p>Next create the list of input file locations to supply to the mainpop() function. Here the files are located online, so the list is created manually:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" title="1">input_files &lt;-<span class="st"> </span><span class="kw"><a href="https://rdrr.io/r/base/list.html">list</a></span>(</a>
-<a class="sourceLine" id="cb2-2" title="2">  <span class="dt">param_file=</span><span class="kw"><a href="https://rdrr.io/r/base/connections.html">url</a></span>(<span class="st">"https://raw.githubusercontent.com/KeithJF82/vectorpower/master/inst/extdata/DemoFolder1/model_parameters.txt"</span>),</a>
-<a class="sourceLine" id="cb2-3" title="3">  <span class="dt">age_file=</span><span class="kw"><a href="https://rdrr.io/r/base/connections.html">url</a></span>(<span class="st">"https://raw.githubusercontent.com/KeithJF82/vectorpower/master/inst/extdata/DemoFolder1/age_data.txt"</span>),</a>
-<a class="sourceLine" id="cb2-4" title="4">  <span class="dt">het_file=</span><span class="kw"><a href="https://rdrr.io/r/base/connections.html">url</a></span>(<span class="st">"https://raw.githubusercontent.com/KeithJF82/vectorpower/master/inst/extdata/DemoFolder1/het_data.txt"</span>),</a>
-<a class="sourceLine" id="cb2-5" title="5">  <span class="dt">start_file=</span><span class="kw"><a href="https://rdrr.io/r/base/connections.html">url</a></span>(<span class="st">"https://raw.githubusercontent.com/KeithJF82/vectorpower/master/inst/extdata/DemoFolder1/start_data.txt"</span>),</a>
-<a class="sourceLine" id="cb2-6" title="6">  <span class="dt">annual_file=</span><span class="kw"><a href="https://rdrr.io/r/base/connections.html">url</a></span>(<span class="st">"https://raw.githubusercontent.com/KeithJF82/vectorpower/master/inst/extdata/DemoFolder1/annual_data.txt"</span>)</a>
-<a class="sourceLine" id="cb2-7" title="7">                    )</a></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a>input_files &lt;-<span class="st"> </span><span class="kw"><a href="https://rdrr.io/r/base/list.html">list</a></span>(</span>
+<span id="cb2-2"><a href="#cb2-2"></a>  <span class="dt">param_file=</span><span class="kw"><a href="https://rdrr.io/r/base/connections.html">url</a></span>(<span class="st">"https://raw.githubusercontent.com/KeithJF82/vectorpower/master/inst/extdata/DemoFolder1/model_parameters.txt"</span>),</span>
+<span id="cb2-3"><a href="#cb2-3"></a>  <span class="dt">age_file=</span><span class="kw"><a href="https://rdrr.io/r/base/connections.html">url</a></span>(<span class="st">"https://raw.githubusercontent.com/KeithJF82/vectorpower/master/inst/extdata/DemoFolder1/age_data.txt"</span>),</span>
+<span id="cb2-4"><a href="#cb2-4"></a>  <span class="dt">het_file=</span><span class="kw"><a href="https://rdrr.io/r/base/connections.html">url</a></span>(<span class="st">"https://raw.githubusercontent.com/KeithJF82/vectorpower/master/inst/extdata/DemoFolder1/het_data.txt"</span>),</span>
+<span id="cb2-5"><a href="#cb2-5"></a>  <span class="dt">start_file=</span><span class="kw"><a href="https://rdrr.io/r/base/connections.html">url</a></span>(<span class="st">"https://raw.githubusercontent.com/KeithJF82/vectorpower/master/inst/extdata/DemoFolder1/start_data.txt"</span>),</span>
+<span id="cb2-6"><a href="#cb2-6"></a>  <span class="dt">annual_file=</span><span class="kw"><a href="https://rdrr.io/r/base/connections.html">url</a></span>(<span class="st">"https://raw.githubusercontent.com/KeithJF82/vectorpower/master/inst/extdata/DemoFolder1/annual_data.txt"</span>)</span>
+<span id="cb2-7"><a href="#cb2-7"></a>                    )</span></code></pre></div>
 <p>If using a dataset folder created using dataset_create(), this can be done automatically by using the load_dataset() function. Here the example folder in the inst/extdata subfolder, created in the first worked example, is used:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" title="1">dataset_folder=<span class="kw"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span>(<span class="st">"extdata/DemoFolder1/"</span>,<span class="dt">package=</span><span class="st">"vectorpower"</span>)</a>
-<a class="sourceLine" id="cb3-2" title="2">input_files &lt;-<span class="st"> </span><span class="kw"><a href="https://rdrr.io/pkg/vectorpower/man/load_dataset.html">load_dataset</a></span>(dataset_folder)</a></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a>dataset_folder=<span class="kw"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span>(<span class="st">"extdata/DemoFolder1/"</span>,<span class="dt">package=</span><span class="st">"vectorpower"</span>)</span>
+<span id="cb3-2"><a href="#cb3-2"></a>input_files &lt;-<span class="st"> </span><span class="kw">load_dataset</span>(dataset_folder)</span></code></pre></div>
 <p>The parameters defining the trial setup are then supplied to be used by mainpop():</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb4-1" title="1"><span class="co"># Length of time to run main population model from starting date before intervention begins</span></a>
-<a class="sourceLine" id="cb4-2" title="2">start_interval =<span class="st"> </span><span class="fl">0.0</span>  </a>
-<a class="sourceLine" id="cb4-3" title="3"><span class="co"># Time points after the end of the starting interval at which benchmark data should be output</span></a>
-<a class="sourceLine" id="cb4-4" title="4">time_values =<span class="st"> </span><span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">0.0</span>,<span class="fl">28.0</span>,<span class="fl">56.0</span>,<span class="fl">84.0</span>,<span class="fl">112.0</span>,<span class="fl">140.0</span>) </a>
-<a class="sourceLine" id="cb4-5" title="5"><span class="co"># List of sets of values to load from starting data</span></a>
-<a class="sourceLine" id="cb4-6" title="6">n_mv_set =<span class="st"> </span><span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="dv">1</span><span class="op">:</span><span class="dv">5</span>) </a>
-<a class="sourceLine" id="cb4-7" title="7"><span class="co"># Intervention parameter given variable value (0= None, 1=ATSB kill rate, 2=bednet coverage, 3=IRS coverage)</span></a>
-<a class="sourceLine" id="cb4-8" title="8">int_v_varied =<span class="st"> </span><span class="dv">1</span> </a>
-<a class="sourceLine" id="cb4-9" title="9"><span class="co"># List of intervention parameter values</span></a>
-<a class="sourceLine" id="cb4-10" title="10">int_values =<span class="st"> </span><span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">0.0</span>,<span class="fl">0.1</span>) </a></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a><span class="co"># Length of time to run main population model from starting date before intervention begins</span></span>
+<span id="cb4-2"><a href="#cb4-2"></a>start_interval =<span class="st"> </span><span class="fl">0.0</span>  </span>
+<span id="cb4-3"><a href="#cb4-3"></a><span class="co"># Time points after the end of the starting interval at which benchmark data should be output</span></span>
+<span id="cb4-4"><a href="#cb4-4"></a>time_values =<span class="st"> </span><span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">0.0</span>,<span class="fl">28.0</span>,<span class="fl">56.0</span>,<span class="fl">84.0</span>,<span class="fl">112.0</span>,<span class="fl">140.0</span>) </span>
+<span id="cb4-5"><a href="#cb4-5"></a><span class="co"># List of sets of values to load from starting data</span></span>
+<span id="cb4-6"><a href="#cb4-6"></a>n_mv_set =<span class="st"> </span><span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="dv">1</span><span class="op">:</span><span class="dv">5</span>) </span>
+<span id="cb4-7"><a href="#cb4-7"></a><span class="co"># Intervention parameter given variable value (0= None, 1=ATSB kill rate, 2=bednet coverage, 3=IRS coverage)</span></span>
+<span id="cb4-8"><a href="#cb4-8"></a>int_v_varied =<span class="st"> </span><span class="dv">1</span> </span>
+<span id="cb4-9"><a href="#cb4-9"></a><span class="co"># List of intervention parameter values</span></span>
+<span id="cb4-10"><a href="#cb4-10"></a>int_values =<span class="st"> </span><span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">0.0</span>,<span class="fl">0.1</span>) </span></code></pre></div>
 <p>The parameters and list of input files are passed to the load_inputs function, which creates a set of data for input.</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" title="1">input_data &lt;-<span class="st"> </span><span class="kw"><a href="../reference/load_inputs.html">load_inputs</a></span>(<span class="dt">input_files=</span>input_files, <span class="dt">n_mv_set=</span>n_mv_set)</a></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a>input_data &lt;-<span class="st"> </span><span class="kw"><a href="../reference/load_inputs.html">load_inputs</a></span>(<span class="dt">input_files=</span>input_files, <span class="dt">n_mv_set=</span>n_mv_set)</span></code></pre></div>
 <p>The input data set and the other trial parameters are then passed to the mainpop() function, which runs the deterministic continuum malaria model, the code for which is found in mainpop.cpp in the src/ folder.</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb6-1" title="1">mainpop_data &lt;-<span class="st"> </span><span class="kw"><a href="../reference/mainpop.html">mainpop</a></span>(<span class="dt">input_files =</span> input_files, <span class="dt">n_mv_set =</span> n_mv_set, <span class="dt">int_v_varied =</span> int_v_varied, </a>
-<a class="sourceLine" id="cb6-2" title="2">                        <span class="dt">int_values=</span>int_values, <span class="dt">start_interval =</span> start_interval, <span class="dt">time_values=</span>time_values)</a></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a>mainpop_data &lt;-<span class="st"> </span><span class="kw"><a href="../reference/mainpop.html">mainpop</a></span>(<span class="dt">input_data =</span> input_data, <span class="dt">n_mv_set =</span> n_mv_set, <span class="dt">int_v_varied =</span> int_v_varied, </span>
+<span id="cb6-2"><a href="#cb6-2"></a>                        <span class="dt">int_values=</span>int_values, <span class="dt">start_interval =</span> start_interval, <span class="dt">time_values=</span>time_values)</span>
+<span id="cb6-3"><a href="#cb6-3"></a><span class="co">#&gt; </span></span>
+<span id="cb6-4"><a href="#cb6-4"></a><span class="co">#&gt; Run 1 Mosquito density=0.1953 Intervention number=0</span></span>
+<span id="cb6-5"><a href="#cb6-5"></a><span class="co">#&gt; Intervention begun. ATSB kill rate=0</span></span>
+<span id="cb6-6"><a href="#cb6-6"></a><span class="co">#&gt; Run 2 Mosquito density=0.1953 Intervention number=1</span></span>
+<span id="cb6-7"><a href="#cb6-7"></a><span class="co">#&gt; Intervention begun. ATSB kill rate=0.1</span></span>
+<span id="cb6-8"><a href="#cb6-8"></a><span class="co">#&gt; Run 3 Mosquito density=0.2458 Intervention number=0</span></span>
+<span id="cb6-9"><a href="#cb6-9"></a><span class="co">#&gt; Intervention begun. ATSB kill rate=0</span></span>
+<span id="cb6-10"><a href="#cb6-10"></a><span class="co">#&gt; Run 4 Mosquito density=0.2458 Intervention number=1</span></span>
+<span id="cb6-11"><a href="#cb6-11"></a><span class="co">#&gt; Intervention begun. ATSB kill rate=0.1</span></span>
+<span id="cb6-12"><a href="#cb6-12"></a><span class="co">#&gt; Run 5 Mosquito density=0.2884 Intervention number=0</span></span>
+<span id="cb6-13"><a href="#cb6-13"></a><span class="co">#&gt; Intervention begun. ATSB kill rate=0</span></span>
+<span id="cb6-14"><a href="#cb6-14"></a><span class="co">#&gt; Run 6 Mosquito density=0.2884 Intervention number=1</span></span>
+<span id="cb6-15"><a href="#cb6-15"></a><span class="co">#&gt; Intervention begun. ATSB kill rate=0.1</span></span>
+<span id="cb6-16"><a href="#cb6-16"></a><span class="co">#&gt; Run 7 Mosquito density=0.3271 Intervention number=0</span></span>
+<span id="cb6-17"><a href="#cb6-17"></a><span class="co">#&gt; Intervention begun. ATSB kill rate=0</span></span>
+<span id="cb6-18"><a href="#cb6-18"></a><span class="co">#&gt; Run 8 Mosquito density=0.3271 Intervention number=1</span></span>
+<span id="cb6-19"><a href="#cb6-19"></a><span class="co">#&gt; Intervention begun. ATSB kill rate=0.1</span></span>
+<span id="cb6-20"><a href="#cb6-20"></a><span class="co">#&gt; Run 9 Mosquito density=0.3635 Intervention number=0</span></span>
+<span id="cb6-21"><a href="#cb6-21"></a><span class="co">#&gt; Intervention begun. ATSB kill rate=0</span></span>
+<span id="cb6-22"><a href="#cb6-22"></a><span class="co">#&gt; Run 10 Mosquito density=0.3635 Intervention number=1</span></span>
+<span id="cb6-23"><a href="#cb6-23"></a><span class="co">#&gt; Intervention begun. ATSB kill rate=0.1</span></span></code></pre></div>
 <p>The resulting data can be used in cohort calculations or processed on its own. It can be saved to a file so that it can be used again if R is closed.</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" title="1"><span class="kw"><a href="https://rdrr.io/r/base/readRDS.html">saveRDS</a></span>(mainpop_data,<span class="dt">file=</span><span class="st">"mainpop_data.Rds"</span>)</a></code></pre></div>
-<p>The get_mainpop_data() function can be used to plot selected results:</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb8-1" title="1"><span class="kw"><a href="https://rdrr.io/r/graphics/par.html">par</a></span>(<span class="dt">mfrow=</span><span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="dv">1</span>,<span class="dv">2</span>))</a>
-<a class="sourceLine" id="cb8-2" title="2">plot1 &lt;-<span class="st"> </span><span class="kw"><a href="../reference/get_mainpop_data.html">get_mainpop_data</a></span>(<span class="dt">input_list=</span>mainpop_data,<span class="dt">set_n_int=</span><span class="dv">1</span>,<span class="dt">benchmark=</span><span class="st">"slide_prev"</span>,<span class="dt">age_start=</span><span class="fl">0.0</span>,<span class="dt">age_end =</span> <span class="fl">65.0</span>,<span class="dt">plot_flag=</span><span class="ot">TRUE</span>)</a>
-<a class="sourceLine" id="cb8-3" title="3">plot2 &lt;-<span class="st"> </span><span class="kw"><a href="../reference/get_mainpop_data.html">get_mainpop_data</a></span>(<span class="dt">input_list=</span>mainpop_data,<span class="dt">set_n_int=</span><span class="dv">2</span>,<span class="dt">benchmark=</span><span class="st">"slide_prev"</span>,<span class="dt">age_start=</span><span class="fl">0.0</span>,<span class="dt">age_end =</span> <span class="fl">65.0</span>,<span class="dt">plot_flag=</span><span class="ot">TRUE</span>)</a>
-<a class="sourceLine" id="cb8-4" title="4"><span class="kw"><a href="https://rdrr.io/r/graphics/par.html">par</a></span>(<span class="dt">mfrow=</span><span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="dv">1</span>,<span class="dv">1</span>))</a></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a><span class="kw"><a href="https://rdrr.io/r/base/readRDS.html">saveRDS</a></span>(mainpop_data,<span class="dt">file=</span><span class="st">"mainpop_data.Rds"</span>)</span></code></pre></div>
+<p>The get_mainpop_data() function can be used to obtain selected results, which can then be plotted as graphs using the plot_mainpop_data() function:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1"></a>plot1 &lt;-<span class="st"> </span><span class="kw"><a href="../reference/get_mainpop_data.html">get_mainpop_data</a></span>(<span class="dt">input_list=</span>mainpop_data,<span class="dt">set_n_mv=</span><span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="dv">1</span><span class="op">:</span><span class="dv">5</span>),<span class="dt">set_n_int=</span><span class="dv">1</span>,<span class="dt">benchmark=</span><span class="st">"slide_prev"</span>,<span class="dt">age_start=</span><span class="fl">0.0</span>,<span class="dt">age_end =</span> <span class="fl">65.0</span>)</span>
+<span id="cb8-2"><a href="#cb8-2"></a>plot2 &lt;-<span class="st"> </span><span class="kw"><a href="../reference/get_mainpop_data.html">get_mainpop_data</a></span>(<span class="dt">input_list=</span>mainpop_data,<span class="dt">set_n_mv=</span><span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="dv">1</span><span class="op">:</span><span class="dv">5</span>),<span class="dt">set_n_int=</span><span class="dv">2</span>,<span class="dt">benchmark=</span><span class="st">"slide_prev"</span>,<span class="dt">age_start=</span><span class="fl">0.0</span>,<span class="dt">age_end =</span> <span class="fl">65.0</span>)</span>
+<span id="cb8-3"><a href="#cb8-3"></a><span class="kw"><a href="https://rdrr.io/r/graphics/par.html">par</a></span>(<span class="dt">mfrow=</span><span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="dv">1</span>,<span class="dv">2</span>))</span>
+<span id="cb8-4"><a href="#cb8-4"></a><span class="kw"><a href="../reference/plot_mainpop_data.html">plot_mainpop_data</a></span>(plot1)</span>
+<span id="cb8-5"><a href="#cb8-5"></a><span class="kw"><a href="../reference/plot_mainpop_data.html">plot_mainpop_data</a></span>(plot2)</span></code></pre></div>
+<p><img src="D_worked_example02_files/figure-html/unnamed-chunk-9-1.png" width="700"></p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a><span class="kw"><a href="https://rdrr.io/r/graphics/par.html">par</a></span>(<span class="dt">mfrow=</span><span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="dv">1</span>,<span class="dv">1</span>))</span></code></pre></div>
 <p>For the creation of cohort data from main population data, see <a href="https://keithjf82.github.io/vectorpower/articles/E_worked_example03.html">Worked Example 3</a>.</p>
   </div>
 

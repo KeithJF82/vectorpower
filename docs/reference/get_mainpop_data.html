@@ -36,9 +36,7 @@
 
 
 <meta property="og:title" content="Get selected main population output data as a function of time — get_mainpop_data" />
-<meta property="og:description" content="Function for taking output of mainpop(), selecting the desired benchmark
-             (EIR, slide prevalence, PCR prevalence, clinical incidence) data, and 
-             plotting it on a graph if desired as an aid to setting up clusters" />
+<meta property="og:description" content="Takes in detailed benchmark data as a list and  returns selected benchmark values as a list" />
 <meta name="twitter:card" content="summary" />
 
 
@@ -135,18 +133,16 @@
     </div>
 
     <div class="ref-description">
-    <p>Function for taking output of mainpop(), selecting the desired benchmark
-             (EIR, slide prevalence, PCR prevalence, clinical incidence) data, and 
-             plotting it on a graph if desired as an aid to setting up clusters</p>
+    <p>Takes in detailed benchmark data as a list and  returns selected benchmark values as a list</p>
     </div>
 
     <pre class="usage"><span class='fu'>get_mainpop_data</span>(
   <span class='kw'>input_list</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(),
   <span class='kw'>benchmark</span> <span class='kw'>=</span> <span class='st'>"EIR"</span>,
+  <span class='kw'>set_n_mv</span> <span class='kw'>=</span> <span class='fl'>1</span>,
   <span class='kw'>set_n_int</span> <span class='kw'>=</span> <span class='fl'>1</span>,
   <span class='kw'>age_start</span> <span class='kw'>=</span> <span class='fl'>0</span>,
-  <span class='kw'>age_end</span> <span class='kw'>=</span> <span class='fl'>65</span>,
-  <span class='kw'>plot_flag</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>
+  <span class='kw'>age_end</span> <span class='kw'>=</span> <span class='fl'>65</span>
 )</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -162,8 +158,13 @@
 Represents annual total in case of EIR, year-round average for others</p></td>
     </tr>
     <tr>
+      <th>set_n_mv</th>
+      <td><p>Baseline malaria level number(s) to output data for (from numbers in main population data, not
+original data set)</p></td>
+    </tr>
+    <tr>
       <th>set_n_int</th>
-      <td><p>Intervention number to use (1-max)</p></td>
+      <td><p>Intervention number(s) to output data for (from numbers in main population data)</p></td>
     </tr>
     <tr>
       <th>age_start</th>
@@ -173,16 +174,14 @@ Represents annual total in case of EIR, year-round average for others</p></td>
       <th>age_end</th>
       <td><p>End age to use when calculating prevalence or incidence over age range (not used with EIR)</p></td>
     </tr>
-    <tr>
-      <th>plot_flag</th>
-      <td><p>Logical operator indicating whether or not to plot graph of read values</p></td>
-    </tr>
     </table>
 
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>Takes in detailed benchmark data as a list and plots a graph based on the
-         input parameters ; returns graph x and y values as a list</p>
+    <p>Function for taking output of mainpop(), selecting the desired benchmark
+         (EIR, slide prevalence, PCR prevalence, clinical incidence) data, and outputting
+         values of the benchmark as a function of time for the desired baseline malaria level(s)
+         and intervention parameter value(s)</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
