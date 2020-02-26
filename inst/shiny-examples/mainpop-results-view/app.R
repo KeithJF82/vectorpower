@@ -28,7 +28,8 @@ server <- function(input, output, session) {
   # load_all("vectorpower")
   
   input_list <- reactive({
-    input_list <- readRDS(file=url("https://github.com/KeithJF82/vectorpower/raw/beta/inst/extdata/examples/mainpop_data.Rds"))
+    input_list <- readRDS(file=
+                        url("https://github.com/KeithJF82/vectorpower/raw/beta/inst/extdata/examples/mainpop_data_example.Rds"))
     # input_list <- 
     #   readRDS("C:/Users/kjfras16/Documents/0 - Git repositories/vectorpower/inst/extdata/examples/mainpop_data_example.Rds")
     return(input_list)
