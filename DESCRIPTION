@@ -17,6 +17,7 @@ Imports:
     Rcpp,
     usethis,
     devtools,
+    shiny,
 SystemRequirements: C++11
 Suggests: 
     knitr,
