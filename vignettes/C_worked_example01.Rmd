@@ -97,11 +97,3 @@ data1 <- dataset_create(dataset_folder=dataset_folder,param_file=param_file,age_
 ```
 
 [Code block above is not currently evaluated as it returns a Travis error even though it works correctly when the website is built.]
-
-[Test of Shiny app]
-
-```{r}
-setwd("C:/Users/keith/Documents/Work/GitHub repositories")
-devtools::load_all("vectorpower")
-runExample("input-data-view")
-````
