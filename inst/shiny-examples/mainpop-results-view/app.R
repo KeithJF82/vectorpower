@@ -10,6 +10,7 @@ ui <- fluidPage(
       radioButtons("benchmark","Benchmark",c("EIR/day","Slide prevalence","PCR prevalence","Clinical incidence/year")),
       sliderInput("n_mv_range","Baseline data set(s)",1,min=1,max=1,value=c(1,1)),
       sliderInput("n_int_range","Intervention parameter value(s)",1,min=1,max=1,value=c(1,1)),
+      submitButton(text="Update Display"),
       width=4
     ),
     mainPanel(
@@ -25,8 +26,8 @@ server <- function(input, output, session) {
   library(vectorpower)
   
   input_list <- reactive({
-    input_list <- readRDS(file=
-                        url("https://github.com/KeithJF82/vectorpower/raw/master/inst/extdata/mainpop_data.Rds"))
+    #input_list <- readRDS(file=url("https://github.com/KeithJF82/vectorpower/raw/master/inst/extdata/new_RDS_examples/mainpop_data.Rds"))
+    input_list <- readRDS(file="C:/Users/keith/Documents/Work/GitHub repositories/vectorpower/inst/extdata/new_RDS_examples/mainpop_data.Rds")
     return(input_list)
     })
   
