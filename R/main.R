@@ -227,11 +227,12 @@ cluster_input_setup <- function(input_list=list(), benchmark = "EIR",set_n_pt = 
 #' @param benchmark_stdev     Standard deviation of benchmark value distribution
 #' @param int_mean            Mean of intervention parameter value distribution
 #' @param int_stdev           Standard deviation of intervention parameter value distribution
+#' @param plot_flag           True/false flag indicating whether to plot graphs of cluster data
 #'
 #' @export
 
 clusters_create <- function(input_list=list(),n_clusters=100,benchmark_mean=0.25, benchmark_stdev=0.025,
-                            int_mean=0.15, int_stdev=0.05){
+                            int_mean=0.15, int_stdev=0.05, plot_flag=FALSE){
   
   # Input error checking (TODO - finish)
   assert_list(input_list)
@@ -240,6 +241,7 @@ clusters_create <- function(input_list=list(),n_clusters=100,benchmark_mean=0.25
   assert_single_numeric(benchmark_stdev)
   assert_single_numeric(int_mean)
   assert_single_numeric(int_stdev)
+  assert_logical(plot_flag)
   
   nv_B=length(input_list$benchmark_values)
   nv_I=length(input_list$int_values)
@@ -289,14 +291,16 @@ clusters_create <- function(input_list=list(),n_clusters=100,benchmark_mean=0.25
   }
   clusters$n_run=((clusters$n_B-1)*nv_I)+clusters$n_I-1
   
-  par(mfrow=c(1,2))
-  matplot(cprob,v_bm1,type="l",col=1,xlab="Cumulative probability",ylab=input_list$benchmark,ylim=c(min(v_bm2),max(v_bm2)))
-  matplot(cprob,v_bm2,type="l",col=2,add=TRUE)
-  matplot(clusters$CP_B,clusters$B,type="p",pch=1,col=3,add=TRUE)
-  matplot(cprob,v_i1,type="l",col=1,xlab="Cumulative probability",ylab="Intervention parameter",ylim=c(min(v_i2),max(v_i2)))
-  matplot(cprob,v_i2,type="l",col=2,add=TRUE)
-  matplot(clusters$CP_I,clusters$I,type="p",pch=1,col=3,add=TRUE)
-  par(mfrow=c(1,1))
+  if(plot_flag==TRUE){
+    par(mfrow=c(1,2))
+    matplot(cprob,v_bm1,type="l",col=1,xlab="Cumulative probability",ylab=input_list$benchmark,ylim=c(min(v_bm2),max(v_bm2)))
+    matplot(cprob,v_bm2,type="l",col=2,add=TRUE)
+    matplot(clusters$CP_B,clusters$B,type="p",pch=1,col=3,add=TRUE)
+    matplot(cprob,v_i1,type="l",col=1,xlab="Cumulative probability",ylab="Intervention parameter",ylim=c(min(v_i2),max(v_i2)))
+    matplot(cprob,v_i2,type="l",col=2,add=TRUE)
+    matplot(clusters$CP_I,clusters$I,type="p",pch=1,col=3,add=TRUE)
+    par(mfrow=c(1,1))
+  }
   
   return(clusters)
 }
