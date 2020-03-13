@@ -1,11 +1,11 @@
-pandoc: '2.6'
+pandoc: 2.7.2
 pkgdown: 1.4.1
 pkgdown_sha: ~
 articles:
-  A_package_intro: A_package_intro.html
-  B_installation: B_installation.html
-  C_worked_example01: C_worked_example01.html
-  D_worked_example02: D_worked_example02.html
-  E_worked_example03: E_worked_example03.html
-  F_worked_example04: F_worked_example04.html
+  A_package_intro: ../../../Github repositories/vectorpower/vignettes/A_package_intro.html
+  B_installation: ../../../Github repositories/vectorpower/vignettes/B_installation.html
+  C_worked_example01: ../../../Github repositories/vectorpower/vignettes/C_worked_example01.html
+  D_worked_example02: ../../../Github repositories/vectorpower/vignettes/D_worked_example02.html
+  E_worked_example03: ../../../Github repositories/vectorpower/vignettes/E_worked_example03.html
+  F_worked_example04: ../../../Github repositories/vectorpower/vignettes/F_worked_example04.html
 

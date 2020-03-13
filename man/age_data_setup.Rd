@@ -10,7 +10,7 @@ age_data_setup(age_width_years = c())
 \item{age_width_years}{Vector of age width data in years}
 }
 \description{
-Function which uses the age distribution data (width of each age category in years) from an age_data.txt file 
+Function which uses the age distribution data (width of each age category in years) from an age_data.txt file
              to set up all static age-related parameter values
 }
 \details{

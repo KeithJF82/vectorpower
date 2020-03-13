@@ -47,7 +47,7 @@ het_file=url("https://raw.githubusercontent.com/KeithJF82/vectorpower/master/ins
 
 To load from a location on the computer where **vectorpower** is being run, give the file names and location in the hierarchy of data folders as shown below:
 
-```{r, eval = FALSE}
+```{r}
 input_folder="C:/Users/YourName/Documents/GitHub/vectorpower/inst/extdata/param_examples"
 param_file=paste(input_folder,"model_parameters_Mali.txt",sep="/")
 age_file=paste(input_folder,"age_data_145.txt",sep="/")
@@ -64,7 +64,7 @@ dataset_folder=paste(output_location,dataset_location,sep="/")
 
 To change the output, change output_location to another existing folder, e.g.:
 
-```{r, eval = FALSE}
+```{r}
 output_location = "C:/Users/YourName/Documents/VPDatasets"
 dataset_location = "Demo Folder 1"
 dataset_folder=paste(output_location,dataset_location,sep="/")
@@ -72,7 +72,7 @@ dataset_folder=paste(output_location,dataset_location,sep="/")
 
 Ensure that folder names are separated by a "/". Alternatively, substitute the entire folder name for dataset_folder, e.g.:
 
-```{r, eval = FALSE}
+```{r}
 dataset_folder="C:/Users/YourName/Documents/VPDatasets/DemoFolder1"
 ```
 
@@ -93,8 +93,7 @@ nyears=1
 With all the parameters specified, the dataset_create function is run. This will first set initial conditions using steady-state calculations, then run the time-dependent model for the specified number of years to reach equilibrium. The results will be output as the dataset's starting data. The year-round data output from the starting data (assuming no new interventions) will then be calculated and output as an aid to users of the dataset.
 
 ```{r, eval=FALSE}
-data1 <- dataset_create(dataset_folder=dataset_folder,param_file=param_file,age_file=age_file,
-                        het_file=het_file,EIR_values=EIR_values,nyears=nyears)
+data1 <- dataset_create(dataset_folder=dataset_folder,param_file=param_file,age_file=age_file,het_file=het_file,EIR_values=EIR_values,nyears=nyears)
 ```
 
 [Code block above is not currently evaluated as it returns a Travis error even though it works correctly when the website is built.]

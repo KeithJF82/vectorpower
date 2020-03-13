@@ -17,10 +17,11 @@ patient[1000];
 Rcpp::List rcpp_cohort(List params, List trial_params, List cluster_data)
 {
 	int na_c0, na_c1, na_c2, n_c, mvn, int_num, data_num, i, j, n, nt, div, pos, ntmax, tflag, interval, infected;
-	double dt, t, EIRd, EIRt, t_mark1, t_mark2, p_multiplier, prob, cprobmax, p_inf_bite, p_inf_from_bite, p_clin_inf, IC_cur, IB_cur, ID_cur, rate_db_t, rate_dc_t, rate_dd_t;
+	double dt, t, EIRd, EIRt, t_mark1, t_mark2, p_multiplier, prob, cprobmax, p_inf_bite, p_inf_from_bite, p_clin_inf, IC_cur, IB_cur, ID_cur, rate_db_t, rate_dc_t, rate_dd_t, random_value;
 
 	//Constants (TODO: Make global)----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	double dy = 365.0;										// Days in a year
+	double dy = 365.0;											// Days in a year
+	double inv_dy = 1.0 / dy;
 	double tinterval1 = 1.0;									// Interval between calculations of current prevalence / incidence values
 
 	//Load input parameter data from R------------------------------------------------------------------------------------------------------------------------------------------
@@ -36,11 +37,11 @@ Rcpp::List rcpp_cohort(List params, List trial_params, List cluster_data)
 	int tmax_i = rcpp_to_int(trial_params["tmax_i"]);
 	double tmax = tmax_i * 1.0;
 	int n_clusters = rcpp_to_int(trial_params["n_clusters"]);					// Number of lines in cluster data input file (number of clusters)
-	double prop_T_c = rcpp_to_int(trial_params["prop_T_c"]);					// Proportion of clinical cases successfully treated in cohort
+	double prop_T_c = rcpp_to_double(trial_params["prop_T_c"]);					// Proportion of clinical cases successfully treated in cohort
 	int n_patients = rcpp_to_int(trial_params["n_patients"]);					// Number of patients in cohort
-	double age_start = rcpp_to_int(trial_params["age_start"]);					// Minimum age in cohort
-	double age_end = rcpp_to_int(trial_params["age_end"]);						// Maximum age in cohort
-	double age_c2 = age_end + (tmax / dy);										// Maximum age in cohort taking into account ageing during trial
+	double age_start = rcpp_to_double(trial_params["age_start"]);					// Minimum age in cohort
+	double age_end = rcpp_to_double(trial_params["age_end"]);						// Maximum age in cohort
+	double age_c2 = age_end + (tmax * inv_dy);									// Maximum age in cohort taking into account ageing during trial
 
 	//Set up constant parameters------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -167,6 +168,8 @@ Rcpp::List rcpp_cohort(List params, List trial_params, List cluster_data)
 	vector<int> patients_status_outputs(n_clusters * n_patients * n_divs, 0);		//All patient statuses across all clusters at each time point, for output to R
 	vector<double> p_det_outputs(n_clusters * n_patients * n_divs, 0.0);			//Probability of asymptomatic infection being detected, where relevant, for all patients across all clusters at each time point, for output to R
 	vector<double> clin_inc_outputs(n_clusters * n_divs, 0.0);						//Clinical incidence per person per day in each cluster at each time point (averaged over time up to that point from previous point), for output to R
+	vector<double> patients_age_outputs(n_clusters * n_patients, 0.0);				//Patient ages (at start of trial period) across all clusters
+	vector<double> patients_het_outputs(n_clusters * n_patients, 0.0);				//Patient heterogeneity group numbers across all clusters
 
 	//Load input data------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -229,6 +232,9 @@ start_run:
 	found:
 		patient[n].na = i;
 		patient[n].num_het = j;
+		pos = ((n_c)*n_patients) + n;
+		patients_age_outputs[pos] = age[i] * inv_dy;
+		patients_het_outputs[pos] = j;
 	}
 
 restart:
@@ -323,8 +329,9 @@ restart:
 					if (runif1() <= p_clin_inf)
 					{/*clinical infection*/
 						clin_inc_values[div] += dv_p1 / tinterval2[div];
-						if (runif1() <= prop_T_c) {/*to T*/ patient[n].status = 1; }
-						else {/*to D*/ patient[n].status = 2; }
+						random_value = runif1();
+						if (random_value <= prop_T_c) {/*to T*/ patient[n].status = 1; }
+						else {/*to D*/  patient[n].status = 2; }
 					}
 					else {/*to A*/ patient[n].status = 3; }
 				}
@@ -410,5 +417,6 @@ finish:
 	Rcout << "\nCluster calculations complete\n";
 
 	// Return list
-	return List::create(Named("patients_status_outputs") = patients_status_outputs, Named("p_det_outputs") = p_det_outputs, Named("clin_inc_outputs") = clin_inc_outputs);
+	return List::create(Named("patients_age_outputs") = patients_age_outputs, Named("patients_het_outputs") = patients_het_outputs, Named("patients_status_outputs") = patients_status_outputs, 
+						Named("p_det_outputs") = p_det_outputs, Named("clin_inc_outputs") = clin_inc_outputs);
 }

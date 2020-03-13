@@ -2,33 +2,16 @@
 % Please edit documentation in R/data_functions.R
 \name{plot_mainpop_data}
 \alias{plot_mainpop_data}
-\title{Plot selected main population output data as a function of time}
+\title{Plot graph of main population data}
 \usage{
-plot_mainpop_data(
-  input_list = list(),
-  benchmark = "EIR",
-  set_n_int = 1,
-  age_start = 0,
-  age_end = 65
-)
+plot_mainpop_data(input_list = list())
 }
 \arguments{
-\item{input_list}{List containing mainpop output data}
-
-\item{benchmark}{Benchmark type to use in choosing clusters ("EIR", "slide_prev", "pcr_prev", or "clin_inc")}
-
-\item{set_n_int}{Intervention number to use (1-max)}
-
-\item{age_start}{Starting age to use when calculating prevalence or incidence over age range (not used with EIR)}
-
-\item{age_end}{End age to use when calculating prevalence or incidence over age range (not used with EIR)}
+\item{input_list}{List containing main population benchmark data selected using get_mainpop_data}
 }
 \description{
-Function for taking output of mainpop(), selecting the desired benchmark
-             (EIR, slide prevalence, PCR prevalence, clinical incidence) data, and 
-             plotting it on a graph as an aid to setting up clusters
+Plot graph of main population data selected using get_mainpop_data function
 }
 \details{
-Takes in detailed benchmark data as a list and plots a graph based on the
-         input parameters ; returns graph x and y values as a list
+Plot graph of main population data selected using get_mainpop_data function
 }

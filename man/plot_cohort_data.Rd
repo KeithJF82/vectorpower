@@ -15,8 +15,7 @@ plot_cohort_data(
 
 \item{benchmark}{Benchmark type to output ("slide_prev", "pcr_prev", or "clin_inc")}
 
-\item{flag_output}{Integer indicating how to present data (1: all clusters, 
-2: average over all clusters)}
+\item{flag_output}{Integer indicating how to present data (1: all clusters, 2: average over all clusters)}
 }
 \description{
 Function which takes the output of the cohort() function and displays selected results

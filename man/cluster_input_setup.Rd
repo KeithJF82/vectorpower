@@ -10,7 +10,8 @@ cluster_input_setup(
   set_n_pt = 1,
   set_n_int = 1,
   age_start = 0,
-  age_end = 65
+  age_end = 65,
+  plot_flag = TRUE
 )
 }
 \arguments{
@@ -27,6 +28,8 @@ pre-existing annual data in input folder)}
 \item{age_start}{Starting age to use when calculating prevalence or incidence over age range (not used with EIR)}
 
 \item{age_end}{End age to use when calculating prevalence or incidence over age range (not used with EIR)}
+
+\item{plot_flag}{Logical operator indicating whether or not to plot graph of read values}
 }
 \description{
 Function for taking benchmark data output by mainpop() and selecting the desired benchmark

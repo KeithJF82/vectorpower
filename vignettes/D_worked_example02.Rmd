@@ -37,7 +37,7 @@ input_files <- list(
 
 If using a dataset folder created using dataset_create(), this can be done automatically by using the load_dataset() function. Here the example folder in the inst/extdata subfolder, created in the first worked example, is used:
 
-```{r, eval=FALSE}
+```{r,eval=FALSE}
 dataset_folder=system.file("extdata/DemoFolder1/",package="vectorpower")
 input_files <- load_dataset(dataset_folder)
 ```
@@ -57,10 +57,16 @@ int_v_varied = 1
 int_values = c(0.0,0.1) 
 ```
 
-The parameters and list of input files are then passed to the mainpop() function, which runs the deterministic continuum malaria model, the code for which is found in mainpop.cpp in the src/ folder.
+The parameters and list of input files are passed to the load_inputs function, which creates a set of data for input.
 
 ```{r}
-mainpop_data <- mainpop(input_files = input_files, n_mv_set = n_mv_set, int_v_varied = int_v_varied, 
+input_data <- load_inputs(input_files=input_files, n_mv_set=n_mv_set)
+```
+
+The input data set and the other trial parameters are then passed to the mainpop() function, which runs the deterministic continuum malaria model, the code for which is found in mainpop.cpp in the src/ folder.
+
+```{r}
+mainpop_data <- mainpop(input_data = input_data, n_mv_set = n_mv_set, int_v_varied = int_v_varied, 
                         int_values=int_values, start_interval = start_interval, time_values=time_values)
 ```
 
@@ -70,12 +76,14 @@ The resulting data can be used in cohort calculations or processed on its own. I
 saveRDS(mainpop_data,file="mainpop_data.Rds")
 ```
 
-The plot_mainpop_data() function can be used to plot selected results:
+The get_mainpop_data() function can be used to obtain selected results, which can then be plotted as graphs using the plot_mainpop_data() function:
 
 ```{r}
+plot1 <- get_mainpop_data(input_list=mainpop_data,set_n_mv=c(1:5),set_n_int=1,benchmark="slide_prev",age_start=0.0,age_end = 65.0)
+plot2 <- get_mainpop_data(input_list=mainpop_data,set_n_mv=c(1:5),set_n_int=2,benchmark="slide_prev",age_start=0.0,age_end = 65.0)
 par(mfrow=c(1,2))
-plot1 <- plot_mainpop_data(input_list=mainpop_data,set_n_int=1,benchmark="slide_prev",age_start=0.0,age_end = 65.0)
-plot2 <- plot_mainpop_data(input_list=mainpop_data,set_n_int=2,benchmark="slide_prev",age_start=0.0,age_end = 65.0)
+plot_mainpop_data(plot1)
+plot_mainpop_data(plot2)
 par(mfrow=c(1,1))
 ```
 
