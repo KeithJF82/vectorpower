@@ -10,7 +10,8 @@ clusters_create(
   benchmark_mean = 0.25,
   benchmark_stdev = 0.025,
   int_mean = 0.15,
-  int_stdev = 0.05
+  int_stdev = 0.05,
+  plot_flag = FALSE
 )
 }
 \arguments{
@@ -25,6 +26,8 @@ clusters_create(
 \item{int_mean}{Mean of intervention parameter value distribution}
 
 \item{int_stdev}{Standard deviation of intervention parameter value distribution}
+
+\item{plot_flag}{True/false flag indicating whether to plot graphs of cluster data}
 }
 \description{
 Function for creating cumulative probability distributions and generating clusters from them
