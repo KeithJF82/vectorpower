@@ -308,7 +308,7 @@ plot_mainpop_data <- function(input_list=list()){
   benchmark_values=input_list$data[[2]]
   ylim=c(min(benchmark_values),max(benchmark_values))
   
-  if(is.na(dim(benchmark_values)[3])){
+  if(n_int_values==1){
     xlim=c(min(time_values),max(time_values)*1.25)
     titles=rep(" ",n_curves)
     colours=1+c(1:n_curves)
