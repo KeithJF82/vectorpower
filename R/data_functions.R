@@ -377,7 +377,7 @@ plot_rainfall <- function(dataset_folder=""){
     trig_coeff4 = trig_coeff1*4.0;
     trig_coeff5 = trig_coeff1*5.0;
     
-    days=c(0:364)
+    days=c(1:365)
     rainfall=rep(0,365)
     
     for(i in days){

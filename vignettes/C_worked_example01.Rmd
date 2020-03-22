@@ -93,7 +93,7 @@ nyears=1
 With all the parameters specified, the dataset_create function is run. This will first set initial conditions using steady-state calculations, then run the time-dependent model for the specified number of years to reach equilibrium. The results will be output as the dataset's starting data. The year-round data output from the starting data (assuming no new interventions) will then be calculated and output as an aid to users of the dataset.
 
 ```{r, eval=FALSE}
-data1 <- dataset_create(dataset_folder=dataset_folder,param_file=param_file,age_file=age_file,het_file=het_file,EIR_values=EIR_values,nyears=nyears)
+data1 <- create_data_folder(dataset_folder=dataset_folder,param_file=param_file,age_file=age_file,het_file=het_file,EIR_values=EIR_values,nyears=nyears)
 ```
 
 [Code block above is not currently evaluated as it returns a Travis error even though it works correctly when the website is built.]

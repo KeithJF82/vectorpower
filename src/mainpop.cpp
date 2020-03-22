@@ -8,8 +8,8 @@ using namespace std;
 Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 {
 	int n_run, n_mv, n_int, i, j, ij, nt, nt_E, div, nt_latgam, nt_latmosq, pos, pos2, ntmax, dur_Ei, latgami, latmosqi, tflag, interval, increment, data_saved, flag_int, np;
-	double mv0, param_int, t, t_int, mu_net_irs, prevent_net_irs, prop_T_rev, av0, muv1, K0, year_day, rain, KL, beta, Surv1, EIRd, mv, incv, incv0, FOIv, FOIv0, age0, age1, t_mark1, t_mark2, EIR_sum, dt2;
-	double mu_atsb, cov_nets, cov_irs, prop_T, rN, rNW, dNW, rI, rIW, dIW, dIF, EL, LL, PL, Sv1, Ev1, Iv1, H, /*H_inv, */delS, delT, delD, delA1, delA2, delP, delU1, delU2, inv_x, inv_KL;
+	double mv0, param_int, t, t_int, mu_protections, r_bite_prevent, prop_T_rev, av0, muv1, K0, year_day, rain, KL, beta, Surv1, EIRd, mv, incv, incv0, FOIv, FOIv0, age0, age1, t_mark1, t_mark2, EIR_sum, dt2;
+	double mu_atsb, cov_nets, cov_irs, cov_set, prop_T, rN, rNW, dNW, rI, rIW, dIW, dIF, EL, LL, PL, Sv1, Ev1, Iv1, H, /*H_inv, */delS, delT, delD, delA1, delA2, delP, delU1, delU2, inv_x, inv_KL, rSET,dSET;
 	double S_cur, T_cur, D_cur, A_cur, U_cur, P_cur, FOI_cur, foi_age_cur, clin_inc_cur, ICA_cur, ICM_cur, IB_cur, ID_cur, EIR_cur, delSv1, EL_cur, LL_cur, PL_cur, dEL, dLL, Sv_cur, Ev_cur, Iv_cur;
 	FILE* benchmarks_by_age = NULL;
 	FILE* endpoint_data = NULL;
@@ -55,6 +55,7 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 	double mu_atsb_def = rcpp_to_double(params["mu_atsb_def"]);					// Attractive targeted sugar bait (ATSB) killing rate associated with data
 	double cov_nets_def = rcpp_to_double(params["cov_nets_def"]);				// Proportion of people protected by bednets associated with data
 	double cov_irs_def = rcpp_to_double(params["cov_irs_def"]);					// Proportion of people protected by interior residual spraying (IRS) associated with data
+	double cov_set_def = 0.0;													// Proportion of people protected by SET
 	double prop_T_def = rcpp_to_double(params["prop_T_def"]);					// Proportion of clinical cases successfully treated in main population associated with data
 
 	double Q0 = rcpp_to_double(params["Q0"]);									// Default anthropophagy
@@ -68,6 +69,8 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 	double p_repel_irs_bed = rcpp_to_double(params["p_repel_irs_bed"]);			// Default probability of mosquito being repelled by IRS after entering house but before biting
 	double p_kill_irs1 = rcpp_to_double(params["p_kill_irs1"]);					// Default probability of mosquito being killed by IRS while trying to bite
 	double p_kill_irs2 = rcpp_to_double(params["p_kill_irs2"]);					// Default probability of mosquito being killed by IRS after biting
+	double p_repel_set = 0.229;
+	double p_kill_set = 0.118;
 
 	double rho = rcpp_to_double(params["rho"]);									// Age-dependent biting parameter
 	double a0 = rcpp_to_double(params["a0"]);									// Age-dependent biting parameter
@@ -130,7 +133,7 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 	
 	//vector<double> mu_atsb_var = rcpp_to_vector_double(trial_params["mu_atsb_var"]);	// Variable mu_atsb for special runs - TODO: Integrate into package
 	int flag_file = rcpp_to_int(trial_params["flag_file"]);								// Flag indicating whether results data to be saved to files
-	int int_v_varied = rcpp_to_int(trial_params["int_v_varied"]);						//  Intervention parameter given variable value (0=model parameter set, 1=ATSB kill rate, 2=bednet coverage, 3=IRS coverage)
+	int int_v_varied = rcpp_to_int(trial_params["int_v_varied"]);						//  Intervention parameter given variable value (0=model parameter set, 1=ATSB kill rate, 2=bednet coverage, 3=IRS coverage, 4=SET coverage)
 	int n_mv_values = rcpp_to_int(trial_params["n_mv_values"]);							// Number of mosquito density values to be used		
 	vector<double> int_values = rcpp_to_vector_double(trial_params["int_values"]);		// Vector of intervention parameter values
 	int n_int_values = int_values.size();												// Number of intervention parameter values to use
@@ -355,13 +358,13 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 	dIW = cov_irs * p_kill_irs1;
 	dIF = cov_irs * p_kill_irs2;
 	K0 = (mv0 * 2.0 * dl * muv0 * (1.0 + (dp * mup)) * (gammal * (lambda + 1.0))) / term;									// Larval birth rate coefficient, set based on mv0
-	prevent_net_irs = phi_bite_house - ((phi_bite_house - phi_bite_bed) * (1.0 - rI) * (1.0 - rIW - dIW) * (1.0 - dIF)) -	// Proportion of bites prevented by bednets and/or interior residual spraying
+	r_bite_prevent = phi_bite_house - ((phi_bite_house - phi_bite_bed) * (1.0 - rI) * (1.0 - rIW - dIW) * (1.0 - dIF)) -	// Proportion of bites prevented by bednets and/or interior residual spraying
 			(phi_bite_bed * (1.0 - rI) * (1.0 - rIW - dIW) * (1.0 - dIF) * (1.0 - rN) * (1.0 - rNW - dNW));
-	mu_net_irs = 0.3333 * Q0 * (((phi_bite_house - phi_bite_bed) * (1.0 - rI) * (dIW + ((1.0 - rIW - dIW) * dIF))) +		// Additional death rate due to bednets and/or interior residual spraying
+	mu_protections = 0.3333 * Q0 * (((phi_bite_house - phi_bite_bed) * (1.0 - rI) * (dIW + ((1.0 - rIW - dIW) * dIF))) +		// Additional death rate due to bednets and/or interior residual spraying
 			(phi_bite_bed * (1.0 - rI) * (1.0 - rN) * (dIW + ((1.0 - rIW - dIW) * (dNW + ((1.0 - rNW - dNW) * dIF))))));
-	av0 = 0.3333 * Q0 * (1.0 - prevent_net_irs);																			// Biting rate on humans / mosquito
-	muv1 = muv0 + mu_atsb + mu_net_irs;																						// Total mosquito death rate
-	// muv1 = mu_atsb_var[0] + muv0 + mu_net_irs;																			// Variable muv1 for special runs - TODO: Integrate with package
+	av0 = 0.3333 * Q0 * (1.0 - r_bite_prevent);																			// Biting rate on humans / mosquito
+	muv1 = muv0 + mu_atsb + mu_protections;																						// Total mosquito death rate
+	// muv1 = mu_atsb_var[0] + muv0 + mu_protections;																			// Variable muv1 for special runs - TODO: Integrate with package
 	Rcout << "\nRun " << n_run + 1 << " Mosquito density=" << mv0 << " Intervention number=" << n_int;
 
 	restart_run:
@@ -481,20 +484,38 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 					Rcout << "\nIntervention begun. IRS coverage=" << cov_irs;
 				}
 					break;
+				case 4:
+				{
+					cov_set = param_int;
+					rSET = cov_set * p_repel_set;
+					dSET = cov_set * p_kill_set;
+					Rcout << "\nIntervention begun. SET coverage=" << cov_set;
+				}
+					break;
 				default: { Rcout << "\n\tint_v_varied error\n"; }
 			}
 			R_FlushConsole();
-			prevent_net_irs = phi_bite_house - ((phi_bite_house - phi_bite_bed) * (1.0 - rI) * (1.0 - rIW - dIW) * (1.0 - dIF)) -
+			if(int_v_varied==4) //TODO
+			{				
+				r_bite_prevent = phi_bite_house - ((phi_bite_house - phi_bite_bed) * (1.0 - rI) * (1.0 - rIW - dIW) * (1.0 - dIF)) -
 								(phi_bite_bed * (1.0 - rI) * (1.0 - rIW - dIW) * (1.0 - dIF) * (1.0 - rN) * (1.0 - rNW - dNW));
-			mu_net_irs = 0.3333 * Q0 * (((phi_bite_house - phi_bite_bed) * (1.0 - rI) * (dIW + ((1.0 - rIW - dIW) * dIF))) +
+				mu_protections = 0.3333 * Q0 * (((phi_bite_house - phi_bite_bed) * (1.0 - rI) * (dIW + ((1.0 - rIW - dIW) * dIF))) +
 								(phi_bite_bed * (1.0 - rI) * (1.0 - rN) * (dIW + ((1.0 - rIW - dIW) * (dNW + ((1.0 - rNW - dNW) * dIF))))));
-			av0 = 0.3333 * Q0 * (1.0 - prevent_net_irs);
+			}
+			else
+			{
+				r_bite_prevent = phi_bite_house - ((phi_bite_house - phi_bite_bed) * (1.0 - rI) * (1.0 - rIW - dIW) * (1.0 - dIF)) -
+								(phi_bite_bed * (1.0 - rI) * (1.0 - rIW - dIW) * (1.0 - dIF) * (1.0 - rN) * (1.0 - rNW - dNW));
+				mu_protections = 0.3333 * Q0 * (((phi_bite_house - phi_bite_bed) * (1.0 - rI) * (dIW + ((1.0 - rIW - dIW) * dIF))) +
+								(phi_bite_bed * (1.0 - rI) * (1.0 - rN) * (dIW + ((1.0 - rIW - dIW) * (dNW + ((1.0 - rNW - dNW) * dIF))))));
+			}
+			av0 = 0.3333 * Q0 * (1.0 - r_bite_prevent);
 			/*if (t_int >= 0.0 && n_int > 0) // Variable muv1 for special runs - TODO: Integrate into package
 			{
 				int day = t_int;
-				muv1 = mu_atsb_var[day] + muv0 + mu_net_irs;
+				muv1 = mu_atsb_var[day] + muv0 + mu_protections;
 			}*/
-			muv1 = muv0 + mu_atsb + mu_net_irs;
+			muv1 = muv0 + mu_atsb + mu_protections;
 
 		}
 
