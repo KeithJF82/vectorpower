@@ -251,9 +251,9 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 	double* IB = (double*)malloc(size3);								// Immunity level against infection from infectious bite
 	double* ID = (double*)malloc(size3);								// Immunity level determining p_det
 
-	double* FOI_lag = (double*)malloc(n_cats * 5000 * sizeof(double));	// Time-lagged force of mosquito -> human infection (to account for incubation period)
-	double* FOIv_lag = (double*)malloc(5000 * sizeof(double));			// Time-lagged force of human -> mosquito infection (to account for incubation period)
-	double* incv_lag = (double*)malloc(5000 * sizeof(double));			// Time-lagged incubation of malaria in infected mosquito
+	double* FOI_lag = (double*)malloc(n_cats * 12500 * sizeof(double));	// Time-lagged force of mosquito -> human infection (to account for incubation period)
+	double* FOIv_lag = (double*)malloc(12500 * sizeof(double));			// Time-lagged force of human -> mosquito infection (to account for incubation period)
+	double* incv_lag = (double*)malloc(12500 * sizeof(double));			// Time-lagged incubation of malaria in infected mosquito
 
 	vector<double> EIR_benchmarks(n_pts* n_runmax, 0.0);				// Values of entomological inoculation rate at checkpoints
 	vector<double> slide_prev_benchmarks(n_pts* n_runmax* na, 0.0);		// Values of slide prevalence at checkpoints
@@ -331,14 +331,16 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 		n_mv = (n_run - n_int) / n_int_values;
 		mv0 = mv_input[n_mv];
 		if (n_int == 0) { dt = 0.05 / sqrt(mv0); }
+		//dt=0.1;
 		mu_atsb = mu_atsb_def;
 		cov_nets = cov_nets_def;
 		cov_irs = cov_irs_def;
+		cov_set = cov_set_def;
 		prop_T = prop_T_def;
 
 		goto start_run;
 		run_complete:
-		// Rcout << "\nRun " << n_run + 1 << " complete.\n";
+		Rcout << "\nRun " << n_run + 1 << " complete. dt=" << dt << "\n";
 		R_FlushConsole();
 	}
 
@@ -365,7 +367,7 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 	av0 = 0.3333 * Q0 * (1.0 - r_bite_prevent);																			// Biting rate on humans / mosquito
 	muv1 = muv0 + mu_atsb + mu_protections;																						// Total mosquito death rate
 	// muv1 = mu_atsb_var[0] + muv0 + mu_protections;																			// Variable muv1 for special runs - TODO: Integrate with package
-	Rcout << "\nRun " << n_run + 1 << " Mosquito density=" << mv0 << " Intervention number=" << n_int;
+	Rcout << "\nRun " << n_run + 1 << " Mosquito density=" << mv0 << " Intervention number=" << n_int << " dt=" << dt;
 
 	restart_run:
 	dt2 = dt * 0.1;		
@@ -424,7 +426,7 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 
 	Surv1 = exp(-muv1 * latmosq);
 	incv0 = FOIv0 * Sv1 * Surv1;
-	for (i = 0; i < 5000; i++)
+	for (i = 0; i < 12500; i++)
 	{
 		FOIv_lag[i] = FOIv0;
 		incv_lag[i] = incv0;
@@ -497,10 +499,8 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 			R_FlushConsole();
 			if(int_v_varied==4) //TODO
 			{				
-				r_bite_prevent = phi_bite_house - ((phi_bite_house - phi_bite_bed) * (1.0 - rI) * (1.0 - rIW - dIW) * (1.0 - dIF)) -
-								(phi_bite_bed * (1.0 - rI) * (1.0 - rIW - dIW) * (1.0 - dIF) * (1.0 - rN) * (1.0 - rNW - dNW));
-				mu_protections = 0.3333 * Q0 * (((phi_bite_house - phi_bite_bed) * (1.0 - rI) * (dIW + ((1.0 - rIW - dIW) * dIF))) +
-								(phi_bite_bed * (1.0 - rI) * (1.0 - rN) * (dIW + ((1.0 - rIW - dIW) * (dNW + ((1.0 - rNW - dNW) * dIF))))));
+				r_bite_prevent = phi_bite_house-((phi_bite_house-phi_bite_bed)*(1.0-rSET-dSET))-(phi_bite_bed*(1.0-rSET-dSET)*(1.0-rNW-dNW));
+				mu_protections = 0.3333 * Q0 * (((phi_bite_house-phi_bite_bed)*dSET)+(phi_bite_bed*(dSET+(dNW*(1.0-rSET-dSET)))));
 			}
 			else
 			{
@@ -674,10 +674,12 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 			if (Sv1 < 0.0) { tflag = 3; }
 			if (tflag > 0)
 			{
-				if (dt <= 0.0025) { goto end_run; }
-				dt = max(0.0025, dt * 0.9);
-				// Rcout << "\ntflag = " << tflag << " Adjusting time increment. New dt = " << dt << "\n";
+				if (dt <= 0.001) { goto end_run; }
+				dt = max(0.001, dt * 0.9);
+				Rcout << "\ntflag = " << tflag << " t = " << t << " Adjusting time increment. New dt = " << dt << "\n";
+				R_FlushConsole();
 				goto restart_run;
+				goto end_run;
 			}
 			if (t_int > 0.0)
 			{
@@ -777,7 +779,7 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 	if (endpoint_data != NULL) { fclose(endpoint_data); }
 	if (data_EIR != NULL) { fclose(data_EIR); }
 	if (data_immunity != NULL) { fclose(data_immunity); }
-	// Rcout << "\nMain population computations complete.\n";
+	// Rcout << "\nComputations complete.\n";
 
 	// Return list
 	return List::create(Named("EIR_benchmarks") = EIR_benchmarks, Named("slide_prev_benchmarks")= slide_prev_benchmarks, 

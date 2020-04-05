@@ -9,7 +9,7 @@ Rcpp::List rcpp_mainpop_ss(List params, List trial_params)
 {
 	int n_mv, i, j, pos, pos2, n_repeats;
 	double mv0, mu_net_irs, prevent_net_irs, av0, muv1, KL, Surv1, EIRd, FOIv0, FOIv1;
-	double rN, rNW, dNW, rI, rIW, dIW, dIF, EL, LL, PL, Sv1, Ev1, Iv1, H, H_inv, dev, EIR_cur, FOI_cur, phi_cur;
+	double rN, rNW, dNW, rI, rIW, dIW, dIF, EL, LL, PL, Sv1, Ev1, Iv1, H, H_inv, dev, EIR_cur, FOI_cur, phi_cur, slide_prev,pcr_prev;
 	FILE* endpoint_data = NULL;
 
 	//Constants ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -351,7 +351,7 @@ Rcpp::List rcpp_mainpop_ss(List params, List trial_params)
 
 				A[pos] = ((i == 0 ? 0.0 : (delta[i] * A[pos2])) + (FOI_cur * (1.0 - phi_cur) * Y[pos]) + (rD * D[pos])) / (betaA[pos] + (FOI_cur * (1 - phi_cur)));
 				U[pos] = ((rA0 * A[pos]) + (i == 0 ? 0.0 : delta[i] * U[pos2])) / betaU[pos];
-				S[pos] = Y[pos] - A[pos] - U[pos];
+				S[pos] = max(0.0, Y[pos] - A[pos] - U[pos]);
 				ICA[pos] = ((i == 0 ? 0.0 : ICA[pos2]) + (rate_clinaq[pos] * x_I[i])) / (1.0 + (x_I[i] / dc));
 				ICM[pos] = i == na ? 0.0 : ICM_init[j]*((exp(-age[i]/dm)) - (exp(-age[i + 1]/dm)))*(dm / (age[i + 1] - age[i]));
 				IB[pos] = ((i == 0 ? 0.0 : IB[pos2]) + (rate_ibaq[pos] * x_I[i])) / (1.0 + (x_I[i] / db));
@@ -360,13 +360,30 @@ Rcpp::List rcpp_mainpop_ss(List params, List trial_params)
 			}
 		}
 
+		pos=0;
+		slide_prev = 0.0;
+		pcr_prev = 0.0;
+		H = arraysum(S, n_cats) + arraysum(T, n_cats) + arraysum(D, n_cats) + arraysum(A, n_cats) + arraysum(U, n_cats) + arraysum(P, n_cats);
+		H_inv = 1.0 / H;
+		for (i = 0; i < na; i++) // Run through age categories
+		{
+			for (j = 0; j < num_het; j++)
+			{
+				slide_prev+= T[pos] + D[pos] + (p_det[pos] * A[pos]);
+				pcr_prev+= T[pos] + D[pos] + A[pos] + U[pos];
+				pos++;
+			}
+		}
+		slide_prev*=H_inv;
+		pcr_prev*=H_inv;
+
 		if (FOIv1 <= 0.0) { dev = 1.0; } 
 		else { dev = abs(FOIv1 - FOIv0) / (FOIv1 + FOIv0); }
 		if (dev > 1.0e-8) { goto repeat; }
 
 		//finish:
 		mv_values[n_mv] = mv0;
-		Rcout << "\nn_mv = " << n_mv + 1 << "\tMosquito density = " << mv0;
+		Rcout << "\nn_mv = " << n_mv + 1 << "\tMosquito density = " << mv0 << "\tslide_prev = " << slide_prev << "\tpcr_prev = " << pcr_prev;
 		R_FlushConsole();
 		H = arraysum(S, n_cats) + arraysum(T, n_cats) + arraysum(D, n_cats) + arraysum(A, n_cats) + arraysum(U, n_cats) + arraysum(P, n_cats);
 		H_inv = 1.0 / H;

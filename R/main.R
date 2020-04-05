@@ -16,7 +16,6 @@ NULL
 #'
 #' @param input_data      List containing parameters, starting data etc. created by load_inputs function
 #' @param output_folder   Folder to send output files (no files saved if set to NA)
-#' @param n_mv_set        Vector of mosquito density number values to use (must be increasing order)
 #' @param int_v_varied    Intervention parameter given variable value 
 #'                        (0= None, 1=ATSB kill rate, 2=bednet coverage, 3=IRS coverage)
 #' @param int_values      Vector of values of varied intervention parameter (will be unused if int_v_varied=0)
@@ -25,23 +24,17 @@ NULL
 #'
 #' @export
 
-mainpop <- function (input_data = list(),output_folder = NA,n_mv_set=c(1), int_v_varied=0, int_values= c(0.0),
+mainpop <- function (input_data = list(),output_folder = NA,int_v_varied=0, int_values= c(0.0),
                      start_interval = 31.0, time_values=c(0.0,7.0))
 {
   # Input error checking
   assert_list(input_data)
   if(is.na(output_folder)==0){assert_string(output_folder)}
   assert_int(int_v_varied)
-  assert_in(int_v_varied,0:3)
+  assert_in(int_v_varied,0:4)
   assert_numeric(int_values)
   assert_single_numeric(start_interval)
   assert_numeric(time_values)
-  # TODO - Change these to something that works with URLs
-  # assert_file_exists(input_files$age_file)
-  # assert_file_exists(input_files$het_file)
-  # assert_file_exists(input_files$param_file)
-  # assert_file_exists(input_files$start_file)
-  # assert_file_exists(input_files$annual_file)
   
   n_mv_set=input_data$n_mv_set
   n_pts=length(time_values)
@@ -323,10 +316,10 @@ cohort <- function(mainpop_data = list(), cluster_data=list(), n_patients = 1,
   raw_data <- rcpp_cohort(mainpop_data$params,trial_params,cluster_data)
   results_data <- data.frame(raw_data)
   
-  cluster_names=paste("cluster",c(1:n_clusters),sep="/")
-  patient_names=paste("patient",c(1:n_patients),sep="/")
+  cluster_names=paste("cluster",c(1:n_clusters),sep="")
+  patient_names=paste("patient",c(1:n_patients),sep="")
   n_pts=length(mainpop_data$time_values)
-  n_pt_names=paste("n_pt",c(1:n_pts),sep="/")
+  n_pt_names=paste("n_pt",c(1:n_pts),sep="")
   patients_age_outputs = array(data=raw_data$patients_age_outputs,dim=c(n_patients,n_clusters),
                                dimnames=list(patient_names,cluster_names))
   patients_het_outputs = array(data=raw_data$patients_het_outputs,dim=c(n_patients,n_clusters),
@@ -341,6 +334,95 @@ cohort <- function(mainpop_data = list(), cluster_data=list(), n_patients = 1,
   results=list(n_clusters=n_clusters,n_patients=n_patients,n_pts=n_pts,time_values=time_values,
                patients_age_outputs=patients_age_outputs,patients_het_outputs=patients_het_outputs,
                patients_status_outputs=patients_status_outputs,p_det_outputs=p_det_outputs,clin_inc_outputs=clin_inc_outputs)
+  
+  return(results)
+}
+
+
+#------------------------------------------------
+#' @title Cohort evaluation (alternate)
+#'
+#' @description Run stochastic individual model across trial cohort individuals in one or more clusters
+#'              (alternate version incorporating more details of testing and reactive treatment during trial,
+#'              in progress)
+#'
+#' @details Takes a list of parameters, returns a list of raw data (data also saved to files as backup). 
+#'
+#' @param mainpop_data      List output by mainpop() containing main population data
+#' @param cluster_data      List output by clusters_create() containing cluster data
+#' @param n_patients        Number of trial cohort patients per cluster
+#' @param prop_T_c          Treatment probability in cohort
+#' @param age_start         Minimum age of trial cohort patients
+#' @param age_end           Maximum age of trial cohort patients
+#' @param flag_output       Integer indicating whether to show progress of simulation
+#' @param test_time_values  Time points at which tests are administered
+#' @param test_type         Type of test administered ("clin" = clinical, "RDT" = rapid diagnostic test)
+#' @param flag_pre_clearing Integer indicating whether patients given pre-trial prophylaxis (if 1, place all patients
+#'                          into prophylaxis category at start)
+#' @param censor_period     Time period after a positive test during which a patient is not counted towards incidence
+#' @param flag_reactive_treatment Integer indicating whether patients are automatically given prophylaxis after a
+#'                                positive test (shifting them into treatment category if a clinical case,
+#'                                prophylaxis category otherwise)
+#'
+#' @export
+
+cohort2 <- function(mainpop_data = list(), cluster_data=list(), n_patients = 1, prop_T_c = 0.9,
+                   age_start = 0.5,age_end = 10.0, flag_output=0, test_time_values = c(), test_type = "clin",
+                   flag_pre_clearing = 1, censor_period = 0.0, flag_reactive_treatment = 1){
+  
+  # Input error checking (TODO - finish)
+  assert_list(mainpop_data)
+  assert_list(cluster_data)
+  assert_single_int(n_patients)
+  assert_single_bounded(prop_T_c,0.0,1.0)
+  assert_single_bounded(age_start,0.0,65.0)
+  assert_single_bounded(age_end,age_start,65.0)
+  assert_single_int(flag_output)
+  assert_in(flag_output,c(0,1))
+  assert_in(test_type, c("clin","RDT"))
+  assert_single_bounded(min(test_time_values),min(mainpop_data$time_values),max(mainpop_data$time_values))
+  assert_single_bounded(max(test_time_values),min(mainpop_data$time_values),max(mainpop_data$time_values))
+  assert_single_int(flag_pre_clearing)
+  assert_in(flag_pre_clearing,c(0,1))
+  assert_single_numeric(censor_period)
+  assert_single_int(flag_reactive_treatment)
+  assert_in(flag_reactive_treatment,c(0,1))
+  
+  if(test_type=="clin"){flag_test_type=1}
+  if(test_type=="RDT"){flag_test_type=2}
+  n_clusters=length(cluster_data$n_run)
+  time_values=mainpop_data$time_values
+  trial_params <- list(n_patients = n_patients,n_clusters = n_clusters, flag_output = flag_output,
+                       flag_pre_clearing = flag_pre_clearing, flag_reactive_treatment = flag_reactive_treatment,
+                       time_values = time_values, test_time_values = test_time_values, flag_test_type = flag_test_type,
+                       censor_period = censor_period, tmax_i=length(mainpop_data$EIR_daily_data[,1,1]),
+                       prop_T_c = prop_T_c,age_start = age_start,age_end = age_end,
+                       EIR_daily_data = as.vector(mainpop_data$EIR_daily_data),
+                       IB_start_data = as.vector(mainpop_data$IB_start_data),
+                       IC_start_data = as.vector(mainpop_data$IC_start_data),
+                       ID_start_data = as.vector(mainpop_data$ID_start_data))
+  
+  raw_data <- rcpp_cohort2(mainpop_data$params,trial_params,cluster_data)
+  results_data <- data.frame(raw_data)
+  
+  cluster_names=paste("cluster",c(1:n_clusters),sep="")
+  patient_names=paste("patient",c(1:n_patients),sep="")
+  n_pts=length(test_time_values)
+  n_pt_names=paste("n_pt",c(1:n_pts),sep="")
+  patients_age_outputs = array(data=raw_data$patients_age_outputs,dim=c(n_patients,n_clusters),
+                               dimnames=list(patient_names,cluster_names))
+  patients_het_outputs = array(data=raw_data$patients_het_outputs,dim=c(n_patients,n_clusters),
+                               dimnames=list(patient_names,cluster_names))
+  patients_status_outputs = array(data=raw_data$patients_status_outputs,dim=c(n_pts,n_patients,n_clusters),
+                                  dimnames=list(n_pt_names,patient_names,cluster_names))
+  p_det_outputs = array(data=raw_data$p_det_outputs,dim=c(n_pts,n_patients,n_clusters),
+                        dimnames=list(n_pt_names,patient_names,cluster_names))
+  test_incidence_outputs=array(data=results_data$test_incidence_outputs,dim=c(length(test_time_values),n_clusters))
+  
+  results <- list(n_clusters=n_clusters,n_patients=n_patients,n_pts=n_pts,time_values=time_values,
+                  test_time_values=test_time_values,patients_age_outputs=patients_age_outputs,
+                  patients_het_outputs=patients_het_outputs,patients_status_outputs=patients_status_outputs,
+                  test_incidence_outputs=test_incidence_outputs)
   
   return(results)
 }

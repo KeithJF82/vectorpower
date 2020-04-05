@@ -7,7 +7,6 @@
 mainpop(
   input_data = list(),
   output_folder = NA,
-  n_mv_set = c(1),
   int_v_varied = 0,
   int_values = c(0),
   start_interval = 31,
@@ -18,8 +17,6 @@ mainpop(
 \item{input_data}{List containing parameters, starting data etc. created by load_inputs function}
 
 \item{output_folder}{Folder to send output files (no files saved if set to NA)}
-
-\item{n_mv_set}{Vector of mosquito density number values to use (must be increasing order)}
 
 \item{int_v_varied}{Intervention parameter given variable value 
 (0= None, 1=ATSB kill rate, 2=bednet coverage, 3=IRS coverage)}

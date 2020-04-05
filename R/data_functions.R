@@ -149,9 +149,9 @@ create_data_folder <- function (dataset_folder="",EIR_values=c(1.0),param_file="
   het_file_new=paste(dataset_folder,"het_data.txt",sep="/")
   param_file_new=paste(dataset_folder,"model_parameters.txt",sep="/")
   start_file_new=paste(dataset_folder,"start_data.txt",sep="/")
-  write.table(param_data,file=param_file_new,col.names=TRUE,sep="\t",quote=FALSE)
-  write.table(age_data,file=age_file_new,col.names=TRUE,sep="\t",quote=FALSE)
-  write.table(het_data,file=het_file_new,col.names=TRUE,sep="\t",quote=FALSE)
+  write.table(param_data,file=param_file_new,row.names=FALSE,col.names=TRUE,sep="\t",quote=FALSE)
+  write.table(age_data,file=age_file_new,col.names=TRUE,row.names=FALSE,sep="\t",quote=FALSE)
+  write.table(het_data,file=het_file_new,col.names=TRUE,row.names=FALSE,sep="\t",quote=FALSE)
   
   # Create new steady-state constant-rainfall data for desired EIR [TODO: or mv0] values using parameter [TODO: and age] files
   n_mv_values=length(EIR_values)
@@ -177,7 +177,10 @@ create_data_folder <- function (dataset_folder="",EIR_values=c(1.0),param_file="
   input_data <- load_inputs(input_files=input_files, n_mv_set=n_mv_set)
   eq_data <- mainpop(input_data = input_data, output_folder = output_folder,int_v_varied = 0, 
                      int_values=c(0.0), start_interval = 0.0, time_values=365*c(0:nyears) )
-  get_mainpop_data(input_list=eq_data,set_n_int=1,benchmark = "EIR",age_start = 0,age_end = 65.0)
+  EIR_pts <- get_mainpop_data(input_list=eq_data,set_n_int=1,benchmark = "EIR",age_start = 0,age_end = 65.0)
+  slide_prev_pts <- get_mainpop_data(input_list=eq_data,set_n_int=1,benchmark = "slide_prev",age_start = 0,age_end = 65.0)
+  pcr_prev_pts <- get_mainpop_data(input_list=eq_data,set_n_int=1,benchmark = "pcr_prev",age_start = 0,age_end = 65.0)
+  clin_inc_pts <- get_mainpop_data(input_list=eq_data,set_n_int=1,benchmark = "clin_inc",age_start = 0,age_end = 65.0)
   
   # Transfer endpoints as new start data
   cat("\n\nCreating new starting_data.txt file from results.")
@@ -192,7 +195,6 @@ create_data_folder <- function (dataset_folder="",EIR_values=c(1.0),param_file="
   input_data <- load_inputs(input_files=input_files, n_mv_set=n_mv_set)
   annual_data <- mainpop(input_data = input_data, int_v_varied = 0, int_values=c(0.0),
                          start_interval = 0.0, time_values=1.0*c(0:364) )
-  get_mainpop_data(input_list=annual_data,set_n_int=1,benchmark = "EIR")
   
   # Output annual data for reference
   cat("\n\nOutputting annual data.\n")
@@ -216,6 +218,9 @@ create_data_folder <- function (dataset_folder="",EIR_values=c(1.0),param_file="
   # Delete Temp folder
   setwd(dataset_folder)
   unlink("Temp", recursive=TRUE,force=TRUE)
+  
+  output_data <- list(annual_data=annual_data,eq_data=list(EIR_pts=EIR_pts,slide_prev_pts=slide_prev_pts,
+                                                           pcr_prev_pts=pcr_prev_pts,clin_inc_pts=clin_inc_pts))
   
   return(annual_data)
 }
@@ -330,9 +335,18 @@ plot_mainpop_data <- function(input_list=list()){
         points[nt]=i
       }
     }
-    matplot(time_values,benchmark_values[,1,],type="p",pch=1,col=colours,xlab="time (days)",ylab=benchmark,xlim=xlim,ylim=ylim)
-    for(i in 2:n_int_values){
-      matplot(time_values,benchmark_values[,i,],type="p",pch=i,col=1+c(1:n_mv_values),xlab="time (days)",ylab=benchmark,add=TRUE)
+    if(n_mv_values==1){
+      matplot(time_values,benchmark_values[,1],type="p",pch=1,col=colours,xlab="time (days)",ylab=benchmark,xlim=xlim,ylim=ylim)
+      for(i in 2:n_int_values){
+        matplot(time_values,benchmark_values[,i],type="p",pch=i,col=1+c(1:n_mv_values),xlab="time (days)",ylab=benchmark,add=TRUE)
+      }
+      
+    } else {
+      matplot(time_values,benchmark_values[,1,],type="p",pch=1,col=colours,xlab="time (days)",ylab=benchmark,xlim=xlim,ylim=ylim)
+      for(i in 2:n_int_values){
+        matplot(time_values,benchmark_values[,i,],type="p",pch=i,col=1+c(1:n_mv_values),xlab="time (days)",ylab=benchmark,add=TRUE)
+      }
+      
     }
     legend("bottomright", inset=0.01, legend=titles, pch=points,col=rep(colours,n_int_values), horiz=FALSE,bg='white',cex=1.0)
   }
@@ -393,7 +407,7 @@ plot_rainfall <- function(dataset_folder=""){
     matplot(days,rainfall,type="l",col=1,lwd=1.5,xlab="Day",ylab="Rainfall (a.u.)")
     matplot(params$date_start,rainfall[params$date_start],type="p",pch=2,col=2,add=TRUE)
     legend("topright", inset=0.01, legend=c("Rainfall","Start date"),lwd=1.0,col=c(1:2),horiz=FALSE,bg='white',cex=1.0)
-    
+    return(rainfall)
   }
   
 }
@@ -498,7 +512,7 @@ age_data_setup <- function(age_width_years=c()){
 #' benchmark values and plots them on a graph
 #'
 #' @param cohort_data   List of form output by cohort() function
-#' @param benchmark     Benchmark type to output ("slide_prev", "pcr_prev", or "clin_inc")
+#' @param benchmark     Benchmark type to output ("slide_prev", "pcr_prev", "clin_inc" or "test_inc")
 #' @param flag_output   Integer indicating how to present data (1: all clusters, 2: average over all clusters)
 #'
 #' @export
@@ -506,7 +520,7 @@ age_data_setup <- function(age_width_years=c()){
 plot_cohort_data <- function(cohort_data = list(), benchmark="slide_prev",flag_output=1){
 
   assert_list(cohort_data)
-  assert_in(benchmark,c("slide_prev","pcr_prev","clin_inc"))
+  assert_in(benchmark,c("slide_prev","pcr_prev","clin_inc","test_inc"))
   assert_single_int(flag_output)
   assert_in(flag_output,c(1,2))
   
@@ -523,30 +537,35 @@ plot_cohort_data <- function(cohort_data = list(), benchmark="slide_prev",flag_o
       #patient_status_outputs[npt,patient,cluster]
       if(benchmark=="clin_inc"){ benchmark_values[i,j]=cohort_data$clin_inc_outputs[i,j] } else {
         
-        frequencies=rep(0,6)
-        for(k in 1:n_patients){
-          status=cohort_data$patients_status_outputs[i,k,j]+1
-          frequencies[status]=frequencies[status]+1
-        }
-        
-        if(benchmark=="pcr_prev"){benchmark_values[i,j]=sum(frequencies[2:5])*dv}
-        
-        if(benchmark=="slide_prev"){benchmark_values[i,j]=(sum(frequencies[2:3])+sum(cohort_data$p_det_outputs[i,,j]))*dv
+        if(benchmark=="test_inc"){
+          benchmark_values[i,j]=cohort_data$test_incidence_outputs[i,j]
+        } else {
+          frequencies=rep(0,6)
+          for(k in 1:n_patients){
+            status=cohort_data$patients_status_outputs[i,k,j]+1
+            frequencies[status]=frequencies[status]+1
+          }
+          
+          if(benchmark=="pcr_prev"){benchmark_values[i,j]=sum(frequencies[2:5])*dv}
+          
+          if(benchmark=="slide_prev"){benchmark_values[i,j]=(sum(frequencies[2:3])+sum(cohort_data$p_det_outputs[i,,j]))*dv
+          } 
         }
       }
     }
   }
   
   # Plot graph
+  if(benchmark=="test_inc"){time_values=cohort_data$test_time_values} else {time_values=cohort_data$time_values}
   if(flag_output==1){
     if(n_clusters>1){
-      matplot(cohort_data$time_values,benchmark_values[,1],type="p",pch=2,col=2,xlab="time (days)",ylab=benchmark,
+      matplot(time_values,benchmark_values[,1],type="p",pch=2,col=2,xlab="time (days)",ylab=benchmark,
               ylim=c(0,max(benchmark_values)))
       for(i in 2:n_clusters){
-        matplot(cohort_data$time_values,benchmark_values[,i],type="p",pch=2,col=1+i, xaxt="n",xlab="",ylab="",add=TRUE)
+        matplot(time_values,benchmark_values[,i],type="p",pch=2,col=1+i, xaxt="n",xlab="",ylab="",add=TRUE)
       }
     }else{
-      matplot(cohort_data$time_values,benchmark_values,type="p",pch=2,col=2,xlab="time (days)",ylab=benchmark,
+      matplot(time_values,benchmark_values,type="p",pch=2,col=2,xlab="time (days)",ylab=benchmark,
               ylim=c(0,max(benchmark_values)))
     }
     legend("bottomleft", inset=0.01, legend=c(1:n_clusters), lwd=1.0,col=1+c(1:n_clusters),
@@ -561,7 +580,8 @@ plot_cohort_data <- function(cohort_data = list(), benchmark="slide_prev",flag_o
     }else{
       benchmark_values_mean=benchmark_values
     }
-    matplot(cohort_data$time_values,benchmark_values_mean,type="p",pch=2,col=2,xlab="time (days)",ylab=benchmark,
+    
+    matplot(time_values,benchmark_values_mean,type="p",pch=2,col=2,xlab="time (days)",ylab=benchmark,
             ylim=c(0,max(benchmark_values_mean)))
     output=benchmark_values_mean
   }

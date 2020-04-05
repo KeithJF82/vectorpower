@@ -66,7 +66,7 @@ input_data <- load_inputs(input_files=input_files, n_mv_set=n_mv_set)
 The input data set and the other trial parameters are then passed to the mainpop() function, which runs the deterministic continuum malaria model, the code for which is found in mainpop.cpp in the src/ folder.
 
 ```{r}
-mainpop_data <- mainpop(input_data = input_data, n_mv_set = n_mv_set, int_v_varied = int_v_varied, 
+mainpop_data <- mainpop(input_data = input_data, int_v_varied = int_v_varied, 
                         int_values=int_values, start_interval = start_interval, time_values=time_values)
 ```
 

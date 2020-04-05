@@ -13,7 +13,7 @@ plot_cohort_data(
 \arguments{
 \item{cohort_data}{List of form output by cohort() function}
 
-\item{benchmark}{Benchmark type to output ("slide_prev", "pcr_prev", or "clin_inc")}
+\item{benchmark}{Benchmark type to output ("slide_prev", "pcr_prev", "clin_inc" or "test_inc")}
 
 \item{flag_output}{Integer indicating how to present data (1: all clusters, 2: average over all clusters)}
 }
