@@ -244,6 +244,9 @@ Rcpp::List rcpp_mainpop_ss(List params, List trial_params)
 		(phi_bite_bed * (1.0 - rI) * (1.0 - rIW - dIW) * (1.0 - dIF) * (1.0 - rN) * (1.0 - rNW - dNW));
 	mu_net_irs = 0.3333 * Q0 * (((phi_bite_house - phi_bite_bed) * (1.0 - rI) * (dIW + ((1.0 - rIW - dIW) * dIF))) +		// Additional death rate due to bednets and/or interior residual spraying
 		(phi_bite_bed * (1.0 - rI) * (1.0 - rN) * (dIW + ((1.0 - rIW - dIW) * (dNW + ((1.0 - rNW - dNW) * dIF))))));
+	//Values set manually when situation not accommodated by model
+	//prevent_net_irs=0.707;
+	//mu_net_irs=0.0865;
 	av0 = 0.3333 * Q0 * (1.0 - prevent_net_irs);																			// Biting rate on humans / mosquito
 	muv1 = muv0 + mu_atsb + mu_net_irs;																						// Total mosquito death rate
 	Surv1 = exp(-muv1 * latmosq); 

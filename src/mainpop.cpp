@@ -18,7 +18,7 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 
 	// Constants ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	double dy = 365.0;			// Days in a year
-	double tinterval1 = 1.0;	// Interval between calculations of current prevalence / incidence values
+	//double tinterval1 = 1.0;	// Interval between calculations of current prevalence / incidence values
 	double KMIN = 0.0005;		// Minimum value of larval birth rate coefficient K0 to prevent zero or negative mosquito numbers
 
 	// Load environment/vector/parasite/etc. parameters from R------------------------------------------------------------------------------------------------------------------------------------------------
@@ -132,8 +132,9 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 	// Load trial parameter data from R--------------------------------------------------------------------------------------------------------------------------------------------		
 	
 	//vector<double> mu_atsb_var = rcpp_to_vector_double(trial_params["mu_atsb_var"]);	// Variable mu_atsb for special runs - TODO: Integrate into package
+	int flag_dt_adjust = rcpp_to_int(trial_params["flag_dt_adjust"]);					// Flag indicating whether or not to adjust dt by mosquito density (0=no,1=yes)
 	int flag_file = rcpp_to_int(trial_params["flag_file"]);								// Flag indicating whether results data to be saved to files
-	int int_v_varied = rcpp_to_int(trial_params["int_v_varied"]);						//  Intervention parameter given variable value (0=model parameter set, 1=ATSB kill rate, 2=bednet coverage, 3=IRS coverage, 4=SET coverage)
+	int int_v_varied = rcpp_to_int(trial_params["int_v_varied"]);						// Intervention parameter given variable value (0=model parameter set, 1=ATSB kill rate, 2=bednet coverage, 3=IRS coverage, 4=SET coverage)
 	int n_mv_values = rcpp_to_int(trial_params["n_mv_values"]);							// Number of mosquito density values to be used		
 	vector<double> int_values = rcpp_to_vector_double(trial_params["int_values"]);		// Vector of intervention parameter values
 	int n_int_values = int_values.size();												// Number of intervention parameter values to use
@@ -261,7 +262,7 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 	vector<double> clin_inc_benchmarks(n_pts* n_runmax* na, 0.0);		// Values of clinical incidence at checkpoints
 	vector<double> M_benchmarks(n_pts * n_runmax, 0.0);					// Values of total relative mosquito population (Sv+Ev+Iv) at checkpoints
 	vector<double> M_spor_benchmarks(n_pts * n_runmax, 0.0);			// Values of sporozoite rate in mosquitoes (Iv/(Sv+Ev+Iv)) at checkpoints
-	vector<double> EIR_daily_data((tmax_c_i + 1)* n_runmax, 0.0);		// Daily entomological inoculation rate values saved for cohort calculations
+	vector<double> EIR_daily_data(tmax_c_i*n_runmax, 0.0);		// Daily entomological inoculation rate values saved for cohort calculations
 	vector<double> IB_start_data(n_mv_values* n_cats, 0.0);				// Starting IB values saved for cohort calculations
 	vector<double> IC_start_data(n_mv_values* n_cats, 0.0);				// Starting IC values saved for cohort calculations
 	vector<double> ID_start_data(n_mv_values* n_cats, 0.0);				// Starting ID values saved for cohort calculations
@@ -297,7 +298,7 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 
 		data_EIR = fopen(file_EIRd.c_str(), "w");
 		fprintf(data_EIR, "n_run");
-		for (t = 0.0; t <= tmax_c; t += tinterval1) { fprintf(data_EIR, "\tEIR%.0f", t); }
+		for (i = 1; i <= tmax_c_i; i++) { fprintf(data_EIR, "\tEIR%i", i); }
 		fclose(data_EIR);
 		data_immunity = fopen(file_imm_start.c_str(), "w");
 		fprintf(data_immunity, "n_mv");
@@ -330,8 +331,11 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 		n_int = n_run % n_int_values;
 		n_mv = (n_run - n_int) / n_int_values;
 		mv0 = mv_input[n_mv];
-		if (n_int == 0) { dt = 0.05 / sqrt(mv0); }
-		//dt=0.1;
+		if (flag_dt_adjust==1) 
+		{ 
+			if(n_int == 0) {dt = min(0.1,0.1 / sqrt(mv0)); }
+		}
+		else { dt=0.05; }
 		mu_atsb = mu_atsb_def;
 		cov_nets = cov_nets_def;
 		cov_irs = cov_irs_def;
@@ -364,6 +368,9 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 			(phi_bite_bed * (1.0 - rI) * (1.0 - rIW - dIW) * (1.0 - dIF) * (1.0 - rN) * (1.0 - rNW - dNW));
 	mu_protections = 0.3333 * Q0 * (((phi_bite_house - phi_bite_bed) * (1.0 - rI) * (dIW + ((1.0 - rIW - dIW) * dIF))) +		// Additional death rate due to bednets and/or interior residual spraying
 			(phi_bite_bed * (1.0 - rI) * (1.0 - rN) * (dIW + ((1.0 - rIW - dIW) * (dNW + ((1.0 - rNW - dNW) * dIF))))));
+	//Values set manually when situation not accommodated by model
+	//r_bite_prevent=0.707;
+	//mu_protections=0.0865;
 	av0 = 0.3333 * Q0 * (1.0 - r_bite_prevent);																			// Biting rate on humans / mosquito
 	muv1 = muv0 + mu_atsb + mu_protections;																						// Total mosquito death rate
 	// muv1 = mu_atsb_var[0] + muv0 + mu_protections;																			// Variable muv1 for special runs - TODO: Integrate with package
@@ -371,10 +378,10 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 
 	restart_run:
 	dt2 = dt * 0.1;		
-	ntmax = intdiv(tmax, dt) + 1;
-	dur_Ei = intdiv(dur_E, dt) + 1;
-	latgami = intdiv(latgam, dt) + 1;
-	latmosqi = intdiv(latmosq, dt) + 1;
+	ntmax = intdiv(tmax, dt);
+	dur_Ei = intdiv(dur_E, dt);
+	latgami = intdiv(latgam, dt);
+	latmosqi = intdiv(latmosq, dt);
 	year_day = fmod(date_start, dy); // Day of the year at the start of the run
 	rain = rain_coeff * (rconst + (2.0 * (
 			(Re0 * cos(trig_coeff1 * year_day)) + (Im0 * sin(trig_coeff1 * year_day)) +
@@ -439,7 +446,7 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 	div = 0;
 	interval = 0;
 	increment = 0;
-	t_mark1 = tinterval1;
+	t_mark1 = 1.0;
 	t_mark2 = time_values[0];
 	EIR_sum = 0.0;
 	data_saved = 0;
@@ -463,6 +470,10 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 					break;
 				case 1:
 				{
+					/*cov_nets=0.6;
+					rN = cov_nets * p_repel_net_entry;
+					rNW = cov_nets * p_repel_net_bed;
+					dNW = cov_nets * p_kill_net;*/
 					mu_atsb = param_int;
 					Rcout << "\nIntervention begun. ATSB kill rate=" << mu_atsb;
 				}
@@ -497,7 +508,7 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 				default: { Rcout << "\n\tint_v_varied error\n"; }
 			}
 			R_FlushConsole();
-			if(int_v_varied==4) //TODO
+			if(int_v_varied==4)
 			{				
 				r_bite_prevent = phi_bite_house-((phi_bite_house-phi_bite_bed)*(1.0-rSET-dSET))-(phi_bite_bed*(1.0-rSET-dSET)*(1.0-rNW-dNW));
 				mu_protections = 0.3333 * Q0 * (((phi_bite_house-phi_bite_bed)*dSET)+(phi_bite_bed*(dSET+(dNW*(1.0-rSET-dSET)))));
@@ -508,6 +519,9 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 								(phi_bite_bed * (1.0 - rI) * (1.0 - rIW - dIW) * (1.0 - dIF) * (1.0 - rN) * (1.0 - rNW - dNW));
 				mu_protections = 0.3333 * Q0 * (((phi_bite_house - phi_bite_bed) * (1.0 - rI) * (dIW + ((1.0 - rIW - dIW) * dIF))) +
 								(phi_bite_bed * (1.0 - rI) * (1.0 - rN) * (dIW + ((1.0 - rIW - dIW) * (dNW + ((1.0 - rNW - dNW) * dIF))))));
+				//Values set manually when situation not accommodated by model
+				//r_bite_prevent=0.707;
+				//mu_protections=0.0865;
 			}
 			av0 = 0.3333 * Q0 * (1.0 - r_bite_prevent);
 			/*if (t_int >= 0.0 && n_int > 0) // Variable muv1 for special runs - TODO: Integrate into package
@@ -665,17 +679,27 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 		// Outputs
 		if (t >= t_mark1)
 		{
-			t_mark1 += tinterval1;			
+			t_mark1 += 1.0;
 			H = arraysum(S, n_cats) + arraysum(T, n_cats) + arraysum(D, n_cats) + arraysum(A, n_cats) + arraysum(U, n_cats) + arraysum(P, n_cats); // Total normalized number of humans; this should always sum to 1.0
+			/*S_cur=arraysum(S, n_cats);
+			T_cur=arraysum(T, n_cats);
+			D_cur=arraysum(D, n_cats);
+			A_cur=arraysum(A, n_cats);
+			U_cur=arraysum(U, n_cats);
+			P_cur=arraysum(P, n_cats);
+			H=S_cur+T_cur+D_cur+A_cur+U_cur+P_cur;
+			Rcout << "\nt = " << t << "\nS = " << S_cur << " T = " << T_cur << " D = " << D_cur << " A = " << A_cur << " U = " << U_cur << " P = " << P_cur;
+			Rcout << "\nH =" << H << " mosq_sum = " << Sv1+Ev1+Iv1 << " larv_sum = " << EL+LL+PL;*/
 
 			// Check that time increment has not been set too large
 			if ((H - 1.0) * (H - 1.0) > 0.01) { tflag = 1; }
-			if (EL < 0.0) { tflag = 2; }
-			if (Sv1 < 0.0) { tflag = 3; }
+			if (min(EL,min(LL,PL))<0.0) { tflag = 2; }
+			if (min(Sv1,min(Ev1,Iv1))<0.0) { tflag = 3; }
+			if (isnan(EIRd)==1){ tflag = 4;}
 			if (tflag > 0)
 			{
 				if (dt <= 0.001) { goto end_run; }
-				dt = max(0.001, dt * 0.9);
+				dt = max(0.001, dt * 0.5);
 				Rcout << "\ntflag = " << tflag << " t = " << t << " Adjusting time increment. New dt = " << dt << "\n";
 				R_FlushConsole();
 				goto restart_run;
@@ -683,7 +707,7 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 			}
 			if (t_int > 0.0)
 			{
-				if (interval <= tmax_c_i) { EIR_daily_data[((tmax_c_i + 1) * n_run) + interval] = EIR_sum / (increment * 1.0); }
+				if (interval < tmax_c_i) { EIR_daily_data[(tmax_c_i* n_run) + interval] = EIR_sum / (increment * 1.0); }
 				EIR_sum = 0.0;
 				increment = 0;
 				interval++;
@@ -728,6 +752,8 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 				for (i = 0; i < na; i++) { fprintf(benchmarks_by_age, "\t%.3e", clin_inc_benchmarks[ij + i]); }
 				fclose(benchmarks_by_age);
 			}
+			//Rcout << "\nt = " << t << " H = " << H << " EIR = " << EIRd;
+			R_FlushConsole();
 		}
 	}
 
@@ -737,7 +763,7 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 	{
 		data_EIR = fopen(file_EIRd.c_str(), "a");
 		fprintf(data_EIR, "\n%i", n_run);
-		for (i = 0; i <= tmax_c_i; i++) { fprintf(data_EIR, "\t%.3e", EIR_daily_data[((tmax_c_i + 1) * n_run) + i]); }
+		for (i = 0; i < tmax_c_i; i++) { fprintf(data_EIR, "\t%.3e", EIR_daily_data[(tmax_c_i * n_run) + i]); }
 		fclose(data_EIR);
 		if (n_int == 0)
 		{
@@ -774,14 +800,18 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 	finish:
+	//Rcout << "\nComputations complete 1.\n";
+	//R_FlushConsole();
 
 	if (benchmarks_by_age != NULL) { fclose(benchmarks_by_age); }
 	if (endpoint_data != NULL) { fclose(endpoint_data); }
 	if (data_EIR != NULL) { fclose(data_EIR); }
 	if (data_immunity != NULL) { fclose(data_immunity); }
-	// Rcout << "\nComputations complete.\n";
+	Rcout << "\nComputations complete.\n";
+	R_FlushConsole();
 
 	// Return list
+	//return List::create(Named("dummy") = 1.0);
 	return List::create(Named("EIR_benchmarks") = EIR_benchmarks, Named("slide_prev_benchmarks")= slide_prev_benchmarks, 
 						Named("pcr_prev_benchmarks")= pcr_prev_benchmarks, Named("clin_inc_benchmarks")= clin_inc_benchmarks, 
 						Named("M_benchmarks") = M_benchmarks, Named("M_spor_benchmarks") = M_spor_benchmarks,

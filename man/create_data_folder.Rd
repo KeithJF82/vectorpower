@@ -10,7 +10,8 @@ create_data_folder(
   param_file = "",
   age_file = "",
   het_file = "",
-  nyears = 10
+  nyears = 10,
+  flag_dt_adjust = 1
 )
 }
 \arguments{
@@ -25,6 +26,9 @@ create_data_folder(
 \item{het_file}{File containing biting heterogeneity parameters to use for new dataset}
 
 \item{nyears}{Number of years to run model for to achieve equilibrium}
+
+\item{flag_dt_adjust}{Integer indicating whether or not to adjust dt by mosquito density in mainpop()
+(0 = No, 1 = Yes)}
 }
 \description{
 Function which sets up a folder containing new data in the correct formats which can be used for

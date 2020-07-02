@@ -9,6 +9,10 @@ rcpp_cohort2 <- function(params, trial_params, cluster_data) {
     .Call(`_vectorpower_rcpp_cohort2`, params, trial_params, cluster_data)
 }
 
+rcpp_ento <- function(params, inputs, trial_params) {
+    .Call(`_vectorpower_rcpp_ento`, params, inputs, trial_params)
+}
+
 rcpp_mainpop <- function(params, inputs, trial_params) {
     .Call(`_vectorpower_rcpp_mainpop`, params, inputs, trial_params)
 }

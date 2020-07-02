@@ -21,11 +21,13 @@ NULL
 #' @param int_values      Vector of values of varied intervention parameter (will be unused if int_v_varied=0)
 #' @param start_interval  Period from start date before intervention starts (used to equilibrate lagged FOI data)
 #' @param time_values     Vector of time checkpoints
+#' @param flag_dt_adjust  Integer indicating whether or not to adjust dt by mosquito density in rcpp_mainpop
+#'                        (0 = No, 1 = Yes)
 #'
 #' @export
 
 mainpop <- function (input_data = list(),output_folder = NA,int_v_varied=0, int_values= c(0.0),
-                     start_interval = 31.0, time_values=c(0.0,7.0))
+                     start_interval = 31.0, time_values=c(0.0,7.0), flag_dt_adjust=1)
 {
   # Input error checking
   assert_list(input_data)
@@ -35,6 +37,7 @@ mainpop <- function (input_data = list(),output_folder = NA,int_v_varied=0, int_
   assert_numeric(int_values)
   assert_single_numeric(start_interval)
   assert_numeric(time_values)
+  assert_in(flag_dt_adjust,0:1)
   
   n_mv_set=input_data$n_mv_set
   n_pts=length(time_values)
@@ -66,7 +69,7 @@ mainpop <- function (input_data = list(),output_folder = NA,int_v_varied=0, int_
   trial_params <- list(age_data=input_data$age_data, n_mv_values=n_mv_values, int_v_varied=int_v_varied, int_values=int_values,
                        start_interval=start_interval, time_values=time_values, n_pts=n_pts, flag_file=flag_file,
                        file_benchmarks=file_benchmarks,file_endpoints=file_endpoints, file_EIRd=file_EIRd, 
-                       file_imm_start=file_imm_start)
+                       file_imm_start=file_imm_start,flag_dt_adjust=flag_dt_adjust)
   
   # Run simulation of main population
   raw_data <- rcpp_mainpop(params=input_data$params,inputs=input_data$start_data,trial_params)
@@ -425,4 +428,216 @@ cohort2 <- function(mainpop_data = list(), cluster_data=list(), n_patients = 1, 
                   test_incidence_outputs=test_incidence_outputs)
   
   return(results)
+}
+#------------------------------------------------
+#' @title Entomological-only calculations
+#'
+#' @description Function which takes in trial parameters for one or more mosquito populations, sends to C++ for 
+#' computation of changes over time using deterministic continuum model, then collects and organizes results (TBA)
+#'
+#' @details Takes a list of parameters, returns a list of raw data (data also saved to files as backup). 
+#'
+#' @param input_folder    Folder containing parameter files
+#' @param output_folder   Folder to send output files (no files saved if set to NA)
+#' @param int_v_varied    Intervention parameter given variable value 
+#'                        (0= None, 1=ATSB kill rate, 2=bednet coverage, 3=IRS coverage)
+#' @param int_values      Vector of values of varied intervention parameter (will be unused if int_v_varied=0)
+#' @param n_mv_set        Vector of mosquito density number values to use (must be increasing order)
+#' @param start_interval  Period from start date before intervention starts (used to equilibrate lagged FOI data)
+#' @param time_values     Vector of time checkpoints
+#' @param flag_dt_adjust  Integer indicating whether or not to adjust dt by mosquito density in rcpp_mainpop
+#'                        (0 = No, 1 = Yes)
+#'
+#' @export
+
+ento <- function (input_folder = "",output_folder = NA,int_v_varied=0, int_values= c(0.0), n_mv_set=c(),
+                     start_interval = 31.0, time_values=c(0.0,7.0), flag_dt_adjust=1)
+{
+  # Input error checking
+  param_file=file=paste(input_folder,"model_parameters.txt",sep="/")
+  assert_file_exists(param_file)
+  start_data_file=file=paste(input_folder,"start_data_ento.txt",sep="/")
+  assert_file_exists(start_data_file)
+  if(is.na(output_folder)==0){assert_string(output_folder)}
+  assert_int(int_v_varied)
+  assert_in(int_v_varied,0:4)
+  assert_numeric(int_values)
+  assert_single_numeric(start_interval)
+  assert_numeric(time_values)
+  assert_in(flag_dt_adjust,0:1)
+  
+  n_pts=length(time_values)
+  n_days=max(time_values)+1
+  n_mv_values=length(n_mv_set)
+  n_mv_end=n_mv_set[n_mv_values]
+  if(int_v_varied==0) { int_values=c(0.0) }
+  n_int_values=length(int_values)
+  na=50 # TODO - Load from file
+  
+  params <- as.list(read.table(param_file, header=TRUE))
+  start_data1 <- read.table(start_data_file,header=TRUE,nrows=n_mv_end)
+  start_data2 <- list(mv_input=start_data1$mv0[n_mv_set], 
+                      EL_input=start_data1$EL[n_mv_set], LL_input=start_data1$LL[n_mv_set], PL_input=start_data1$PL[n_mv_set],
+                      Sv_input=c(), Ev_input=c(), Iv_input=c())
+  for(i in 1:na){
+    start_data2$Sv_input <- append(start_data2$Sv_input,start_data1[[5+i]][n_mv_set])
+    start_data2$Ev_input <- append(start_data2$Ev_input,start_data1[[5+i+na]][n_mv_set])
+    start_data2$Iv_input <- append(start_data2$Iv_input,start_data1[[5+i+(2*na)]][n_mv_set])
+  }
+  
+  if(is.na(output_folder)==FALSE){
+    file_endpoints = paste(output_folder,"endpoints.txt",sep="/")
+    flag_file=1
+  } else {
+    file_endpoints = NA
+    flag_file=0
+  }
+  
+  # Organize trial parameters into list
+  trial_params <- list(n_mv_values=n_mv_values, int_v_varied=int_v_varied, int_values=int_values,
+                       start_interval=start_interval, time_values=time_values, n_pts=n_pts, flag_file=flag_file,
+                       file_endpoints=file_endpoints, flag_dt_adjust=flag_dt_adjust)
+  
+  # Run simulation of main population
+  raw_data <- rcpp_ento(params=params,inputs=start_data2,trial_params)
+  
+  # process raw output data
+  {
+    n_pt_names=paste("n_pt",c(1:n_pts),sep="")
+    na_names=paste("na",c(1:na),sep="")
+    n_days_names=paste("n_days",c(1:n_days),sep="")
+    n_mv_names=paste("n_mv",c(1:n_mv_values),sep="")
+    n_int_names=paste("n_int",c(1:n_int_values),sep="")
+    dimnames_list=list(na_names,n_pt_names,n_int_names,n_mv_names)
+    dimnames_list2=list(n_pt_names,n_int_names,n_mv_names)
+    M_benchmarks = array(data=raw_data$M_benchmarks,dim=c(n_pts,n_int_values,n_mv_values),dimnames=dimnames_list2)
+    M_spor_benchmarks = array(data=raw_data$M_spor_benchmarks,dim=c(n_pts,n_int_values,n_mv_values),dimnames=dimnames_list2)
+    M_3g_benchmarks = array(data=raw_data$M_3g_benchmarks,dim=c(n_pts,n_int_values,n_mv_values),dimnames=dimnames_list2)
+  }
+  
+  output_data <- list(n_mv_values=n_mv_values,n_int_values=n_int_values,n_pts=n_pts,n_mv_set=n_mv_set,
+                      time_values=time_values,int_values=int_values,
+                      M_benchmarks=M_benchmarks,M_spor_benchmarks=M_spor_benchmarks,M_3g_benchmarks=M_3g_benchmarks,
+                      params=params)
+  
+  return(output_data)
+}
+
+#------------------------------------------------
+#' @title Combined control/intervention cluster trial run
+#'
+#' @description Function which takes in trial parameters for main population modelling results and both control and 
+#'              intervention clusters, and runs
+#'
+#' @details Takes a list of parameters, returns null while saving data to files. 
+#'
+#' @param output_file_cluster Name of file to send cluster data; NA if data not to be saved
+#' @param output_file_indiv   Name of file to send individual data; NA if data not to be saved
+#' @param mainpop_data        List containing main population data output by mainpop()
+#' @param n_clusters          Number of clusters (control and intervention)
+#' @param n_patients          Number of patients per cluster
+#' @param benchmark           Benchmark type to use in choosing clusters ("EIR", "slide_prev", "pcr_prev", or "clin_inc"
+#'                            for new data, "EIR_annual", "slide_prev_annual", "pcr_prev_annual", "clin_inc_annual" for
+#'                            pre-existing annual data in input folder)
+#' @param age_start           Starting age to use when calculating prevalence or incidence over age range (not used with EIR)
+#' @param age_end             End age to use when calculating prevalence or incidence over age range (not used with EIR)     
+#' @param test_time_values    Time points at which tests are administered
+#' @param test_type           Type of test administered ("clin" = clinical, "RDT" = rapid diagnostic test)
+#' @param flag_pre_clearing   Integer indicating whether patients given pre-trial prophylaxis (if 1, place all patients
+#'                            into prophylaxis category at start)
+#' @param censor_period       Time period after a positive test during which a patient is not counted towards incidence
+#' @param flag_reactive_treatment Integer indicating whether patients are automatically given prophylaxis after a
+#'                                positive test (shifting them into treatment category if a clinical case,
+#'                                prophylaxis category otherwise)
+#' @param prop_T_c            Treatment probability
+#' @param benchmark_mean      Mean of benchmark value distribution
+#' @param benchmark_stdev     Standard deviation of benchmark value distribution
+#' @param int_mean            Mean of intervention parameter value distribution
+#' @param int_stdev           Standard deviation of intervention parameter value distribution
+#'
+#' @export
+
+crt_combined <- function(output_file_cluster=NA,output_file_indiv=NA,mainpop_data=list(),n_clusters=1,n_patients=1,
+                         benchmark="EIR_annual",age_start=0.0,age_end=65.0,test_time_values=c(0.0,1.0),
+                         test_type="RDT",flag_pre_clearing=0,censor_period=0.0, flag_reactive_treatment=1,prop_T_c=0.9,
+                         benchmark_mean=0.0,benchmark_stdev=0.0,int_mean=0.0,int_stdev=0.0){
+  
+  assert_list(mainpop_data)
+  assert_single_int(mainpop_data$n_mv_values)
+  assert_single_bounded(max(test_time_values),0,max(mainpop_data$time_values))
+  
+  n_mv_values=mainpop_data$n_mv_values
+  n_int_values=mainpop_data$n_int_values
+  setup_list <- cluster_input_setup(input_list=mainpop_data, set_n_pt=1, set_n_int=1, benchmark = benchmark, 
+                                    plot_flag=FALSE)
+  n_pts=length(test_time_values)
+  
+  # Create list of control clusters
+  cluster_list_con <- clusters_create(input_list=setup_list,n_clusters=n_clusters,benchmark_mean=benchmark_mean, 
+                                      benchmark_stdev=benchmark_stdev, int_mean=0.0, int_stdev=0.0)
+  
+  # Create list of intervention clusters
+  cluster_list_int <- clusters_create(input_list=setup_list,n_clusters=n_clusters, benchmark_mean=benchmark_mean, 
+                                      benchmark_stdev=benchmark_stdev, int_mean=int_mean, int_stdev=int_stdev)
+  
+  # Simulate control clusters
+  cohort_data_con <- cohort2(mainpop_data=mainpop_data,cluster_data=cluster_list_con, n_patients = n_patients,
+                             prop_T_c = prop_T_c, age_start = age_start, age_end = age_end, 
+                             test_time_values = test_time_values, test_type = test_type, 
+                             flag_pre_clearing = flag_pre_clearing, censor_period = censor_period, 
+                             flag_reactive_treatment = flag_reactive_treatment)
+  
+  # Simulate intervention clusters
+  cohort_data_int <- cohort2(mainpop_data=mainpop_data,cluster_data=cluster_list_int, n_patients = n_patients,
+                             prop_T_c = prop_T_c, age_start = age_start, age_end = age_end, 
+                             test_time_values = test_time_values, test_type = test_type, 
+                             flag_pre_clearing = flag_pre_clearing, censor_period = censor_period, 
+                             flag_reactive_treatment = flag_reactive_treatment)
+  
+  cat(file=output_file_cluster,"Date\tCluster\tTrt\tNumerator\tDenominator\tIncidence")
+  for(i in 1:n_clusters){
+    for(j in 1:n_pts){
+      inc=cohort_data_con$test_incidence_outputs[j,i]
+      if(j==1){ denominator=n_patients } else {denominator=n_patients-numerator}
+      numerator=inc*denominator
+      cat(file=output_file_cluster,"\n",test_time_values[j],"\t",i,"\t0\t",numerator,"\t",denominator,"\t",inc,
+          append=TRUE)
+    }
+  }
+  for(i in 1:n_clusters){
+    i2=i+n_clusters
+    for(j in 1:n_pts){
+      inc=cohort_data_int$test_incidence_outputs[j,i]
+      if(j==1){ denominator=n_patients } else {denominator=n_patients-numerator}
+      numerator=inc*denominator
+      cat(file=output_file_cluster,"\n",test_time_values[j],"\t",i,"\t0\t",numerator,"\t",denominator,"\t",inc,
+          append=TRUE)
+    }
+  }
+  
+  for(i in 1:n_clusters){
+    for(j in 1:n_patients){
+      age=cohort_data_con$patients_age_outputs[j,i]
+      het_cat=cohort_data_con$patients_het_outputs[j,i]
+      for(k in 1:n_pts){
+        time=test_time_values[k]
+        status=cohort_data_con$patients_status_outputs[k,j,i]
+        cat(file=output_file_indiv,"\n",time,"\t",j,"\t",i,"\t0\t",age,"\t",het_cat,"\t",status,append=TRUE)
+      }
+    }
+  }
+  for(i in 1:n_clusters){
+    i2=i+n_clusters
+    for(j in 1:n_patients){
+      age=cohort_data_int$patients_age_outputs[j,i]
+      het_cat=cohort_data_int$patients_het_outputs[j,i]
+      for(k in 1:n_pts){
+        time=test_time_values[k]
+        status=cohort_data_int$patients_status_outputs[k,j,i]
+        cat(file=output_file_indiv,"\n",time,"\t",j,"\t",i2,"\t0\t",age,"\t",het_cat,"\t",status,append=TRUE)
+      }
+    }
+  }
+  
+  return(NULL)
 }

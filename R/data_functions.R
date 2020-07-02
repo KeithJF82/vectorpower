@@ -102,7 +102,7 @@ load_inputs <- function (input_files="",n_mv_set=c())
     start_data$ID_input <- append(start_data$ID_input,input_data[[8+i+(9*n_cats)]][n_mv_set])
   }
   
-  inputs <- list(n_mv_set = n_mv_set, start_data = start_data, params = params, annual_data = annual_data)
+  inputs <- list(n_mv_set = n_mv_set, start_data = start_data,params = params, annual_data = annual_data)
   
   return(inputs)
   
@@ -123,10 +123,13 @@ load_inputs <- function (input_files="",n_mv_set=c())
 #' @param age_file          File containing age distribution parameters to use for new dataset
 #' @param het_file          File containing biting heterogeneity parameters to use for new dataset
 #' @param nyears            Number of years to run model for to achieve equilibrium
+#' @param flag_dt_adjust  Integer indicating whether or not to adjust dt by mosquito density in mainpop()
+#'                        (0 = No, 1 = Yes)
 #'
 #' @export
 
-create_data_folder <- function (dataset_folder="",EIR_values=c(1.0),param_file="",age_file="",het_file="",nyears=10)
+create_data_folder <- function (dataset_folder="",EIR_values=c(1.0),param_file="",age_file="",het_file="",nyears=10,
+                                flag_dt_adjust=1)
 {
   # Error checking
   assert_string(dataset_folder)
@@ -176,7 +179,7 @@ create_data_folder <- function (dataset_folder="",EIR_values=c(1.0),param_file="
                    start_file=start_file_new,annual_file=NA)
   input_data <- load_inputs(input_files=input_files, n_mv_set=n_mv_set)
   eq_data <- mainpop(input_data = input_data, output_folder = output_folder,int_v_varied = 0, 
-                     int_values=c(0.0), start_interval = 0.0, time_values=365*c(0:nyears) )
+                     int_values=c(0.0), start_interval = 0.0, time_values=365*c(0:nyears),flag_dt_adjust=flag_dt_adjust)
   EIR_pts <- get_mainpop_data(input_list=eq_data,set_n_int=1,benchmark = "EIR",age_start = 0,age_end = 65.0)
   slide_prev_pts <- get_mainpop_data(input_list=eq_data,set_n_int=1,benchmark = "slide_prev",age_start = 0,age_end = 65.0)
   pcr_prev_pts <- get_mainpop_data(input_list=eq_data,set_n_int=1,benchmark = "pcr_prev",age_start = 0,age_end = 65.0)
@@ -194,7 +197,7 @@ create_data_folder <- function (dataset_folder="",EIR_values=c(1.0),param_file="
                    start_file=start_file_new,annual_file=NA)
   input_data <- load_inputs(input_files=input_files, n_mv_set=n_mv_set)
   annual_data <- mainpop(input_data = input_data, int_v_varied = 0, int_values=c(0.0),
-                         start_interval = 0.0, time_values=1.0*c(0:364) )
+                         start_interval = 0.0, time_values=1.0*c(0:364),flag_dt_adjust=flag_dt_adjust)
   
   # Output annual data for reference
   cat("\n\nOutputting annual data.\n")
@@ -405,8 +408,8 @@ plot_rainfall <- function(dataset_folder=""){
     }
     
     matplot(days,rainfall,type="l",col=1,lwd=1.5,xlab="Day",ylab="Rainfall (a.u.)")
-    matplot(params$date_start,rainfall[params$date_start],type="p",pch=2,col=2,add=TRUE)
-    legend("topright", inset=0.01, legend=c("Rainfall","Start date"),lwd=1.0,col=c(1:2),horiz=FALSE,bg='white',cex=1.0)
+    #matplot(params$date_start,rainfall[params$date_start],type="p",pch=2,col=2,add=TRUE)
+    #legend("topright", inset=0.01, legend=c("Rainfall","Start date"),lwd=1.0,col=c(1:2),horiz=FALSE,bg='white',cex=1.0)
     return(rainfall)
   }
   
@@ -652,6 +655,47 @@ tabulate_cohort_data <- function(cohort_data = list(), file="dummy.txt"){
   
   # Write data frame to file
   write.table(cluster_output,row.names=FALSE,file=file)
+  
+  return(NULL)
+}
+#------------------------------------------------
+#' @title Add entomological start data file to existing data folder
+#'
+#' @description Function which creates a starting data file for entomological modelling in existing data folder
+#'
+#' @details     Takes in the name of an existing data folder and creates start_data_ento.txt file from
+#'              information in start_data.txt file.
+#'
+#' @param dataset_folder    Dataset folder (must be an existing dataset folder containing model_parameters.txt
+#'                          and start_data.txt files)
+#' 
+#' @export
+
+create_ento_start_data <- function (dataset_folder="")
+{
+  assert_file_exists(paste(dataset_folder,"model_parameters.txt",sep="/"))
+  start_data_file=paste(dataset_folder,"start_data.txt",sep="/")
+  assert_file_exists(start_data_file)
+
+  start_data=read.table(start_data_file,header=TRUE)
+  start_data_file_new=paste(dataset_folder,"start_data_ento.txt",sep="/")
+  
+  cat(file=start_data_file_new,"n_run\tmv0\tEL\tLL\tPL")
+  na_m=50
+  for(i in 1:na_m){cat(file=start_data_file_new,"\tSv",i,sep="",append=TRUE)}
+  for(i in 1:na_m){cat(file=start_data_file_new,"\tEv",i,sep="",append=TRUE)}
+  for(i in 1:na_m){cat(file=start_data_file_new,"\tIv",i,sep="",append=TRUE)}
+  for(j in 1:length(start_data$n_run)){
+    cat(file=start_data_file_new,"\n",append=TRUE)
+    cat(file=start_data_file_new,j,start_data$mv0[j],start_data$EL[j],start_data$LL[j],start_data$PL[j],sep="\t",append=TRUE) 
+    cat(file=start_data_file_new,"\t",start_data$Sv1[j],sep="",append=TRUE)
+    for(i in 2:na_m){cat(file=start_data_file_new,"\t0",sep="",append=TRUE)}
+    cat(file=start_data_file_new,"\t",start_data$Ev1[j],sep="",append=TRUE)
+    for(i in 2:na_m){cat(file=start_data_file_new,"\t0",sep="",append=TRUE)}
+    cat(file=start_data_file_new,"\t",start_data$Iv1[j],sep="",append=TRUE)
+    for(i in 2:na_m){cat(file=start_data_file_new,"\t0",sep="",append=TRUE)}
+  }
+  
   
   return(NULL)
 }
