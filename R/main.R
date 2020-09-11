@@ -3,6 +3,10 @@
 #' @useDynLib vectorpower
 #' @import graphics
 #' @import utils
+#' @import tidyverse
+#' @import geepack
+#' @import pbapply
+#' @import stats
 NULL
 #------------------------------------------------
 #' @title Main population evaluation
@@ -66,10 +70,10 @@ mainpop <- function (input_data = list(),output_folder = NA,int_v_varied=0, int_
   }
   
   # Organize trial parameters into list
-  trial_params <- list(age_data=input_data$age_data, n_mv_values=n_mv_values, int_v_varied=int_v_varied, int_values=int_values,
-                       start_interval=start_interval, time_values=time_values, n_pts=n_pts, flag_file=flag_file,
-                       file_benchmarks=file_benchmarks,file_endpoints=file_endpoints, file_EIRd=file_EIRd, 
-                       file_imm_start=file_imm_start,flag_dt_adjust=flag_dt_adjust)
+  trial_params <- list(age_data=input_data$age_data, n_mv_values=n_mv_values, int_v_varied=int_v_varied, 
+                       int_values=int_values,start_interval=start_interval, time_values=time_values, n_pts=n_pts, 
+                       flag_file=flag_file,file_benchmarks=file_benchmarks,file_endpoints=file_endpoints, 
+                       file_EIRd=file_EIRd, file_imm_start=file_imm_start,flag_dt_adjust=flag_dt_adjust)
   
   # Run simulation of main population
   raw_data <- rcpp_mainpop(params=input_data$params,inputs=input_data$start_data,trial_params)
@@ -84,13 +88,19 @@ mainpop <- function (input_data = list(),output_folder = NA,int_v_varied=0, int_
     n_int_names=paste("n_int",c(1:n_int_values),sep="")
     dimnames_list=list(na_names,n_pt_names,n_int_names,n_mv_names)
     dimnames_list2=list(n_pt_names,n_int_names,n_mv_names)
-    EIR_benchmarks = array(data=raw_data$EIR_benchmarks,dim=c(n_pts,n_int_values,n_mv_values),dimnames=list(n_pt_names,n_int_names,n_mv_names))
-    slide_prev_benchmarks = array(data=raw_data$slide_prev_benchmarks,dim=c(na,n_pts,n_int_values,n_mv_values),dimnames=dimnames_list)
-    pcr_prev_benchmarks = array(data=raw_data$pcr_prev_benchmarks,dim=c(na,n_pts,n_int_values,n_mv_values),dimnames=dimnames_list)
-    clin_inc_benchmarks = array(data=raw_data$clin_inc_benchmarks,dim=c(na,n_pts,n_int_values,n_mv_values),dimnames=dimnames_list)
+    EIR_benchmarks = array(data=raw_data$EIR_benchmarks,dim=c(n_pts,n_int_values,n_mv_values),
+                           dimnames=list(n_pt_names,n_int_names,n_mv_names))
+    slide_prev_benchmarks = array(data=raw_data$slide_prev_benchmarks,dim=c(na,n_pts,n_int_values,n_mv_values),
+                                  dimnames=dimnames_list)
+    pcr_prev_benchmarks = array(data=raw_data$pcr_prev_benchmarks,dim=c(na,n_pts,n_int_values,n_mv_values),
+                                dimnames=dimnames_list)
+    clin_inc_benchmarks = array(data=raw_data$clin_inc_benchmarks,dim=c(na,n_pts,n_int_values,n_mv_values),
+                                dimnames=dimnames_list)
     M_benchmarks = array(data=raw_data$M_benchmarks,dim=c(n_pts,n_int_values,n_mv_values),dimnames=dimnames_list2)
-    M_spor_benchmarks = array(data=raw_data$M_spor_benchmarks,dim=c(n_pts,n_int_values,n_mv_values),dimnames=dimnames_list2)
-    EIR_daily_data = array(data=raw_data$EIR_daily_data,dim=c(n_days,n_int_values,n_mv_values),dimnames=list(n_days_names,n_int_names,n_mv_names))
+    M_spor_benchmarks = array(data=raw_data$M_spor_benchmarks,dim=c(n_pts,n_int_values,n_mv_values),
+                              dimnames=dimnames_list2)
+    EIR_daily_data = array(data=raw_data$EIR_daily_data,dim=c(n_days,n_int_values,n_mv_values),
+                           dimnames=list(n_days_names,n_int_names,n_mv_names))
     IB_start_data = array(data=raw_data$IB_start_data,dim=c(n_cats,n_mv_values),dimnames=list(n_cat_names,n_mv_names))
     IC_start_data = array(data=raw_data$IC_start_data,dim=c(n_cats,n_mv_values),dimnames=list(n_cat_names,n_mv_names))
     ID_start_data = array(data=raw_data$ID_start_data,dim=c(n_cats,n_mv_values),dimnames=list(n_cat_names,n_mv_names))
@@ -119,23 +129,26 @@ mainpop <- function (input_data = list(),output_folder = NA,int_v_varied=0, int_
 #'          benchmark values and intervention parameter values (as both list and files)
 #'
 #' @param input_list          List containing mainpop output data
-#' @param benchmark           Benchmark type to use in choosing clusters ("EIR", "slide_prev", "pcr_prev", or "clin_inc"
+#' @param benchmark           Benchmark to use in choosing clusters ("EIR", "slide_prev", "pcr_prev", or "clin_inc"
 #'                            for new data, "EIR_annual", "slide_prev_annual", "pcr_prev_annual", "clin_inc_annual" for
 #'                            pre-existing annual data in input folder)
 #' @param set_n_pt            Data point to use (1-max)
 #' @param set_n_int           Intervention number to use (1-max)
-#' @param age_start           Starting age to use when calculating prevalence or incidence over age range (not used with EIR)
-#' @param age_end             End age to use when calculating prevalence or incidence over age range (not used with EIR)
+#' @param age_start           Starting age to use when calculating prevalence or incidence over age range 
+#'                            (not used with EIR)
+#' @param age_end             End age to use when calculating prevalence or incidence over age range 
+#'                            (not used with EIR)
 #' @param plot_flag           Logical operator indicating whether or not to plot graph of read values
 #'
 #' @export
 
-cluster_input_setup <- function(input_list=list(), benchmark = "EIR",set_n_pt = 1,set_n_int=1,age_start = 0,age_end = 65.0,
-                                plot_flag=TRUE){
+cluster_input_setup <- function(input_list=list(), benchmark = "EIR",set_n_pt = 1,set_n_int=1,age_start = 0,
+                                age_end = 65.0,plot_flag=TRUE){
   
   # Input error checking
   assert_list(input_list)
-  assert_in(benchmark,c("EIR","slide_prev","pcr_prev","clin_inc","EIR_annual","slide_prev_annual","pcr_prev_annual","clin_inc_annual"))
+  assert_in(benchmark,c("EIR","slide_prev","pcr_prev","clin_inc","EIR_annual","slide_prev_annual","pcr_prev_annual",
+                        "clin_inc_annual"))
   assert_int(set_n_pt)
   assert_in(set_n_pt,c(1:input_list$n_pts))
   assert_int(set_n_int)
@@ -158,9 +171,12 @@ cluster_input_setup <- function(input_list=list(), benchmark = "EIR",set_n_pt = 
   if(n_AE==12){benchmark_values = input_list$annual_data$EIRy[input_list$n_mv_set]}
   if(n_AE==21){
     density_sum = 0
-    if(benchmark == "slide_prev"){ benchmark_data = input_list$slide_prev_benchmarks[,set_n_pt,set_n_int,c(1:input_list$n_mv_values)]}
-    if(benchmark == "pcr_prev"){ benchmark_data = input_list$pcr_prev_benchmarks[,set_n_pt,set_n_int,c(1:input_list$n_mv_values)]}
-    if(benchmark == "clin_inc"){ benchmark_data = input_list$clin_inc_benchmarks[,set_n_pt,set_n_int,c(1:input_list$n_mv_values)] }
+    if(benchmark == "slide_prev"){ benchmark_data = input_list$slide_prev_benchmarks[,set_n_pt,set_n_int,
+                                                                                     c(1:input_list$n_mv_values)]}
+    if(benchmark == "pcr_prev"){ benchmark_data = input_list$pcr_prev_benchmarks[,set_n_pt,set_n_int,
+                                                                                 c(1:input_list$n_mv_values)]}
+    if(benchmark == "clin_inc"){ benchmark_data = input_list$clin_inc_benchmarks[,set_n_pt,set_n_int,
+                                                                                 c(1:input_list$n_mv_values)] }
     for(i in n_age_start:n_age_end){
       density_sum = density_sum + input_list$params$den_norm[i]
       benchmark_values = benchmark_values + benchmark_data[i,]
@@ -174,12 +190,14 @@ cluster_input_setup <- function(input_list=list(), benchmark = "EIR",set_n_pt = 
   }
   
   if(plot_flag==TRUE){
-    if(n_annual==1){ matplot(c(1:input_list$n_mv_values),benchmark_values,type="p",pch=2,col=2,xlab="N_M",ylab=benchmark)}
+    if(n_annual==1){ 
+      matplot(c(1:input_list$n_mv_values),benchmark_values,type="p",pch=2,col=2,xlab="N_M",ylab=benchmark)}
     else{ matplot(c(1:input_list$n_mv_values),benchmark_values,type="p",pch=2,col=2,xlab="N_M",ylab=benchmark) }
   }
   
   output <- list(benchmark=benchmark,set_n_pt = set_n_pt,set_n_int=set_n_int,age_start = age_start,age_end = age_end,
-                 benchmark_values=benchmark_values,int_values=input_list$int_values,n_mv_set=c(1:input_list$n_mv_values))
+                 benchmark_values=benchmark_values,int_values=input_list$int_values,
+                 n_mv_set=c(1:input_list$n_mv_values))
   
   return(output)
 }
@@ -189,8 +207,8 @@ cluster_input_setup <- function(input_list=list(), benchmark = "EIR",set_n_pt = 
 #'
 #' @description Function for creating cumulative probability distributions and generating clusters from them
 #'
-#' @details Takes in previously generated benchmark and intervention data (currently in files) and outputs cluster data
-#'          (currently as files)
+#' @details Takes in previously generated benchmark and intervention data (currently in files) 
+#'          and outputs cluster data (currently as files)
 #'
 #' @param input_list          List containing input_data, produced by cluster_input_setup()
 #' @param n_clusters          Number of clusters to create
@@ -250,8 +268,9 @@ clusters_create <- function(input_list=list(),n_clusters=100,benchmark_mean=0.25
     v_i2[i]=input_list$int_values[j]
   }
   
-  clusters <- data.frame(CP_B=stats::runif(n_clusters,0,1),n_B=rep(0,n_clusters),B=rep(0,n_clusters),
-                         CP_I=stats::runif(n_clusters,0,1),n_I=rep(0,n_clusters),I=rep(0,n_clusters),n_run=rep(0,n_clusters))
+  clusters <- data.frame(CP_B=runif(n_clusters,0,1),n_B=rep(0,n_clusters),B=rep(0,n_clusters),
+                         CP_I=runif(n_clusters,0,1),n_I=rep(0,n_clusters),I=rep(0,n_clusters),
+                         n_run=rep(0,n_clusters))
   for(i in 1:n_clusters){
     j=findPosition(clusters$CP_B[i],cprob)
     clusters$B[i]=v_bm2[j]
@@ -264,10 +283,12 @@ clusters_create <- function(input_list=list(),n_clusters=100,benchmark_mean=0.25
   
   if(plot_flag==TRUE){
     par(mfrow=c(1,2))
-    matplot(cprob,v_bm1,type="l",col=1,xlab="Cumulative probability",ylab=input_list$benchmark,ylim=c(min(v_bm2),max(v_bm2)))
+    matplot(cprob,v_bm1,type="l",col=1,xlab="Cumulative probability",ylab=input_list$benchmark,
+            ylim=c(min(v_bm2),max(v_bm2)))
     matplot(cprob,v_bm2,type="l",col=2,add=TRUE)
     matplot(clusters$CP_B,clusters$B,type="p",pch=1,col=3,add=TRUE)
-    matplot(cprob,v_i1,type="l",col=1,xlab="Cumulative probability",ylab="Intervention parameter",ylim=c(min(v_i2),max(v_i2)))
+    matplot(cprob,v_i1,type="l",col=1,xlab="Cumulative probability",ylab="Intervention parameter",
+            ylim=c(min(v_i2),max(v_i2)))
     matplot(cprob,v_i2,type="l",col=2,add=TRUE)
     matplot(clusters$CP_I,clusters$I,type="p",pch=1,col=3,add=TRUE)
     par(mfrow=c(1,1))
@@ -336,7 +357,8 @@ cohort <- function(mainpop_data = list(), cluster_data=list(), n_patients = 1,
   
   results=list(n_clusters=n_clusters,n_patients=n_patients,n_pts=n_pts,time_values=time_values,
                patients_age_outputs=patients_age_outputs,patients_het_outputs=patients_het_outputs,
-               patients_status_outputs=patients_status_outputs,p_det_outputs=p_det_outputs,clin_inc_outputs=clin_inc_outputs)
+               patients_status_outputs=patients_status_outputs,
+               p_det_outputs=p_det_outputs,clin_inc_outputs=clin_inc_outputs)
   
   return(results)
 }
@@ -397,9 +419,10 @@ cohort2 <- function(mainpop_data = list(), cluster_data=list(), n_patients = 1, 
   time_values=mainpop_data$time_values
   trial_params <- list(n_patients = n_patients,n_clusters = n_clusters, flag_output = flag_output,
                        flag_pre_clearing = flag_pre_clearing, flag_reactive_treatment = flag_reactive_treatment,
-                       time_values = time_values, test_time_values = test_time_values, flag_test_type = flag_test_type,
-                       censor_period = censor_period, tmax_i=length(mainpop_data$EIR_daily_data[,1,1]),
-                       prop_T_c = prop_T_c,age_start = age_start,age_end = age_end,
+                       time_values = time_values, test_time_values = test_time_values, 
+                       flag_test_type = flag_test_type, censor_period = censor_period, 
+                       tmax_i=length(mainpop_data$EIR_daily_data[,1,1]), prop_T_c = prop_T_c,
+                       age_start = age_start,age_end = age_end,
                        EIR_daily_data = as.vector(mainpop_data$EIR_daily_data),
                        IB_start_data = as.vector(mainpop_data$IB_start_data),
                        IC_start_data = as.vector(mainpop_data$IC_start_data),
@@ -418,14 +441,16 @@ cohort2 <- function(mainpop_data = list(), cluster_data=list(), n_patients = 1, 
                                dimnames=list(patient_names,cluster_names))
   patients_status_outputs = array(data=raw_data$patients_status_outputs,dim=c(n_pts,n_patients,n_clusters),
                                   dimnames=list(n_pt_names,patient_names,cluster_names))
+  patients_test_outputs = array(data=raw_data$patients_test_outputs,dim=c(n_pts,n_patients,n_clusters),
+                                dimnames=list(n_pt_names,patient_names,cluster_names))
   p_det_outputs = array(data=raw_data$p_det_outputs,dim=c(n_pts,n_patients,n_clusters),
                         dimnames=list(n_pt_names,patient_names,cluster_names))
   test_incidence_outputs=array(data=results_data$test_incidence_outputs,dim=c(length(test_time_values),n_clusters))
   
   results <- list(n_clusters=n_clusters,n_patients=n_patients,n_pts=n_pts,time_values=time_values,
                   test_time_values=test_time_values,patients_age_outputs=patients_age_outputs,
-                  patients_het_outputs=patients_het_outputs,patients_status_outputs=patients_status_outputs,
-                  test_incidence_outputs=test_incidence_outputs)
+                  patients_het_outputs=patients_het_outputs,test_incidence_outputs=test_incidence_outputs,
+                  patients_status_outputs=patients_status_outputs,patients_test_outputs=patients_test_outputs)
   
   return(results)
 }
@@ -477,8 +502,8 @@ ento <- function (input_folder = "",output_folder = NA,int_v_varied=0, int_value
   params <- as.list(read.table(param_file, header=TRUE))
   start_data1 <- read.table(start_data_file,header=TRUE,nrows=n_mv_end)
   start_data2 <- list(mv_input=start_data1$mv0[n_mv_set], 
-                      EL_input=start_data1$EL[n_mv_set], LL_input=start_data1$LL[n_mv_set], PL_input=start_data1$PL[n_mv_set],
-                      Sv_input=c(), Ev_input=c(), Iv_input=c())
+                      EL_input=start_data1$EL[n_mv_set], LL_input=start_data1$LL[n_mv_set], 
+                      PL_input=start_data1$PL[n_mv_set], Sv_input=c(), Ev_input=c(), Iv_input=c())
   for(i in 1:na){
     start_data2$Sv_input <- append(start_data2$Sv_input,start_data1[[5+i]][n_mv_set])
     start_data2$Ev_input <- append(start_data2$Ev_input,start_data1[[5+i+na]][n_mv_set])
@@ -510,9 +535,12 @@ ento <- function (input_folder = "",output_folder = NA,int_v_varied=0, int_value
     n_int_names=paste("n_int",c(1:n_int_values),sep="")
     dimnames_list=list(na_names,n_pt_names,n_int_names,n_mv_names)
     dimnames_list2=list(n_pt_names,n_int_names,n_mv_names)
-    M_benchmarks = array(data=raw_data$M_benchmarks,dim=c(n_pts,n_int_values,n_mv_values),dimnames=dimnames_list2)
-    M_spor_benchmarks = array(data=raw_data$M_spor_benchmarks,dim=c(n_pts,n_int_values,n_mv_values),dimnames=dimnames_list2)
-    M_3g_benchmarks = array(data=raw_data$M_3g_benchmarks,dim=c(n_pts,n_int_values,n_mv_values),dimnames=dimnames_list2)
+    M_benchmarks = array(data=raw_data$M_benchmarks,dim=c(n_pts,n_int_values,n_mv_values),
+                         dimnames=dimnames_list2)
+    M_spor_benchmarks = array(data=raw_data$M_spor_benchmarks,dim=c(n_pts,n_int_values,n_mv_values),
+                              dimnames=dimnames_list2)
+    M_3g_benchmarks = array(data=raw_data$M_3g_benchmarks,dim=c(n_pts,n_int_values,n_mv_values),
+                            dimnames=dimnames_list2)
   }
   
   output_data <- list(n_mv_values=n_mv_values,n_int_values=n_int_values,n_pts=n_pts,n_mv_set=n_mv_set,
@@ -529,23 +557,25 @@ ento <- function (input_folder = "",output_folder = NA,int_v_varied=0, int_value
 #' @description Function which takes in trial parameters for main population modelling results and both control and 
 #'              intervention clusters, and runs
 #'
-#' @details Takes a list of parameters, returns null while saving data to files. 
+#' @details Takes a list of parameters, returns output data as list 
 #'
-#' @param output_file_cluster Name of file to send cluster data; NA if data not to be saved
-#' @param output_file_indiv   Name of file to send individual data; NA if data not to be saved
-#' @param mainpop_data        List containing main population data output by mainpop()
-#' @param n_clusters          Number of clusters (control and intervention)
-#' @param n_patients          Number of patients per cluster
-#' @param benchmark           Benchmark type to use in choosing clusters ("EIR", "slide_prev", "pcr_prev", or "clin_inc"
-#'                            for new data, "EIR_annual", "slide_prev_annual", "pcr_prev_annual", "clin_inc_annual" for
-#'                            pre-existing annual data in input folder)
-#' @param age_start           Starting age to use when calculating prevalence or incidence over age range (not used with EIR)
-#' @param age_end             End age to use when calculating prevalence or incidence over age range (not used with EIR)     
-#' @param test_time_values    Time points at which tests are administered
-#' @param test_type           Type of test administered ("clin" = clinical, "RDT" = rapid diagnostic test)
-#' @param flag_pre_clearing   Integer indicating whether patients given pre-trial prophylaxis (if 1, place all patients
-#'                            into prophylaxis category at start)
-#' @param censor_period       Time period after a positive test during which a patient is not counted towards incidence
+# @param output_file_cluster Name of file to send cluster data; NA if data not to be saved
+# @param output_file_indiv   Name of file to send individual data; NA if data not to be saved
+#' @param mainpop_data       List containing main population data output by mainpop()
+#' @param n_clusters         Number of clusters (control and intervention)
+#' @param n_patients         Number of patients per cluster
+#' @param benchmark          Benchmark type to use in choosing clusters ("EIR", "slide_prev", "pcr_prev", or "clin_inc"
+#'                           for new data, "EIR_annual", "slide_prev_annual", "pcr_prev_annual", "clin_inc_annual" for
+#'                           pre-existing annual data in input folder)
+#' @param age_start          Starting age to use when calculating prevalence or incidence over age range 
+#'                           (not used with EIR)
+#' @param age_end            End age to use when calculating prevalence or incidence over age range 
+#'                           (not used with EIR)     
+#' @param test_time_values   Time points at which tests are administered
+#' @param test_type          Type of test administered ("clin" = clinical, "RDT" = rapid diagnostic test)
+#' @param flag_pre_clearing  Integer indicating whether patients given pre-trial prophylaxis (if 1, place all patients
+#'                           into prophylaxis category at start)
+#' @param censor_period      Time period after a positive test during which a patient is not counted towards incidence
 #' @param flag_reactive_treatment Integer indicating whether patients are automatically given prophylaxis after a
 #'                                positive test (shifting them into treatment category if a clinical case,
 #'                                prophylaxis category otherwise)
@@ -557,7 +587,8 @@ ento <- function (input_folder = "",output_folder = NA,int_v_varied=0, int_value
 #'
 #' @export
 
-crt_combined <- function(output_file_cluster=NA,output_file_indiv=NA,mainpop_data=list(),n_clusters=1,n_patients=1,
+crt_combined <- function(#output_file_cluster=NA,output_file_indiv=NA,
+                         mainpop_data=list(),n_clusters=1,n_patients=1,
                          benchmark="EIR_annual",age_start=0.0,age_end=65.0,test_time_values=c(0.0,1.0),
                          test_type="RDT",flag_pre_clearing=0,censor_period=0.0, flag_reactive_treatment=1,prop_T_c=0.9,
                          benchmark_mean=0.0,benchmark_stdev=0.0,int_mean=0.0,int_stdev=0.0){
@@ -594,14 +625,31 @@ crt_combined <- function(output_file_cluster=NA,output_file_indiv=NA,mainpop_dat
                              flag_pre_clearing = flag_pre_clearing, censor_period = censor_period, 
                              flag_reactive_treatment = flag_reactive_treatment)
   
-  cat(file=output_file_cluster,"Date\tCluster\tTrt\tNumerator\tDenominator\tIncidence")
+  fill_c=rep(0,2*n_clusters*n_pts)
+  fill_i=rep(0,2*n_clusters*n_patients*n_pts)
+  Date_fill_c=rep(test_time_values,2*n_clusters)
+  Date_fill_i=rep(test_time_values,2*n_clusters*n_patients)
+  Trt_fill_c=c(rep(0,n_clusters*n_pts),rep(1,n_clusters*n_pts))
+  Trt_fill_i=c(rep(0,n_clusters*n_patients*n_pts),rep(1,n_clusters*n_patients*n_pts))
+  output <- list(output_cluster=data.frame(Date=Date_fill_c,Cluster=fill_c,Trt=Trt_fill_c,Numerator=fill_c,
+                                           Denominator=fill_c,Incidence=fill_c),
+                 output_indiv=data.frame(Date=Date_fill_i,Patient=fill_i,Cluster=fill_i,Trt=Trt_fill_i,Age=fill_i,
+                                         Het_cat=fill_i,Status=fill_i,Test_status=fill_i))
+  
+  # cat(file=output_file_cluster,"Date\tCluster\tTrt\tNumerator\tDenominator\tIncidence")
+  line=0
   for(i in 1:n_clusters){
     for(j in 1:n_pts){
       inc=cohort_data_con$test_incidence_outputs[j,i]
       if(j==1){ denominator=n_patients } else {denominator=n_patients-numerator}
       numerator=inc*denominator
-      cat(file=output_file_cluster,"\n",test_time_values[j],"\t",i,"\t0\t",numerator,"\t",denominator,"\t",inc,
-          append=TRUE)
+      line=line+1
+      output$output_cluster$Cluster[line]=i
+      output$output_cluster$Numerator[line]=numerator
+      output$output_cluster$Denominator[line]=denominator
+      output$output_cluster$Incidence[line]=inc
+      # cat(file=output_file_cluster,"\n",test_time_values[j],"\t",i,"\t0\t",numerator,"\t",denominator,"\t",inc,
+      #     append=TRUE)
     }
   }
   for(i in 1:n_clusters){
@@ -610,34 +658,281 @@ crt_combined <- function(output_file_cluster=NA,output_file_indiv=NA,mainpop_dat
       inc=cohort_data_int$test_incidence_outputs[j,i]
       if(j==1){ denominator=n_patients } else {denominator=n_patients-numerator}
       numerator=inc*denominator
-      cat(file=output_file_cluster,"\n",test_time_values[j],"\t",i,"\t0\t",numerator,"\t",denominator,"\t",inc,
-          append=TRUE)
+      line=line+1
+      output$output_cluster$Cluster[line]=i
+      output$output_cluster$Numerator[line]=numerator
+      output$output_cluster$Denominator[line]=denominator
+      output$output_cluster$Incidence[line]=inc
+      # cat(file=output_file_cluster,"\n",test_time_values[j],"\t",i2,"\t1\t",numerator,"\t",denominator,"\t",inc,
+      #     append=TRUE)
     }
   }
   
+  # cat(file=output_file_indiv,"Date\tPatient\tCluster\tTrt\tAge\tHet_cat\tStatus\tTest_status")
+  line=0
   for(i in 1:n_clusters){
     for(j in 1:n_patients){
+      j2=((i-1)*n_patients)+j
       age=cohort_data_con$patients_age_outputs[j,i]
       het_cat=cohort_data_con$patients_het_outputs[j,i]
       for(k in 1:n_pts){
         time=test_time_values[k]
         status=cohort_data_con$patients_status_outputs[k,j,i]
-        cat(file=output_file_indiv,"\n",time,"\t",j,"\t",i,"\t0\t",age,"\t",het_cat,"\t",status,append=TRUE)
+        test_status=cohort_data_con$patients_test_outputs[k,j,i]
+        line=line+1
+        output$output_indiv$Patient[line]=j
+        output$output_indiv$Cluster[line]=i
+        output$output_indiv$Age[line]=age
+        output$output_indiv$Het_cat[line]=het_cat
+        output$output_indiv$Status[line]=status
+        output$output_indiv$Test_status[line]=test_status
+        # cat(file=output_file_indiv,"\n",time,"\t",j2,"\t",i,"\t0\t",age,"\t",het_cat,"\t",status,"\t",test_status,
+        #     append=TRUE)
       }
     }
   }
   for(i in 1:n_clusters){
     i2=i+n_clusters
     for(j in 1:n_patients){
+      j2=((i2-1)*n_patients)+j
       age=cohort_data_int$patients_age_outputs[j,i]
       het_cat=cohort_data_int$patients_het_outputs[j,i]
       for(k in 1:n_pts){
         time=test_time_values[k]
         status=cohort_data_int$patients_status_outputs[k,j,i]
-        cat(file=output_file_indiv,"\n",time,"\t",j,"\t",i2,"\t0\t",age,"\t",het_cat,"\t",status,append=TRUE)
+        test_status=cohort_data_int$patients_test_outputs[k,j,i]
+        # cat(file=output_file_indiv,"\n",time,"\t",j2,"\t",i2,"\t1\t",age,"\t",het_cat,"\t",status,"\t",test_status,
+        #     append=TRUE)
       }
     }
   }
   
-  return(NULL)
+  # output <- list(output_cluster=read.table(output_file_cluster,header=TRUE),
+  #                output_indiv=read.table(output_file_indiv,header=TRUE))
+  
+  return(output)
 }
+
+#------------------------------------------------
+#' @title Single power calculation
+#'
+#' @description Function which takes in trial parameters for main population modelling results and both control and 
+#'              intervention clusters, computes data using crt_combined and returns result to be used in overall
+#'              power calculations
+#'
+#' @details Takes a list of parameters, returns inf_boolen. 
+#'
+#' @param mainpop_data       List containing main population data output by mainpop()
+#' @param n_clusters         Number of clusters (control and intervention)
+#' @param n_patients         Number of patients per cluster
+#' @param benchmark          Benchmark type to use in choosing clusters ("EIR", "slide_prev", "pcr_prev", or "clin_inc"
+#'                           for new data, "EIR_annual", "slide_prev_annual", "pcr_prev_annual", "clin_inc_annual" for
+#'                           pre-existing annual data in input folder)
+#' @param age_start          Starting age to use when calculating prevalence or incidence over age range 
+#'                           (not used with EIR)
+#' @param age_end            End age to use when calculating prevalence or incidence over age range 
+#'                           (not used with EIR)     
+#' @param test_time_values   Time points at which tests are administered
+#' @param test_type          Type of test administered ("clin" = clinical, "RDT" = rapid diagnostic test)
+#' @param flag_pre_clearing  Integer indicating whether patients given pre-trial prophylaxis (if 1, place all patients
+#'                           into prophylaxis category at start)
+#' @param censor_period      Time period after a positive test during which a patient is not counted towards incidence
+#' @param flag_reactive_treatment Integer indicating whether patients are automatically given prophylaxis after a
+#'                                positive test (shifting them into treatment category if a clinical case,
+#'                                prophylaxis category otherwise)
+#' @param prop_T_c            Treatment probability
+#' @param benchmark_mean      Mean of benchmark value distribution
+#' @param benchmark_stdev     Standard deviation of benchmark value distribution
+#' @param int_mean            Mean of intervention parameter value distribution
+#' @param int_stdev           Standard deviation of intervention parameter value distribution
+#' @param alpha  TODO
+#' @param effect_size_sign  TODO
+#' @param trial_type  TODO
+#' @param delta_eq  TODO
+#' @param delta_ni  TODO
+#'
+#' @export
+
+power_compute_single <- 
+  function(mainpop_data=list(),n_clusters=1,n_patients=1,
+           benchmark="EIR_annual",age_start=0.0,age_end=65.0,test_time_values=c(0.0,1.0),
+           test_type="RDT",flag_pre_clearing=0,censor_period=0.0, flag_reactive_treatment=1,prop_T_c=0.9,
+           benchmark_mean=0.0,benchmark_stdev=0.0,int_mean=0.0,int_stdev=0.0,
+           alpha=0.05,effect_size_sign="Positive",trial_type="sup",delta_eq=NULL,delta_ni=NULL)
+{
+    
+    ######### Generate data for use
+    
+    output <- 
+      crt_combined(mainpop_data=mainpop_data,n_clusters=n_clusters,n_patients=n_patients,benchmark=benchmark,
+                   age_start=age_start,age_end=age_end,test_time_values=test_time_values,test_type=test_type,
+                   flag_pre_clearing=flag_pre_clearing,censor_period=censor_period,
+                   flag_reactive_treatment=flag_reactive_treatment,prop_T_c=prop_T_c,
+                   benchmark_mean=benchmark_mean,benchmark_stdev=benchmark_stdev,int_mean=int_mean,int_stdev=int_stdev)
+    
+    data <- output$output_cluster
+    
+    ######### Ensure that treatment variable is specified first in formula
+    
+    data$Trt <- as.factor(data$Trt)
+    data <- within(data,
+                   Trt<- relevel(Trt,
+                                 ref = "1"))
+    
+    
+    Outcome <- "cbind(Numerator, Denominator)"
+    
+    # This returns the formula:
+    covariates=c("Trt","Date")
+    gee_formula <- as.formula(paste(Outcome, 
+                                    paste(covariates, 
+                                          collapse=" + "),
+                                    sep=" ~ "))
+    
+    Cluster="Cluster"
+    geepack_inf <- geeglm(formula=gee_formula,
+                                   data = data,
+                                   id = Cluster, 
+                                   family = binomial(link="logit"),
+                                   corstr = "exchangeable")
+    
+    ###### Estimate CI
+    
+    geepack_inf_solution <- coef(summary(geepack_inf))
+    
+    ci_table <- with(as.data.frame(geepack_inf_solution),
+                     cbind(lwr= Estimate - qnorm(1-alpha/2)*Std.err,
+                           upr= Estimate + qnorm(1-alpha/2)*Std.err))
+    
+    params_soln <- cbind.data.frame(geepack_inf_solution,ci_table)
+    
+    ################ SUPERIORITY TRIAL
+    if(trial_type=="sup")
+    {
+      ###### Given direction of effect size, determine significance
+      if (effect_size_sign=="Positive"){inf_boolen <- ifelse(as.vector(params_soln["Trt","lwr"]) > 0, 1, 0)}
+      if (effect_size_sign=="Negative"){inf_boolen <- ifelse(as.vector(params_soln["Trt","upr"]) < 0, 1, 0)}
+    }
+    
+    ################ EQUIVALENCE TRIAL
+    if(trial_type=="eq")
+    {
+      ###### Regardless of  direction of effect size, equvalence will have CI containing zero and within abs(delta)
+      inf_boolen <- ifelse(((as.vector(params_soln["Trt","lwr"])< 0 & 
+                               as.vector(params_soln["Trt","lwr"]) > - abs(delta_eq)) &
+                              (as.vector(params_soln["Trt","upr"]) > 0 & 
+                                 as.vector(params_soln["Trt","upr"]) < + abs(delta_eq))),
+                           1,0)
+    }
+    
+    ################ NON-INFERIORITY TRIAL
+    if(trial_type=="ni")
+    {
+      if(is.null(delta_ni)) {stop("A value for delta for Non-inferiority trials MUST be specified")}
+      if(delta_ni > 0 & effect_size_sign=="Positive") {stop("delta_ni and effect_size_sign should NOT have same sign")}
+      if(delta_ni < 0 & effect_size_sign=="Negative") {stop("delta_ni and effect_size_sign should NOT have same sign")}
+      
+      ###### Determine the direction of effect size then define boundaries appropriately
+      
+      if(effect_size_sign=="Negative")
+      {
+        inf_boolen <- ifelse(((as.vector(params_soln["Trt","lwr"]) < delta_ni) & 
+                                (as.vector(params_soln["Trt","lwr"]) < 0 ))&
+                               ((as.vector(params_soln["Trt","upr"]) < delta_ni) & 
+                                  (as.vector(params_soln["Trt","upr"]) > 0 )),
+                             1,0)
+      }
+      ##
+      if(effect_size_sign=="Positive")
+      {
+        inf_boolen <- ifelse(((as.vector(params_soln["Trt","lwr"]) > delta_ni) & 
+                                (as.vector(params_soln["Trt","lwr"]) < 0 ))&
+                               ((as.vector(params_soln["Trt","upr"]) > delta_ni) & 
+                                  (as.vector(params_soln["Trt","upr"]) > 0 )),
+                             1,0)
+      }
+    }
+    return(inf_boolen)   
+}
+
+
+#------------------------------------------------
+#' @title Power calculation
+#'
+#' @description Function which takes in trial parameters for main population modelling results and both control and 
+#'              intervention clusters and computes power using power_compute_single
+#'
+#' @details Takes a list of parameters, returns power. 
+#'
+#' @param mainpop_data       List containing main population data output by mainpop()
+#' @param n_clusters         Number of clusters (control and intervention)
+#' @param n_patients         Number of patients per cluster
+#' @param benchmark          Benchmark type to use in choosing clusters ("EIR", "slide_prev", "pcr_prev", or "clin_inc"
+#'                           for new data, "EIR_annual", "slide_prev_annual", "pcr_prev_annual", "clin_inc_annual" for
+#'                           pre-existing annual data in input folder)
+#' @param age_start          Starting age to use when calculating prevalence or incidence over age range 
+#'                           (not used with EIR)
+#' @param age_end            End age to use when calculating prevalence or incidence over age range 
+#'                           (not used with EIR)     
+#' @param test_time_values   Time points at which tests are administered
+#' @param test_type          Type of test administered ("clin" = clinical, "RDT" = rapid diagnostic test)
+#' @param flag_pre_clearing  Integer indicating whether patients given pre-trial prophylaxis (if 1, place all patients
+#'                           into prophylaxis category at start)
+#' @param censor_period      Time period after a positive test during which a patient is not counted towards incidence
+#' @param flag_reactive_treatment Integer indicating whether patients are automatically given prophylaxis after a
+#'                                positive test (shifting them into treatment category if a clinical case,
+#'                                prophylaxis category otherwise)
+#' @param prop_T_c            Treatment probability
+#' @param benchmark_mean      Mean of benchmark value distribution
+#' @param benchmark_stdev     Standard deviation of benchmark value distribution
+#' @param int_mean            Mean of intervention parameter value distribution
+#' @param int_stdev           Standard deviation of intervention parameter value distribution
+#' @param alpha  TODO
+#' @param effect_size_sign  TODO
+#' @param trial_type  TODO
+#' @param delta_eq  TODO
+#' @param delta_ni  TODO
+#' @param n_sims  TODO
+#'
+#' @export
+
+power_compute <- 
+  function(mainpop_data=list(),n_clusters=1,n_patients=1,
+           benchmark="EIR_annual",age_start=0.0,age_end=65.0,test_time_values=c(0.0,1.0),
+           test_type="RDT",flag_pre_clearing=0,censor_period=0.0, flag_reactive_treatment=1,prop_T_c=0.9,
+           benchmark_mean=0.0,benchmark_stdev=0.0,int_mean=0.0,int_stdev=0.0,
+           alpha=0.05,effect_size_sign="Positive",trial_type="sup",delta_eq=NULL,delta_ni=NULL,n_sims=1000)
+  {
+    ######################### PRE-CONDITIONS FOR ALL TRIAL TYPES
+    if(is.null(alpha)) {alpha <- 0.05}
+    if(is.null(n_sims)){ n_sims <- 1000}
+    if(is.null(trial_type)) {trial_type="sup"}
+
+    boolean_matrix <-  pbsapply(seq(n_sims),
+                                function(x) power_compute_single(
+                                  mainpop_data=mainpop_data,n_clusters=n_clusters,n_patients=n_patients,
+                                  benchmark=benchmark,
+                                  age_start=age_start,age_end=age_end,test_time_values=test_time_values,
+                                  test_type=test_type,
+                                  flag_pre_clearing=flag_pre_clearing,censor_period=censor_period,
+                                  flag_reactive_treatment=flag_reactive_treatment,prop_T_c=prop_T_c,
+                                  benchmark_mean=benchmark_mean,benchmark_stdev=benchmark_stdev,int_mean=int_mean,
+                                  int_stdev=int_stdev,
+                                  alpha=alpha,effect_size_sign=effect_size_sign,
+                                  trial_type=trial_type,delta_eq=delta_eq,delta_ni=delta_ni
+                                ))
+    
+    boolean_matrix_t <- t(boolean_matrix)
+    
+    boolean_df <- data.frame(matrix(unlist(boolean_matrix_t), 
+                                    nrow=n_sims, 
+                                    byrow=FALSE),
+                             stringsAsFactors=FALSE)
+    
+    colnames(boolean_df) <- c("power")
+    
+    power_estimates <- apply(boolean_df,2,mean)
+    
+    return(power_estimates)
+    
+  }

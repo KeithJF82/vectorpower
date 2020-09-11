@@ -131,7 +131,8 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 
 	// Load trial parameter data from R--------------------------------------------------------------------------------------------------------------------------------------------		
 	
-	//vector<double> mu_atsb_var = rcpp_to_vector_double(trial_params["mu_atsb_var"]);	// Variable mu_atsb for special runs - TODO: Integrate into package
+	// Variable mu_atsb for special runs - TODO: Integrate into package
+	/*vector<double> mu_atsb_var = {};*/
 	int flag_dt_adjust = rcpp_to_int(trial_params["flag_dt_adjust"]);					// Flag indicating whether or not to adjust dt by mosquito density (0=no,1=yes)
 	int flag_file = rcpp_to_int(trial_params["flag_file"]);								// Flag indicating whether results data to be saved to files
 	int int_v_varied = rcpp_to_int(trial_params["int_v_varied"]);						// Intervention parameter given variable value (0=model parameter set, 1=ATSB kill rate, 2=bednet coverage, 3=IRS coverage, 4=SET coverage)
@@ -356,6 +357,8 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 
 	param_int = int_v_varied == 0 ? 0.0 : int_values[n_int];
 	prop_T_rev = 1.0 - prop_T;																								// Probability of treatment not being received by clinical cases				
+	restart_run:
+	Rcout << "\nRun " << n_run + 1 << " Mosquito density=" << mv0 << " Intervention number=" << n_int << " dt=" << dt;
 	rN = cov_nets * p_repel_net_entry;
 	rNW = cov_nets * p_repel_net_bed;
 	dNW = cov_nets * p_kill_net;
@@ -373,10 +376,7 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 	//mu_protections=0.0865;
 	av0 = 0.3333 * Q0 * (1.0 - r_bite_prevent);																			// Biting rate on humans / mosquito
 	muv1 = muv0 + mu_atsb + mu_protections;																						// Total mosquito death rate
-	// muv1 = mu_atsb_var[0] + muv0 + mu_protections;																			// Variable muv1 for special runs - TODO: Integrate with package
-	Rcout << "\nRun " << n_run + 1 << " Mosquito density=" << mv0 << " Intervention number=" << n_int << " dt=" << dt;
 
-	restart_run:
 	dt2 = dt * 0.1;		
 	ntmax = intdiv(tmax, dt);
 	dur_Ei = intdiv(dur_E, dt);
@@ -524,14 +524,14 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 				//mu_protections=0.0865;
 			}
 			av0 = 0.3333 * Q0 * (1.0 - r_bite_prevent);
-			/*if (t_int >= 0.0 && n_int > 0) // Variable muv1 for special runs - TODO: Integrate into package
-			{
-				int day = t_int;
-				muv1 = mu_atsb_var[day] + muv0 + mu_protections;
-			}*/
 			muv1 = muv0 + mu_atsb + mu_protections;
-
 		}
+
+		/*if (t_int >= 0.0 && n_int > 0) // Variable muv1 for special runs - TODO: Integrate into package
+		{
+			int day = t_int;
+			muv1 = mu_atsb_var[day] + muv0 + mu_protections;
+		}*/
 
 		rain = rain_coeff * (rconst + (2.0 * (
 				(Re0 * cos(trig_coeff1 * year_day)) + (Im0 * sin(trig_coeff1 * year_day)) +

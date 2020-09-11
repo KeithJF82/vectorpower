@@ -19,7 +19,7 @@ patient2[1000];
 Rcpp::List rcpp_cohort2(List params, List trial_params, List cluster_data)
 {
 	int na_c0, na_c1, na_c2, n_c, mvn, int_num, data_num, i, j, n, nt, div, pos, ntmax, tflag, interval, infected, n_positive, n_eligible, flag_positive, flag_censor;
-	double dt, t, EIRd, EIRt, t_mark1, t_mark2, p_multiplier, prob, cprobmax, p_inf_bite, p_inf_from_bite, p_clin_inf, IC_cur, IB_cur, ID_cur, rate_db_t, rate_dc_t, rate_dd_t, random_value;
+	double dt, t, EIRd, EIRt, t_mark1, t_mark2, p_multiplier, cprobmax, p_inf_bite, p_inf_from_bite, p_clin_inf, p_det, IC_cur, IB_cur, ID_cur, rate_db_t, rate_dc_t, rate_dd_t, random_value;
 
 	//Constants (TODO: Make global)----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	double dy = 365.0;											// Days in a year
@@ -27,9 +27,6 @@ Rcpp::List rcpp_cohort2(List params, List trial_params, List cluster_data)
 	double tinterval1 = 1.0;									// Interval between calculations of current prevalence / incidence values
 
 	//Load input parameter data from R------------------------------------------------------------------------------------------------------------------------------------------
-
-	Rcout << "\nBeginning cluster calculations\n";
-	R_FlushConsole();
 
 	int flag_output = rcpp_to_int(trial_params["flag_output"]);							//Flag indicating whether progress reported
 	int flag_pre_clearing = rcpp_to_int(trial_params["flag_pre_clearing"]);				//Flag indicating whether pre-clearing applied
@@ -45,6 +42,12 @@ Rcpp::List rcpp_cohort2(List params, List trial_params, List cluster_data)
 	tinterval2[0] = time_values[0] = 0.0 ? 1.0 : time_values[0];
 	for (div = 1; div < n_divs; div++) { tinterval2[div] = time_values[div] - time_values[div-1]; }*/
 	int tmax_i = rcpp_to_int(trial_params["tmax_i"]);
+	
+	if (flag_output == 1)
+	{
+		Rcout << "\nBeginning cluster calculations\n";
+		R_FlushConsole();
+	}	
 
 	double tmax = test_time_values[n_divs-1];
 	int n_clusters = rcpp_to_int(trial_params["n_clusters"]);					// Number of lines in cluster data input file (number of clusters)
@@ -202,8 +205,9 @@ Rcpp::List rcpp_cohort2(List params, List trial_params, List cluster_data)
 	double* cprob = (double*)malloc(n_cats_c * sizeof(double));						//Cumulative probability distribution used to determine age/heterogenity category to place randomly generated patients
 	//double* clin_inc_values = (double*)malloc(n_divs * sizeof(double));             //Values of clinical incidence (cohort) between checkpoints
 	vector<int> patients_status_outputs(n_clusters * n_patients * n_divs, 0);		//All patient statuses across all clusters at each time point, for output to R
+	vector<int> patients_test_outputs(n_clusters * n_patients * n_divs, 0);		//All patient test flags (0=negative, 1=positive) across all clusters at each time point, for output to R
 	vector<double> p_det_outputs(n_clusters * n_patients * n_divs, 0.0);			//Probability of asymptomatic infection being detected, where relevant, for all patients across all clusters at each time point, for output to R
-	//vector<double> clin_inc_outputs(n_clusters * n_divs, 0.0);						//Clinical incidence per person per day in each cluster at each time point (averaged over time up to that point from previous point), for output to R
+	//vector<double> clin_inc_outputs(n_clusters * n_divs, 0.0);					//Clinical incidence per person per day in each cluster at each time point (averaged over time up to that point from previous point), for output to R
 	vector<double> test_incidence_outputs(n_clusters * n_divs, 0.0);				//Incidence of patients passing designated test at each time point, for output to R, adjusted for censoring
 	//vector<double> dummy(n_clusters * n_divs, 0.0);
 	vector<double> patients_age_outputs(n_clusters * n_patients, 0.0);				//Patient ages (at start of trial period) across all clusters
@@ -269,12 +273,12 @@ start_run:
 
 	for (n = 0; n < n_patients; n++)//Randomly determine patient's age and heterogeneity category using cprob
 	{
-		prob = runif1();
+		random_value = runif1();
 		for (i = na_c0; i <= na_c1; i++)
 		{
 			for (j = 0; j < num_het; j++)
 			{
-				if (prob <= cprob[((i - na_c0) * num_het) + j]) { goto found; }
+				if (random_value <= cprob[((i - na_c0) * num_het) + j]) { goto found; }
 			}
 		}
 	found:
@@ -340,7 +344,11 @@ restart:
 			{
 				//Save status and (if relevant) detection probability
 				patients_status_outputs[pos] = patient2[n].status;
-				if (patient2[n].status == 3) { p_det_outputs[pos] = dmin + (dmin_rev / (1.0 + (fd[patient2[n].na] * pow(patient2[n].ID * inv_ID0, kd)))); }
+				if (patient2[n].status == 3) 
+				{ 
+					p_det = dmin + (dmin_rev / (1.0 + (fd[patient2[n].na] * pow(patient2[n].ID * inv_ID0, kd))));
+					p_det_outputs[pos] = p_det; 
+				}
 
 				//Run test
 				if(patient2[n].flag_censored==1) //Patients being censored are not counted towards positives; incidence denominator reduced by no. censored
@@ -359,9 +367,12 @@ restart:
 								flag_positive=1;
 							}
 							break;
-						case 2: //TODO: Apply p_det
+						case 2: //Use p_det to determine whether asymptomatic case tests positive
 							{ 
-								flag_positive=1;
+								if(runif1()<=p_det)
+								{
+									flag_positive=1;								
+								}
 							}
 							break;
 						default:
@@ -370,7 +381,10 @@ restart:
 							R_FlushConsole();
 							goto finish;					
 						}
-					}		
+					}	
+					
+					patients_test_outputs[pos] = flag_positive;
+
 					if(flag_positive==1)
 					{						
 						n_positive++;
@@ -441,8 +455,7 @@ restart:
 					if (runif1() <= p_clin_inf)
 					{/*clinical infection*/
 						//clin_inc_values[div] += dv_p1 / tinterval2[div];
-						random_value = runif1();
-						if (random_value <= prop_T_c) {/*to T*/ patient2[n].status = 1; }
+						if (runif1() <= prop_T_c) {/*to T*/ patient2[n].status = 1; }
 						else {/*to D*/  patient2[n].status = 2; }
 					}
 					else {/*to A*/ patient2[n].status = 3; }
@@ -534,10 +547,15 @@ end:
 
 finish:
 
-	Rcout << "\nCluster calculations complete.\n";
+	if (flag_output == 1)
+	{
+		Rcout << "\nCluster calculations complete\n";
+		R_FlushConsole();
+	}	
 
 	// Return list
-	return List::create(Named("patients_age_outputs") = patients_age_outputs, Named("patients_het_outputs") = patients_het_outputs, Named("patients_status_outputs") = patients_status_outputs, 
+	return List::create(Named("patients_age_outputs") = patients_age_outputs, Named("patients_het_outputs") = patients_het_outputs, 
+						Named("patients_status_outputs") = patients_status_outputs, Named("patients_test_outputs") = patients_test_outputs, 
 						Named("p_det_outputs") = p_det_outputs, Named("test_incidence_outputs") = test_incidence_outputs);
 	//return List::create(Named("incidence") = dummy);
 }

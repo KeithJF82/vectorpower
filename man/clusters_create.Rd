@@ -33,6 +33,6 @@ clusters_create(
 Function for creating cumulative probability distributions and generating clusters from them
 }
 \details{
-Takes in previously generated benchmark and intervention data (currently in files) and outputs cluster data
-         (currently as files)
+Takes in previously generated benchmark and intervention data (currently in files) 
+         and outputs cluster data (currently as files)
 }

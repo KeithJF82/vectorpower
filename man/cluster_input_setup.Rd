@@ -17,7 +17,7 @@ cluster_input_setup(
 \arguments{
 \item{input_list}{List containing mainpop output data}
 
-\item{benchmark}{Benchmark type to use in choosing clusters ("EIR", "slide_prev", "pcr_prev", or "clin_inc"
+\item{benchmark}{Benchmark to use in choosing clusters ("EIR", "slide_prev", "pcr_prev", or "clin_inc"
 for new data, "EIR_annual", "slide_prev_annual", "pcr_prev_annual", "clin_inc_annual" for
 pre-existing annual data in input folder)}
 
@@ -25,9 +25,11 @@ pre-existing annual data in input folder)}
 
 \item{set_n_int}{Intervention number to use (1-max)}
 
-\item{age_start}{Starting age to use when calculating prevalence or incidence over age range (not used with EIR)}
+\item{age_start}{Starting age to use when calculating prevalence or incidence over age range 
+(not used with EIR)}
 
-\item{age_end}{End age to use when calculating prevalence or incidence over age range (not used with EIR)}
+\item{age_end}{End age to use when calculating prevalence or incidence over age range 
+(not used with EIR)}
 
 \item{plot_flag}{Logical operator indicating whether or not to plot graph of read values}
 }
