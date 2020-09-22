@@ -20,7 +20,8 @@ crt_combined(
   benchmark_mean = 0,
   benchmark_stdev = 0,
   int_mean = 0,
-  int_stdev = 0
+  int_stdev = 0,
+  data_level = "Both"
 )
 }
 \arguments{
@@ -62,6 +63,8 @@ prophylaxis category otherwise)}
 \item{int_mean}{Mean of intervention parameter value distribution}
 
 \item{int_stdev}{Standard deviation of intervention parameter value distribution}
+
+\item{data_level}{Data type to output ("Cluster", "Individual" or "Both")}
 }
 \description{
 Function which takes in trial parameters for main population modelling results and both control and 

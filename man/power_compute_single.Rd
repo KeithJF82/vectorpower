@@ -12,6 +12,7 @@ power_compute_single(
   age_start = 0,
   age_end = 65,
   test_time_values = c(0, 1),
+  data_level = "Cluster",
   test_type = "RDT",
   flag_pre_clearing = 0,
   censor_period = 0,
@@ -46,6 +47,8 @@ pre-existing annual data in input folder)}
 (not used with EIR)}
 
 \item{test_time_values}{Time points at which tests are administered}
+
+\item{data_level}{Data level to use ("Cluster" or "Individual")}
 
 \item{test_type}{Type of test administered ("clin" = clinical, "RDT" = rapid diagnostic test)}
 

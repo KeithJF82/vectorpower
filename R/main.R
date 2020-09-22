@@ -798,7 +798,7 @@ power_compute_single <-
                                     sep=" ~ "))
     
     Cluster="Cluster"
-    geepack_inf <- geeglm(formula=gee_formula,
+    geepack_inf <- geepack::geeglm(formula=gee_formula,
                                    data = data,
                                    id = Cluster, 
                                    family = binomial(link="logit"),

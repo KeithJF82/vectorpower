@@ -21,6 +21,7 @@ power_compute(
   benchmark_stdev = 0,
   int_mean = 0,
   int_stdev = 0,
+  data_level = "Cluster",
   alpha = 0.05,
   effect_size_sign = "Positive",
   trial_type = "sup",
@@ -68,6 +69,8 @@ prophylaxis category otherwise)}
 \item{int_mean}{Mean of intervention parameter value distribution}
 
 \item{int_stdev}{Standard deviation of intervention parameter value distribution}
+
+\item{data_level}{Data level to use ("Cluster" or "Individual")}
 
 \item{alpha}{TODO}
 
