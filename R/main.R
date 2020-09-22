@@ -584,6 +584,7 @@ ento <- function (input_folder = "",output_folder = NA,int_v_varied=0, int_value
 #' @param benchmark_stdev     Standard deviation of benchmark value distribution
 #' @param int_mean            Mean of intervention parameter value distribution
 #' @param int_stdev           Standard deviation of intervention parameter value distribution
+#' @param data_level           Data type to output ("Cluster", "Individual" or "Both")
 #'
 #' @export
 
@@ -591,11 +592,12 @@ crt_combined <- function(#output_file_cluster=NA,output_file_indiv=NA,
                          mainpop_data=list(),n_clusters=1,n_patients=1,
                          benchmark="EIR_annual",age_start=0.0,age_end=65.0,test_time_values=c(0.0,1.0),
                          test_type="RDT",flag_pre_clearing=0,censor_period=0.0, flag_reactive_treatment=1,prop_T_c=0.9,
-                         benchmark_mean=0.0,benchmark_stdev=0.0,int_mean=0.0,int_stdev=0.0){
+                         benchmark_mean=0.0,benchmark_stdev=0.0,int_mean=0.0,int_stdev=0.0,data_level="Both"){
   
   assert_list(mainpop_data)
   assert_single_int(mainpop_data$n_mv_values)
   assert_single_bounded(max(test_time_values),0,max(mainpop_data$time_values))
+  assert_in(data_level,c("Cluster","Individual","Both"))
   
   n_mv_values=mainpop_data$n_mv_values
   n_int_values=mainpop_data$n_int_values
@@ -625,90 +627,95 @@ crt_combined <- function(#output_file_cluster=NA,output_file_indiv=NA,
                              flag_pre_clearing = flag_pre_clearing, censor_period = censor_period, 
                              flag_reactive_treatment = flag_reactive_treatment)
   
-  fill_c=rep(0,2*n_clusters*n_pts)
-  fill_i=rep(0,2*n_clusters*n_patients*n_pts)
-  Date_fill_c=rep(test_time_values,2*n_clusters)
-  Date_fill_i=rep(test_time_values,2*n_clusters*n_patients)
-  Trt_fill_c=c(rep(0,n_clusters*n_pts),rep(1,n_clusters*n_pts))
-  Trt_fill_i=c(rep(0,n_clusters*n_patients*n_pts),rep(1,n_clusters*n_patients*n_pts))
-  output <- list(output_cluster=data.frame(Date=Date_fill_c,Cluster=fill_c,Trt=Trt_fill_c,Numerator=fill_c,
-                                           Denominator=fill_c,Incidence=fill_c),
-                 output_indiv=data.frame(Date=Date_fill_i,Patient=fill_i,Cluster=fill_i,Trt=Trt_fill_i,Age=fill_i,
-                                         Het_cat=fill_i,Status=fill_i,Test_status=fill_i))
-  
-  # cat(file=output_file_cluster,"Date\tCluster\tTrt\tNumerator\tDenominator\tIncidence")
-  line=0
-  for(i in 1:n_clusters){
-    for(j in 1:n_pts){
-      inc=cohort_data_con$test_incidence_outputs[j,i]
-      if(j==1){ denominator=n_patients } else {denominator=n_patients-numerator}
-      numerator=inc*denominator
-      line=line+1
-      output$output_cluster$Cluster[line]=i
-      output$output_cluster$Numerator[line]=numerator
-      output$output_cluster$Denominator[line]=denominator
-      output$output_cluster$Incidence[line]=inc
-      # cat(file=output_file_cluster,"\n",test_time_values[j],"\t",i,"\t0\t",numerator,"\t",denominator,"\t",inc,
-      #     append=TRUE)
-    }
+  output <- list()
+  if(data_level=="Cluster" || data_level=="Both"){
+    fill_c=rep(0,2*n_clusters*n_pts)
+    Date_fill_c=rep(test_time_values,2*n_clusters)
+    Trt_fill_c=c(rep(0,n_clusters*n_pts),rep(1,n_clusters*n_pts)) 
+    output$output_cluster <- data.frame(Date=Date_fill_c,Cluster=fill_c,Trt=Trt_fill_c,Numerator=fill_c,
+                                             Denominator=fill_c,Incidence=fill_c)
   }
-  for(i in 1:n_clusters){
-    i2=i+n_clusters
-    for(j in 1:n_pts){
-      inc=cohort_data_int$test_incidence_outputs[j,i]
-      if(j==1){ denominator=n_patients } else {denominator=n_patients-numerator}
-      numerator=inc*denominator
-      line=line+1
-      output$output_cluster$Cluster[line]=i
-      output$output_cluster$Numerator[line]=numerator
-      output$output_cluster$Denominator[line]=denominator
-      output$output_cluster$Incidence[line]=inc
-      # cat(file=output_file_cluster,"\n",test_time_values[j],"\t",i2,"\t1\t",numerator,"\t",denominator,"\t",inc,
-      #     append=TRUE)
-    }
+  if(data_level=="Individual" || data_level=="Both"){
+    fill_i=rep(0,2*n_clusters*n_patients*n_pts)
+    Date_fill_i=rep(test_time_values,2*n_clusters*n_patients)
+    Trt_fill_i=c(rep(0,n_clusters*n_patients*n_pts),rep(1,n_clusters*n_patients*n_pts))
+    output$output_indiv <- data.frame(Date=Date_fill_i,Patient=fill_i,Cluster=fill_i,Trt=Trt_fill_i,Age=fill_i,
+                                             Het_cat=fill_i,Status=fill_i,Test_status=fill_i)
   }
   
-  # cat(file=output_file_indiv,"Date\tPatient\tCluster\tTrt\tAge\tHet_cat\tStatus\tTest_status")
-  line=0
-  for(i in 1:n_clusters){
-    for(j in 1:n_patients){
-      j2=((i-1)*n_patients)+j
-      age=cohort_data_con$patients_age_outputs[j,i]
-      het_cat=cohort_data_con$patients_het_outputs[j,i]
-      for(k in 1:n_pts){
-        time=test_time_values[k]
-        status=cohort_data_con$patients_status_outputs[k,j,i]
-        test_status=cohort_data_con$patients_test_outputs[k,j,i]
+  # Output cluster level data
+  if(data_level=="Cluster" || data_level=="Both"){
+    line=0
+    for(i in 1:n_clusters){
+      for(j in 1:n_pts){
+        inc=cohort_data_con$test_incidence_outputs[j,i]
+        if(j==1){ denominator=n_patients } else {denominator=n_patients-numerator}
+        numerator=inc*denominator
         line=line+1
-        output$output_indiv$Patient[line]=j
-        output$output_indiv$Cluster[line]=i
-        output$output_indiv$Age[line]=age
-        output$output_indiv$Het_cat[line]=het_cat
-        output$output_indiv$Status[line]=status
-        output$output_indiv$Test_status[line]=test_status
-        # cat(file=output_file_indiv,"\n",time,"\t",j2,"\t",i,"\t0\t",age,"\t",het_cat,"\t",status,"\t",test_status,
-        #     append=TRUE)
+        output$output_cluster$Cluster[line]=i
+        output$output_cluster$Numerator[line]=numerator
+        output$output_cluster$Denominator[line]=denominator
+        output$output_cluster$Incidence[line]=inc
       }
     }
-  }
-  for(i in 1:n_clusters){
-    i2=i+n_clusters
-    for(j in 1:n_patients){
-      j2=((i2-1)*n_patients)+j
-      age=cohort_data_int$patients_age_outputs[j,i]
-      het_cat=cohort_data_int$patients_het_outputs[j,i]
-      for(k in 1:n_pts){
-        time=test_time_values[k]
-        status=cohort_data_int$patients_status_outputs[k,j,i]
-        test_status=cohort_data_int$patients_test_outputs[k,j,i]
-        # cat(file=output_file_indiv,"\n",time,"\t",j2,"\t",i2,"\t1\t",age,"\t",het_cat,"\t",status,"\t",test_status,
-        #     append=TRUE)
+    for(i in 1:n_clusters){
+      i2=i+n_clusters
+      for(j in 1:n_pts){
+        inc=cohort_data_int$test_incidence_outputs[j,i]
+        if(j==1){ denominator=n_patients } else {denominator=n_patients-numerator}
+        numerator=inc*denominator
+        line=line+1
+        output$output_cluster$Cluster[line]=i
+        output$output_cluster$Numerator[line]=numerator
+        output$output_cluster$Denominator[line]=denominator
+        output$output_cluster$Incidence[line]=inc
       }
-    }
+    } 
   }
   
-  # output <- list(output_cluster=read.table(output_file_cluster,header=TRUE),
-  #                output_indiv=read.table(output_file_indiv,header=TRUE))
+  # Output individual level data
+  if(data_level=="Individual" || data_level=="Both"){
+    line=0
+    for(i in 1:n_clusters){
+      for(j in 1:n_patients){
+        j2=((i-1)*n_patients)+j
+        age=cohort_data_con$patients_age_outputs[j,i]
+        het_cat=cohort_data_con$patients_het_outputs[j,i]
+        for(k in 1:n_pts){
+          time=test_time_values[k]
+          status=cohort_data_con$patients_status_outputs[k,j,i]
+          test_status=cohort_data_con$patients_test_outputs[k,j,i]
+          line=line+1
+          output$output_indiv$Patient[line]=j
+          output$output_indiv$Cluster[line]=i
+          output$output_indiv$Age[line]=age
+          output$output_indiv$Het_cat[line]=het_cat
+          output$output_indiv$Status[line]=status
+          output$output_indiv$Test_status[line]=test_status
+        }
+      }
+    }
+    for(i in 1:n_clusters){
+      i2=i+n_clusters
+      for(j in 1:n_patients){
+        j2=((i2-1)*n_patients)+j
+        age=cohort_data_int$patients_age_outputs[j,i]
+        het_cat=cohort_data_int$patients_het_outputs[j,i]
+        for(k in 1:n_pts){
+          time=test_time_values[k]
+          status=cohort_data_int$patients_status_outputs[k,j,i]
+          test_status=cohort_data_int$patients_test_outputs[k,j,i]
+          line=line+1
+          output$output_indiv$Patient[line]=j
+          output$output_indiv$Cluster[line]=i
+          output$output_indiv$Age[line]=age
+          output$output_indiv$Het_cat[line]=het_cat
+          output$output_indiv$Status[line]=status
+          output$output_indiv$Test_status[line]=test_status
+        }
+      }
+    } 
+  }
   
   return(output)
 }
@@ -733,6 +740,7 @@ crt_combined <- function(#output_file_cluster=NA,output_file_indiv=NA,
 #' @param age_end            End age to use when calculating prevalence or incidence over age range 
 #'                           (not used with EIR)     
 #' @param test_time_values   Time points at which tests are administered
+#' @param data_level         Data level to use ("Cluster" or "Individual")
 #' @param test_type          Type of test administered ("clin" = clinical, "RDT" = rapid diagnostic test)
 #' @param flag_pre_clearing  Integer indicating whether patients given pre-trial prophylaxis (if 1, place all patients
 #'                           into prophylaxis category at start)
@@ -755,20 +763,21 @@ crt_combined <- function(#output_file_cluster=NA,output_file_indiv=NA,
 
 power_compute_single <- 
   function(mainpop_data=list(),n_clusters=1,n_patients=1,
-           benchmark="EIR_annual",age_start=0.0,age_end=65.0,test_time_values=c(0.0,1.0),
+           benchmark="EIR_annual",age_start=0.0,age_end=65.0,test_time_values=c(0.0,1.0),data_level="Cluster",
            test_type="RDT",flag_pre_clearing=0,censor_period=0.0, flag_reactive_treatment=1,prop_T_c=0.9,
            benchmark_mean=0.0,benchmark_stdev=0.0,int_mean=0.0,int_stdev=0.0,
            alpha=0.05,effect_size_sign="Positive",trial_type="sup",delta_eq=NULL,delta_ni=NULL)
 {
     
+    assert_in(data_level,c("Cluster","Individual"))
     ######### Generate data for use
     
     output <- 
       crt_combined(mainpop_data=mainpop_data,n_clusters=n_clusters,n_patients=n_patients,benchmark=benchmark,
-                   age_start=age_start,age_end=age_end,test_time_values=test_time_values,test_type=test_type,
-                   flag_pre_clearing=flag_pre_clearing,censor_period=censor_period,
-                   flag_reactive_treatment=flag_reactive_treatment,prop_T_c=prop_T_c,
-                   benchmark_mean=benchmark_mean,benchmark_stdev=benchmark_stdev,int_mean=int_mean,int_stdev=int_stdev)
+                   age_start=age_start,age_end=age_end,test_time_values=test_time_values,
+                   test_type=test_type,flag_pre_clearing=flag_pre_clearing,censor_period=censor_period,
+                   flag_reactive_treatment=flag_reactive_treatment,prop_T_c=prop_T_c,benchmark_mean=benchmark_mean,
+                   benchmark_stdev=benchmark_stdev,int_mean=int_mean,int_stdev=int_stdev,data_level=data_level)
     
     data <- output$output_cluster
     
@@ -778,7 +787,6 @@ power_compute_single <-
     data <- within(data,
                    Trt<- relevel(Trt,
                                  ref = "1"))
-    
     
     Outcome <- "cbind(Numerator, Denominator)"
     
@@ -887,6 +895,7 @@ power_compute_single <-
 #' @param benchmark_stdev     Standard deviation of benchmark value distribution
 #' @param int_mean            Mean of intervention parameter value distribution
 #' @param int_stdev           Standard deviation of intervention parameter value distribution
+#' @param data_level         Data level to use ("Cluster" or "Individual")
 #' @param alpha  TODO
 #' @param effect_size_sign  TODO
 #' @param trial_type  TODO
@@ -900,9 +909,10 @@ power_compute <-
   function(mainpop_data=list(),n_clusters=1,n_patients=1,
            benchmark="EIR_annual",age_start=0.0,age_end=65.0,test_time_values=c(0.0,1.0),
            test_type="RDT",flag_pre_clearing=0,censor_period=0.0, flag_reactive_treatment=1,prop_T_c=0.9,
-           benchmark_mean=0.0,benchmark_stdev=0.0,int_mean=0.0,int_stdev=0.0,
+           benchmark_mean=0.0,benchmark_stdev=0.0,int_mean=0.0,int_stdev=0.0,data_level="Cluster",
            alpha=0.05,effect_size_sign="Positive",trial_type="sup",delta_eq=NULL,delta_ni=NULL,n_sims=1000)
   {
+    assert_in(data_level,c("Cluster","Individual"))
     ######################### PRE-CONDITIONS FOR ALL TRIAL TYPES
     if(is.null(alpha)) {alpha <- 0.05}
     if(is.null(n_sims)){ n_sims <- 1000}
