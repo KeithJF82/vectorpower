@@ -9,12 +9,14 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 {
 	int n_run, n_mv, n_int, i, j, ij, nt, nt_E, div, nt_latgam, nt_latmosq, pos, pos2, ntmax, dur_Ei, latgami, latmosqi, tflag, interval, increment, data_saved, flag_int, np;
 	double mv0, param_int, t, t_int, mu_protections, r_bite_prevent, prop_T_rev, av0, muv1, K0, year_day, rain, KL, beta, Surv1, EIRd, mv, incv, incv0, FOIv, FOIv0, age0, age1, t_mark1, t_mark2, EIR_sum, dt2;
-	double mu_atsb, cov_nets, cov_irs, cov_set, prop_T, rN, rNW, dNW, rI, rIW, dIW, dIF, EL, LL, PL, Sv1, Ev1, Iv1, H, /*H_inv, */delS, delT, delD, delA1, delA2, delP, delU1, delU2, inv_x, inv_KL, rSET,dSET;
+	double mu_atsb, cov_nets, cov_irs, cov_set, prop_T, rN, rNW, dNW, rI, rIW, dIW, dIF, EL, LL, PL, Sv1, Ev1, Iv1, H, /*H_inv, */delS, delT, delD, delA1, delA2, delP, delU1, delU2, inv_x, inv_KL;
 	double S_cur, T_cur, D_cur, A_cur, U_cur, P_cur, FOI_cur, foi_age_cur, clin_inc_cur, ICA_cur, ICM_cur, IB_cur, ID_cur, EIR_cur, delSv1, EL_cur, LL_cur, PL_cur, dEL, dLL, Sv_cur, Ev_cur, Iv_cur;
 	FILE* benchmarks_by_age = NULL;
 	FILE* endpoint_data = NULL;
 	FILE* data_EIR = NULL;
 	FILE* data_immunity = NULL;
+	double dSET = 0.0;
+	double rSET = 0.0;
 
 	// Constants ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	double dy = 365.0;			// Days in a year

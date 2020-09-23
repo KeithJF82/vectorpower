@@ -7,11 +7,13 @@ using namespace std;
 // [[Rcpp::export]]
 Rcpp::List rcpp_ento(List params, List inputs, List trial_params)
 {
-	int i, n_run, n_mv, n_int, nt, ntmax, div, latmosqi, tflag, flag_int, np, pos2;
-	double mv0, param_int, t, t_int, mu_protections, r_bite_prevent, muv1, K0, year_day, rain, KL, beta, mv, t_mark1, t_mark2, dt2;
-	double mu_atsb, cov_nets, cov_irs, cov_set, rN, rNW, dNW, rI, rIW, dIW, dIF, EL, LL, PL, inv_KL, rSET,dSET;
+	int i, n_run, n_mv, n_int, nt, ntmax, div, /*latmosqi, */tflag, flag_int, np, pos2;
+	double mv0, param_int, t, t_int, mu_protections, /*r_bite_prevent, */muv1, K0, year_day, rain, KL, beta, mv, t_mark1, t_mark2, dt2;
+	double mu_atsb, cov_nets, cov_irs, cov_set, rN, rNW, dNW, rI, rIW, dIW, dIF, EL, LL, PL, inv_KL;
 	double EL_cur, LL_cur, PL_cur, Sv_cur, Ev_cur, Iv_cur, dEL, dLL, delSv, incv;
 	FILE* endpoint_data = NULL;
+	double dSET=0.0;
+	double rSET=0.0;
 
 	// Constants ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	double dy = 365.0;			// Days in a year
@@ -63,7 +65,7 @@ Rcpp::List rcpp_ento(List params, List inputs, List trial_params)
 	//double rho = rcpp_to_double(params["rho"]);								// Age-dependent biting parameter
 	//double a0 = rcpp_to_double(params["a0"]);									// Age-dependent biting parameter
 	//double sigma2 = rcpp_to_double(params["sigma2"]);							// Variance of log heterogeneity in biting
-	double latmosq = rcpp_to_double(params["latmosq"]);							// Time lag for infection in mosquitoes
+	//double latmosq = rcpp_to_double(params["latmosq"]);							// Time lag for infection in mosquitoes
 	//double latgam = rcpp_to_double(params["latgam"]);							// Time lag mosquitoes to become infectious
 
 	// Larval parameters	
@@ -188,8 +190,8 @@ Rcpp::List rcpp_ento(List params, List inputs, List trial_params)
 	dIW = cov_irs * p_kill_irs1;
 	dIF = cov_irs * p_kill_irs2;
 	K0 = (mv0 * 2.0 * dl * muv0 * (1.0 + (dp * mup)) * (gammal * (lambda + 1.0))) / term;									// Larval birth rate coefficient, set based on mv0
-	r_bite_prevent = phi_bite_house - ((phi_bite_house - phi_bite_bed) * (1.0 - rI) * (1.0 - rIW - dIW) * (1.0 - dIF)) -	// Proportion of bites prevented by bednets and/or interior residual spraying
-			(phi_bite_bed * (1.0 - rI) * (1.0 - rIW - dIW) * (1.0 - dIF) * (1.0 - rN) * (1.0 - rNW - dNW));
+	//r_bite_prevent = phi_bite_house - ((phi_bite_house - phi_bite_bed) * (1.0 - rI) * (1.0 - rIW - dIW) * (1.0 - dIF)) -	// Proportion of bites prevented by bednets and/or interior residual spraying
+	//		(phi_bite_bed * (1.0 - rI) * (1.0 - rIW - dIW) * (1.0 - dIF) * (1.0 - rN) * (1.0 - rNW - dNW));
 	mu_protections = 0.3333 * Q0 * (((phi_bite_house - phi_bite_bed) * (1.0 - rI) * (dIW + ((1.0 - rIW - dIW) * dIF))) +		// Additional death rate due to bednets and/or interior residual spraying
 			(phi_bite_bed * (1.0 - rI) * (1.0 - rN) * (dIW + ((1.0 - rIW - dIW) * (dNW + ((1.0 - rNW - dNW) * dIF))))));
 	//Values set manually when situation not accommodated by model
@@ -205,7 +207,7 @@ Rcpp::List rcpp_ento(List params, List inputs, List trial_params)
 	ntmax = intdiv(tmax, dt);
 	//dur_Ei = intdiv(dur_E, dt);
 	//latgami = intdiv(latgam, dt);
-	latmosqi = intdiv(latmosq, dt);
+	//latmosqi = intdiv(latmosq, dt);
 	year_day = fmod(date_start, dy); // Day of the year at the start of the run
 	rain = rain_coeff * (rconst + (2.0 * (
 			(Re0 * cos(trig_coeff1 * year_day)) + (Im0 * sin(trig_coeff1 * year_day)) +
@@ -302,13 +304,13 @@ Rcpp::List rcpp_ento(List params, List inputs, List trial_params)
 			R_FlushConsole();
 			if(int_v_varied==4)
 			{				
-				r_bite_prevent = phi_bite_house-((phi_bite_house-phi_bite_bed)*(1.0-rSET-dSET))-(phi_bite_bed*(1.0-rSET-dSET)*(1.0-rNW-dNW));
+				//r_bite_prevent = phi_bite_house-((phi_bite_house-phi_bite_bed)*(1.0-rSET-dSET))-(phi_bite_bed*(1.0-rSET-dSET)*(1.0-rNW-dNW));
 				mu_protections = 0.3333 * Q0 * (((phi_bite_house-phi_bite_bed)*dSET)+(phi_bite_bed*(dSET+(dNW*(1.0-rSET-dSET)))));
 			}
 			else
 			{
-				r_bite_prevent = phi_bite_house - ((phi_bite_house - phi_bite_bed) * (1.0 - rI) * (1.0 - rIW - dIW) * (1.0 - dIF)) -
-								(phi_bite_bed * (1.0 - rI) * (1.0 - rIW - dIW) * (1.0 - dIF) * (1.0 - rN) * (1.0 - rNW - dNW));
+				//r_bite_prevent = phi_bite_house - ((phi_bite_house - phi_bite_bed) * (1.0 - rI) * (1.0 - rIW - dIW) * (1.0 - dIF)) -
+				//				(phi_bite_bed * (1.0 - rI) * (1.0 - rIW - dIW) * (1.0 - dIF) * (1.0 - rN) * (1.0 - rNW - dNW));
 				mu_protections = 0.3333 * Q0 * (((phi_bite_house - phi_bite_bed) * (1.0 - rI) * (dIW + ((1.0 - rIW - dIW) * dIF))) +
 								(phi_bite_bed * (1.0 - rI) * (1.0 - rN) * (dIW + ((1.0 - rIW - dIW) * (dNW + ((1.0 - rNW - dNW) * dIF))))));
 				//Values set manually when situation not accommodated by model

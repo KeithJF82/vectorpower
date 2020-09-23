@@ -19,7 +19,8 @@ patient2[1000];
 Rcpp::List rcpp_cohort2(List params, List trial_params, List cluster_data)
 {
 	int na_c0, na_c1, na_c2, n_c, mvn, int_num, data_num, i, j, n, nt, div, pos, ntmax, tflag, interval, infected, n_positive, n_eligible, flag_positive, flag_censor;
-	double dt, t, EIRd, EIRt, t_mark1, t_mark2, p_multiplier, cprobmax, p_inf_bite, p_inf_from_bite, p_clin_inf, p_det, IC_cur, IB_cur, ID_cur, rate_db_t, rate_dc_t, rate_dd_t, random_value;
+	double dt, t, EIRd, EIRt, t_mark1, t_mark2, p_multiplier, cprobmax, p_inf_bite, p_inf_from_bite, p_clin_inf, IC_cur, IB_cur, ID_cur, rate_db_t, rate_dc_t, rate_dd_t, random_value;
+	double p_det = 0.0;
 
 	//Constants (TODO: Make global)----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	double dy = 365.0;											// Days in a year
