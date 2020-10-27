@@ -1,5 +1,5 @@
 ---
-title: "Worked Example 4 - Cohort Simulation"
+title: "Worked Example 4 - Cohort Simulation 1"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{F_worked_example04}
@@ -14,7 +14,9 @@ knitr::opts_chunk$set(
 )
 ```
 
-This is an example of how to take previously created main population and trial cohort and and run stochastic simulations of the individuals in the cohort. 
+This is an example of how to take previously created main population and trial cluster data and and run stochastic simulations of the individuals in the cohort in each cluster, producing prevalence and incidence results for each cohort.
+
+A more detailed cohort model including additional features and producing individual data suitable for use in power calculations is described in Worked Example 5(link).
 
 First load the package (install it first if necessary as shown in the [Installation article](https://keithjf82.github.io/vectorpower/articles/B_installation.html):
 

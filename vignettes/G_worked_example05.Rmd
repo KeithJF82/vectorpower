@@ -1,0 +1,70 @@
+---
+title: "Worked Example 5 - Cohort Simulation 2"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{G_worked_example05}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+This is an example of how to take previously created main population and trial cluster data and and run stochastic simulations of the individuals in the cohort in each cluster, producing data suitable for power calculations (described in Worked Example 6(link)). For cohort modelling producing prevalence and incidence data, see Worked [Worked Example 4](https://keithjf82.github.io/vectorpower/articles/F_worked_example04.html)
+
+First load the package (install it first if necessary as shown in the [Installation article](https://keithjf82.github.io/vectorpower/articles/B_installation.html):
+
+```{r setup}
+library(vectorpower)
+```
+
+In this example, the main population and cohort data sets are loaded from RDS files created by saving the results of running the mainpop() function (see [Worked Example 2](https://keithjf82.github.io/vectorpower/articles/D_worked_example02.html)) and the clusters_create() function ( see [Worked Example 3](https://keithjf82.github.io/vectorpower/articles/E_worked_example03.html)).
+
+```{r}
+# Load main population data
+mainpop_data <- readRDS(file=url("https://github.com/KeithJF82/vectorpower/raw/master/inst/extdata/mainpop_data.Rds"))
+
+# Load control and intervention cluster data
+cluster_list_con <-readRDS(file=url("https://github.com/KeithJF82/vectorpower/raw/master/inst/extdata/cluster_list_con.Rds"))
+cluster_list_int <-readRDS(file=url("https://github.com/KeithJF82/vectorpower/raw/master/inst/extdata/cluster_list_int.Rds"))
+```
+
+Malaria progression in the trial cohort in each cluster is evaluated using the cohort2() function, which runs the stochastic individual-based malaria model (the code for which is found in cohort2.cpp in the src/ folder). Here the control group of clusters is simulated. [Description of settings]
+
+```{r}
+# Simulate control clusters
+cohort_data_con <- cohort2(mainpop_data=mainpop_data,cluster_data=cluster_list_con,n_patients = 100,prop_T_c = 0.9,
+                          age_start = 0.5,age_end = 10.0,flag_output = 0, test_time_values = 14.0*c(1:10), 
+                          test_type = "RDT", flag_pre_clearing = 1, censor_period = 14.0, flag_reactive_treatment = 1)
+```
+
+The intervention clusters are simulated with the same settings
+
+```{r}
+# Simulate intervention clusters
+cohort_data_int <- cohort2(mainpop_data=mainpop_data,cluster_data=cluster_list_int,n_patients = 100,prop_T_c = 0.9,
+                          age_start = 0.5,age_end = 10.0,flag_output = 0, test_time_values = 14.0*c(1:10), 
+                          test_type = "RDT", flag_pre_clearing = 1, censor_period = 14.0, flag_reactive_treatment = 1)
+```
+
+The results of the cohort simulations can be viewed using the plot_cohort_data() function:
+
+```{r}
+# Display average positive test rate across control clusters
+control_plot <- plot_cohort_data(cohort_data = cohort_data_con,benchmark = "test_inc",flag_output=2)
+```
+```{r}
+# Display average positive test rate across intervention clusters
+int_plot <- plot_cohort_data(cohort_data = cohort_data_int,benchmark = "test_inc",flag_output=2)
+```
+```{r}
+# Compare prevalence progression in control and intervention clusters on same set of axes
+matplot(cohort_data_con$test_time_values,control_plot,type="p",pch=1,col=1,xlab="time (days)",ylab="Average prevalence")
+matplot(cohort_data_int$test_time_values,int_plot,type="p",pch=2,col=2,add=TRUE)
+legend("topleft", inset=0.01, legend=c("Control","Intervention"), pch=c(1:2),col=c(1:2),
+       horiz=FALSE,bg='white',cex=1.0)
+```
