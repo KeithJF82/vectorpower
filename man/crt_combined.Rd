@@ -31,9 +31,9 @@ crt_combined(
 
 \item{n_patients}{Number of patients per cluster}
 
-\item{benchmark}{Benchmark type to use in choosing clusters ("EIR", "slide_prev", "pcr_prev", or "clin_inc"
-for new data, "EIR_annual", "slide_prev_annual", "pcr_prev_annual", "clin_inc_annual" for
-pre-existing annual data in input folder)}
+\item{benchmark}{Benchmark type to use in choosing clusters ("EIR", "slide_prev", "pcr_prev", or 
+"clin_inc" for new data, "EIR_annual", "slide_prev_annual", "pcr_prev_annual", 
+"clin_inc_annual" for pre-existing annual data in input folder)}
 
 \item{age_start}{Starting age to use when calculating prevalence or incidence over age range 
 (not used with EIR)}

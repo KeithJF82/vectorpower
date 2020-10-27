@@ -13,7 +13,7 @@ struct patients//Structure containing individual patient data for cohort
 	int flag_censored;		//Flag indicating (1=yes, 0=no) if patient should be ignored when calculating test incidence
 	double censor_delay;	//Remaining censor period
 }
-patient2[1000];
+patient2[200];
 
 // [[Rcpp::export]]
 Rcpp::List rcpp_cohort2(List params, List trial_params, List cluster_data)
@@ -118,8 +118,6 @@ Rcpp::List rcpp_cohort2(List params, List trial_params, List cluster_data)
 	double IC_boost = 1.0 / (uc + 1.0);
 
 	//Constant derived values--------------------------------------------------------------------------------------------------------------------------
-
-	R_FlushConsole();
 
 	double rT = 1.0 / dur_T;			//Rate of recovery from disease and parasitaemia when treated
 	double rD = 1.0 / dur_D;			//Rate of moving from clinical disease to asymptomatic when not successfully treated
@@ -298,7 +296,6 @@ restart:
 
 	p_multiplier = 1.0 / dt;
 	ntmax = intdiv(tmax, dt);
-	R_FlushConsole();
 
 	for (n = 0; n < n_patients; n++)
 	{

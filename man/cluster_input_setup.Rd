@@ -18,8 +18,8 @@ cluster_input_setup(
 \item{input_list}{List containing mainpop output data}
 
 \item{benchmark}{Benchmark to use in choosing clusters ("EIR", "slide_prev", "pcr_prev", or "clin_inc"
-for new data, "EIR_annual", "slide_prev_annual", "pcr_prev_annual", "clin_inc_annual" for
-pre-existing annual data in input folder)}
+for new data, "EIR_annual", "slide_prev_annual", "pcr_prev_annual", "clin_inc_annual" 
+for pre-existing annual data in input folder)}
 
 \item{set_n_pt}{Data point to use (1-max)}
 

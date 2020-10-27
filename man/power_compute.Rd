@@ -2,12 +2,19 @@
 % Please edit documentation in R/main.R
 \name{power_compute}
 \alias{power_compute}
-\title{Power calculation}
+\title{Power calculation alt}
 \usage{
 power_compute(
   mainpop_data = list(),
   n_clusters = 1,
   n_patients = 1,
+  data_level = "Cluster",
+  alpha = 0.05,
+  effect_size_sign = "Positive",
+  trial_type = "sup",
+  delta_eq = NULL,
+  delta_ni = NULL,
+  n_sims = 1,
   benchmark = "EIR_annual",
   age_start = 0,
   age_end = 65,
@@ -20,14 +27,7 @@ power_compute(
   benchmark_mean = 0,
   benchmark_stdev = 0,
   int_mean = 0,
-  int_stdev = 0,
-  data_level = "Cluster",
-  alpha = 0.05,
-  effect_size_sign = "Positive",
-  trial_type = "sup",
-  delta_eq = NULL,
-  delta_ni = NULL,
-  n_sims = 1000
+  int_stdev = 0
 )
 }
 \arguments{
@@ -37,9 +37,23 @@ power_compute(
 
 \item{n_patients}{Number of patients per cluster}
 
-\item{benchmark}{Benchmark type to use in choosing clusters ("EIR", "slide_prev", "pcr_prev", or "clin_inc"
-for new data, "EIR_annual", "slide_prev_annual", "pcr_prev_annual", "clin_inc_annual" for
-pre-existing annual data in input folder)}
+\item{data_level}{Data level to use ("Cluster" or "Individual")}
+
+\item{alpha}{Significance level}
+
+\item{effect_size_sign}{Sign of effect to check for ("Positive" or "Negative")}
+
+\item{trial_type}{Trial type (superiority, equivalence, non-inferiority - "sup", "eq", "ni")}
+
+\item{delta_eq}{Delta for equivalence trials}
+
+\item{delta_ni}{Delta for non-inferiority trials}
+
+\item{n_sims}{Number of iterations}
+
+\item{benchmark}{Benchmark type to use in choosing clusters ("EIR", "slide_prev", "pcr_prev", or 
+"clin_inc" for new data, "EIR_annual", "slide_prev_annual", "pcr_prev_annual", 
+"clin_inc_annual" for pre-existing annual data in input folder)}
 
 \item{age_start}{Starting age to use when calculating prevalence or incidence over age range 
 (not used with EIR)}
@@ -69,25 +83,11 @@ prophylaxis category otherwise)}
 \item{int_mean}{Mean of intervention parameter value distribution}
 
 \item{int_stdev}{Standard deviation of intervention parameter value distribution}
-
-\item{data_level}{Data level to use ("Cluster" or "Individual")}
-
-\item{alpha}{TODO}
-
-\item{effect_size_sign}{TODO}
-
-\item{trial_type}{TODO}
-
-\item{delta_eq}{TODO}
-
-\item{delta_ni}{TODO}
-
-\item{n_sims}{TODO}
 }
 \description{
 Function which takes in trial parameters for main population modelling results and both control and 
-             intervention clusters and computes power using power_compute_single
+             intervention clusters, computes data using single instance of crt_combined and calculates power
 }
 \details{
-Takes a list of parameters, returns power.
+Takes a list of parameters, returns inf_boolen.
 }
