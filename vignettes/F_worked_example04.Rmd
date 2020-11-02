@@ -2,7 +2,7 @@
 title: "Worked Example 4 - Cohort Simulation 1"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{F_worked_example04}
+  %\VignetteIndexEntry{Worked Example 4 - Cohort Simulation 1}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -12,6 +12,7 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
+knitr::opts_chunk$set(root.dir = system.file("extdata",package="vectorpower"))
 ```
 
 This is an example of how to take previously created main population and trial cluster data and and run stochastic simulations of the individuals in the cohort in each cluster, producing prevalence and incidence results for each cohort.

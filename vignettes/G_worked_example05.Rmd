@@ -2,7 +2,7 @@
 title: "Worked Example 5 - Cohort Simulation 2"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{G_worked_example05}
+  %\VignetteIndexEntry{Worked Example 5 - Cohort Simulation 2}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -12,6 +12,7 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
+knitr::opts_chunk$set(root.dir = system.file("extdata",package="vectorpower"))
 ```
 
 This is an example of how to take previously created main population and trial cluster data and and run stochastic simulations of the individuals in the cohort in each cluster, producing data suitable for power calculations (described in Worked Example 6(link)). For cohort modelling producing prevalence and incidence data, see Worked [Worked Example 4](https://keithjf82.github.io/vectorpower/articles/F_worked_example04.html)

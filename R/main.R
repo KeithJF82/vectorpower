@@ -606,7 +606,6 @@ crt_combined <- function(#output_file_cluster=NA,output_file_indiv=NA,
                                     plot_flag=FALSE)
   n_pts=length(test_time_values)
   
-  
   output <- list()
   
   # Create list of control clusters
@@ -620,6 +619,7 @@ crt_combined <- function(#output_file_cluster=NA,output_file_indiv=NA,
                                              int_mean=int_mean, int_stdev=int_stdev)
   
   # Simulate control clusters
+  cat("\nSimulating control clusters")
   output$cohort_data_con <- cohort2(mainpop_data=mainpop_data,cluster_data=output$cluster_list_con, 
                                     n_patients = n_patients,prop_T_c = prop_T_c, 
                                     age_start = age_start, age_end = age_end, 
@@ -628,6 +628,7 @@ crt_combined <- function(#output_file_cluster=NA,output_file_indiv=NA,
                                     flag_reactive_treatment = flag_reactive_treatment)
   
   # Simulate intervention clusters
+  cat("\nSimulating intervention clusters")
   output$cohort_data_int <- cohort2(mainpop_data=mainpop_data,cluster_data=output$cluster_list_int, 
                                     n_patients = n_patients,prop_T_c = prop_T_c, 
                                     age_start = age_start, age_end = age_end, 
@@ -653,6 +654,7 @@ crt_combined <- function(#output_file_cluster=NA,output_file_indiv=NA,
   
   # Output cluster level data
   if(data_level=="Cluster" || data_level=="Both"){
+    cat("\nOutputting control cluster data (cluster level)")
     line=0
     for(i in 1:n_clusters){
       for(j in 1:n_pts){
@@ -666,6 +668,7 @@ crt_combined <- function(#output_file_cluster=NA,output_file_indiv=NA,
         output$output_cluster$Incidence[line]=inc
       }
     }
+    cat("\nOutputting intervention cluster data (cluster level)")
     for(i in 1:n_clusters){
       i2=i+n_clusters
       for(j in 1:n_pts){
@@ -673,7 +676,7 @@ crt_combined <- function(#output_file_cluster=NA,output_file_indiv=NA,
         if(j==1){ denominator=n_patients } else {denominator=n_patients-numerator}
         numerator=inc*denominator
         line=line+1
-        output$output_cluster$Cluster[line]=i
+        output$output_cluster$Cluster[line]=i2
         output$output_cluster$Numerator[line]=numerator
         output$output_cluster$Denominator[line]=denominator
         output$output_cluster$Incidence[line]=inc
@@ -682,43 +685,62 @@ crt_combined <- function(#output_file_cluster=NA,output_file_indiv=NA,
   }
   
   if(data_level=="Individual" || data_level=="Both"){
+    cat("\nOutputting control and intervention cluster data (individual level)")
     output$output_indiv$Status=c(as.vector(output$cohort_data_con$patients_status_outputs),
                                  as.vector(output$cohort_data_int$patients_status_outputs))
     output$output_indiv$Test_status=c(as.vector(output$cohort_data_con$patients_test_outputs),
                                       as.vector(output$cohort_data_int$patients_test_outputs))
-    lines1=c(1:(n_patients*n_pts))
-    lines2=c(1:n_pts)
-    for(i in 1:n_clusters){
-      output$output_indiv$Cluster[lines1]=rep(i,n_patients*n_pts)
-      lines1=lines1+(n_patients*n_pts)
-      for(j in 1:n_patients){
-        age=output$cohort_data_con$patients_age_outputs[j,i]
-        het_cat=output$cohort_data_con$patients_het_outputs[j,i]
-        output$output_indiv$Patient[lines2]=rep(j,n_pts)
-        output$output_indiv$Age[lines2]=rep(age,n_pts)
-        output$output_indiv$Het_cat[lines2]=rep(het_cat,n_pts)
-        lines2=lines2+n_pts
-      }
-    }
-    for(i in 1:n_clusters){
-      output$output_indiv$Cluster[lines1]=rep(i,n_patients*n_pts)
-      lines1=lines1+(n_patients*n_pts)
-      for(j in 1:n_patients){
-        age=output$cohort_data_int$patients_age_outputs[j,i]
-        het_cat=output$cohort_data_int$patients_het_outputs[j,i]
-        output$output_indiv$Patient[lines2]=rep(j,n_pts)
-        output$output_indiv$Age[lines2]=rep(age,n_pts)
-        output$output_indiv$Het_cat[lines2]=rep(het_cat,n_pts)
-        lines2=lines2+n_pts
-      }
-    } 
+    output$output_indiv$Age=c(as.vector(output$cohort_data_con$patients_age_outputs),
+                              as.vector(output$cohort_data_int$patients_age_outputs))
+    output$output_indiv$het_cat=c(as.vector(output$cohort_data_con$patients_het_outputs),
+                                  as.vector(output$cohort_data_int$patients_het_outputs))
+    n_patients_total=n_clusters*n_patients*2
+    n_lines_cluster=n_patients*n_pts
+    
+    output$output_indiv$Cluster=rep(c(1:(2*n_clusters)),n_lines_cluster)
+    output$output_indiv$Cluster=sort(output$output_indiv$Cluster)
+    output$output_indiv$Patient=rep(c(1:n_patients_total),n_pts)
+    output$output_indiv$Patient=sort(output$output_indiv$Patient)
+    
+    # cat("\nOutputting control cluster data (individual level)")
+    # lines1=c(1:(n_patients*n_pts))
+    # lines2=c(1:n_pts)
+    # pos=0
+    # for(i in 1:n_clusters){
+    #   output$output_indiv$Cluster[lines1]=rep(i,n_patients*n_pts)
+    #   lines1=lines1+(n_patients*n_pts)
+    #   for(j in 1:n_patients){
+    #     pos=pos+1
+    #     age=age_data[pos]
+    #     het_cat=het_data[pos]
+    #     output$output_indiv$Patient[lines2]=rep(j,n_pts)
+    #     output$output_indiv$Age[lines2]=rep(age,n_pts)
+    #     output$output_indiv$Het_cat[lines2]=rep(het_cat,n_pts)
+    #     lines2=lines2+n_pts
+    #   }
+    # }
+    # cat("\nOutputting intervention cluster data (individual level)")
+    # for(i in 1:n_clusters){
+    #   i2=i+n_clusters
+    #   output$output_indiv$Cluster[lines1]=rep(i2,n_patients*n_pts)
+    #   lines1=lines1+(n_patients*n_pts)
+    #   for(j in 1:n_patients){
+    #     pos=pos+1
+    #     age=age_data[pos]
+    #     het_cat=het_data[pos]
+    #     output$output_indiv$Patient[lines2]=rep(j,n_pts)
+    #     output$output_indiv$Age[lines2]=rep(age,n_pts)
+    #     output$output_indiv$Het_cat[lines2]=rep(het_cat,n_pts)
+    #     lines2=lines2+n_pts
+    #   }
+    # } 
   }
   
   return(output)
 }
 
 #------------------------------------------------
-#' @title Power calculation alt
+#' @title Power calculation
 #'
 #' @description Function which takes in trial parameters for main population modelling results and both control and 
 #'              intervention clusters, computes data using single instance of crt_combined and calculates power
@@ -793,7 +815,6 @@ power_compute <-
       data_full <- output$output_cluster 
     } else { 
       data_full <- output$output_indiv }
-    
     
     ######### Ensure that treatment variable is specified first in formula
     

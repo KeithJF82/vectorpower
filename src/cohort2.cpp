@@ -209,8 +209,11 @@ Rcpp::List rcpp_cohort2(List params, List trial_params, List cluster_data)
 	//vector<double> clin_inc_outputs(n_clusters * n_divs, 0.0);					//Clinical incidence per person per day in each cluster at each time point (averaged over time up to that point from previous point), for output to R
 	vector<double> test_incidence_outputs(n_clusters * n_divs, 0.0);				//Incidence of patients passing designated test at each time point, for output to R, adjusted for censoring
 	//vector<double> dummy(n_clusters * n_divs, 0.0);
-	vector<double> patients_age_outputs(n_clusters * n_patients, 0.0);				//Patient ages (at start of trial period) across all clusters
-	vector<double> patients_het_outputs(n_clusters * n_patients, 0.0);				//Patient heterogeneity group numbers across all clusters
+	//vector<double> patients_age_list(n_clusters * n_patients, 0.0);				//Patient ages (at start of trial period) across all clusters
+	//vector<double> patients_het_list(n_clusters * n_patients, 0.0);				//Patient heterogeneity group numbers across all clusters
+
+	vector<double> patients_age_outputs(n_clusters * n_patients * n_divs, 0.0);				//Patient ages (at start of trial period) across all clusters, repeated over time points
+	vector<double> patients_het_outputs(n_clusters * n_patients * n_divs, 0.0);				//Patient heterogeneity group numbers across all clusters, repeated over time points
 
 	//Load input data------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -284,8 +287,8 @@ start_run:
 		patient2[n].na = i;
 		patient2[n].num_het = j;
 		pos = ((n_c)*n_patients) + n;
-		patients_age_outputs[pos] = age[i] * inv_dy;
-		patients_het_outputs[pos] = j;
+		//patients_age_list[pos] = age[i] * inv_dy;
+		//patients_het_list[pos] = j;
 	}
 
 restart:
@@ -342,6 +345,8 @@ restart:
 			{
 				//Save status and (if relevant) detection probability
 				patients_status_outputs[pos] = patient2[n].status;
+				patients_age_outputs[pos] = age[patient2[n].na]*inv_dy;
+				patients_het_outputs[pos] = patient2[n].num_het;
 				if (patient2[n].status == 3) 
 				{ 
 					p_det = dmin + (dmin_rev / (1.0 + (fd[patient2[n].na] * pow(patient2[n].ID * inv_ID0, kd))));
