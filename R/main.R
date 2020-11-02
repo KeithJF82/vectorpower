@@ -298,73 +298,6 @@ clusters_create <- function(input_list=list(),n_clusters=100,benchmark_mean=0.25
 }
 
 #------------------------------------------------
-#' @title Cohort evaluation
-#'
-#' @description Run stochastic individual model across trial cohort individuals in one or more clusters
-#'
-#' @details Takes a list of parameters, returns a list of raw data (data also saved to files as backup). 
-#'
-#' @param mainpop_data    List output by mainpop() containing main population data
-#' @param cluster_data    List output by clusters_create() containing cluster data
-#' @param n_patients      Number of trial cohort patients per cluster
-#' @param prop_T_c        Treatment probability in cohort
-#' @param age_start       Minimum age of trial cohort patients
-#' @param age_end         Maximum age of trial cohort patients
-#' @param flag_output     Integer indicating whether to show progress of simulation
-#'
-#' @export
-
-cohort <- function(mainpop_data = list(), cluster_data=list(), n_patients = 1,
-                   prop_T_c = 0.9,age_start = 0.5,age_end = 10.0, flag_output=0){
-  
-  # Input error checking (TODO - finish)
-  assert_list(mainpop_data)
-  assert_list(cluster_data)
-  assert_single_int(n_patients)
-  assert_single_bounded(prop_T_c,0.0,1.0)
-  assert_single_bounded(age_start,0.0,65.0)
-  assert_single_bounded(age_end,age_start,65.0)
-  assert_single_int(flag_output)
-  assert_in(flag_output,c(0,1))
-  
-  n_clusters=length(cluster_data$n_run)
-  time_values=mainpop_data$time_values
-  trial_params <- list(n_patients = n_patients,n_clusters=n_clusters, flag_output = flag_output,
-                       time_values=time_values,tmax_i=length(mainpop_data$EIR_daily_data[,1,1]),
-                       prop_T_c = prop_T_c,age_start = age_start,age_end = age_end,
-                       EIR_daily_data = as.vector(mainpop_data$EIR_daily_data),
-                       IB_start_data = as.vector(mainpop_data$IB_start_data),
-                       IC_start_data = as.vector(mainpop_data$IC_start_data),
-                       ID_start_data = as.vector(mainpop_data$ID_start_data))
-  
-  raw_data <- rcpp_cohort(mainpop_data$params,trial_params,cluster_data)
-  results_data <- data.frame(raw_data)
-  
-  cluster_names=paste("cluster",c(1:n_clusters),sep="")
-  patient_names=paste("patient",c(1:n_patients),sep="")
-  n_pts=length(mainpop_data$time_values)
-  n_pt_names=paste("n_pt",c(1:n_pts),sep="")
-  patients_age_outputs = array(data=raw_data$patients_age_outputs,dim=c(n_patients,n_clusters),
-                               dimnames=list(patient_names,cluster_names))
-  patients_het_outputs = array(data=raw_data$patients_het_outputs,dim=c(n_patients,n_clusters),
-                               dimnames=list(patient_names,cluster_names))
-  patients_status_outputs = array(data=raw_data$patients_status_outputs,dim=c(n_pts,n_patients,n_clusters),
-                                  dimnames=list(n_pt_names,patient_names,cluster_names))
-  p_det_outputs = array(data=raw_data$p_det_outputs,dim=c(n_pts,n_patients,n_clusters),
-                                  dimnames=list(n_pt_names,patient_names,cluster_names))
-  clin_inc_outputs = array(data=raw_data$clin_inc_outputs,dim=c(n_pts,n_clusters),
-                        dimnames=list(n_pt_names,cluster_names))
-  
-  results=list(n_clusters=n_clusters,n_patients=n_patients,n_pts=n_pts,time_values=time_values,
-               patients_age_outputs=patients_age_outputs,patients_het_outputs=patients_het_outputs,
-               patients_status_outputs=patients_status_outputs,
-               p_det_outputs=p_det_outputs,clin_inc_outputs=clin_inc_outputs)
-  
-  return(results)
-}
-
-
-#------------------------------------------------
 #' @title Cohort evaluation (alternate)
 #'
 #' @description Run stochastic individual model across trial cohort individuals in one or more clusters
@@ -391,7 +324,7 @@ cohort <- function(mainpop_data = list(), cluster_data=list(), n_patients = 1,
 #'
 #' @export
 
-cohort2 <- function(mainpop_data = list(), cluster_data=list(), n_patients = 1, prop_T_c = 0.9,
+cohort <- function(mainpop_data = list(), cluster_data=list(), n_patients = 1, prop_T_c = 0.9,
                    age_start = 0.5,age_end = 10.0, flag_output=0, test_time_values = c(), test_type = "clin",
                    flag_pre_clearing = 1, censor_period = 0.0, flag_reactive_treatment = 1){
   
@@ -428,7 +361,7 @@ cohort2 <- function(mainpop_data = list(), cluster_data=list(), n_patients = 1, 
                        IC_start_data = as.vector(mainpop_data$IC_start_data),
                        ID_start_data = as.vector(mainpop_data$ID_start_data))
   
-  raw_data <- rcpp_cohort2(mainpop_data$params,trial_params,cluster_data)
+  raw_data <- rcpp_cohort(mainpop_data$params,trial_params,cluster_data)
   results_data <- data.frame(raw_data)
   
   cluster_names=paste("cluster",c(1:n_clusters),sep="")
@@ -620,7 +553,7 @@ crt_combined <- function(#output_file_cluster=NA,output_file_indiv=NA,
   
   # Simulate control clusters
   cat("\nSimulating control clusters")
-  output$cohort_data_con <- cohort2(mainpop_data=mainpop_data,cluster_data=output$cluster_list_con, 
+  output$cohort_data_con <- cohort(mainpop_data=mainpop_data,cluster_data=output$cluster_list_con, 
                                     n_patients = n_patients,prop_T_c = prop_T_c, 
                                     age_start = age_start, age_end = age_end, 
                                     test_time_values = test_time_values, test_type = test_type, 
@@ -629,7 +562,7 @@ crt_combined <- function(#output_file_cluster=NA,output_file_indiv=NA,
   
   # Simulate intervention clusters
   cat("\nSimulating intervention clusters")
-  output$cohort_data_int <- cohort2(mainpop_data=mainpop_data,cluster_data=output$cluster_list_int, 
+  output$cohort_data_int <- cohort(mainpop_data=mainpop_data,cluster_data=output$cluster_list_int, 
                                     n_patients = n_patients,prop_T_c = prop_T_c, 
                                     age_start = age_start, age_end = age_end, 
                                     test_time_values = test_time_values, test_type = test_type, 
@@ -839,6 +772,8 @@ power_compute <-
     n_lines2=n_lines*n_sims
     inf_boolen=rep(NA,n_sims)
     
+    cat("\nCalculating power")
+    
     for(sim in 1:n_sims){
       
       #Lines in data_full from which to take data
@@ -915,5 +850,8 @@ power_compute <-
     results$cohort_data_con = output$cohort_data_con
     results$cohort_data_int = output$cohort_data_int
     results$power_estimate=mean(inf_boolen)
+    
+    cat("\n Power = ",results$power_estimate,sep="")
+    
     return(results)
   }

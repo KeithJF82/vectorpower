@@ -1,8 +1,8 @@
 ---
-title: "Worked Example 4 - Cohort Simulation 1"
+title: "Worked Example 5 - Cohort Simulation 2"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Worked Example 4 - Cohort Simulation 1}
+  %\VignetteIndexEntry{Worked Example 5 - Cohort Simulation 2}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -15,9 +15,7 @@ knitr::opts_chunk$set(
 knitr::opts_chunk$set(root.dir = system.file("extdata",package="vectorpower"))
 ```
 
-This is an example of how to take previously created main population and trial cluster data and and run stochastic simulations of the individuals in the cohort in each cluster, producing prevalence and incidence results for each cohort.
-
-A more detailed cohort model including additional features and producing individual data suitable for use in power calculations is described in Worked Example 5(link).
+This is an example of how to take previously created main population and trial cluster data and and run stochastic simulations of the individuals in the cohort in each cluster, producing data suitable for power calculations (described in Worked Example 5(link)).
 
 First load the package (install it first if necessary as shown in the [Installation article](https://keithjf82.github.io/vectorpower/articles/B_installation.html):
 
@@ -36,36 +34,38 @@ cluster_list_con <-readRDS(file=url("https://github.com/KeithJF82/vectorpower/ra
 cluster_list_int <-readRDS(file=url("https://github.com/KeithJF82/vectorpower/raw/master/inst/extdata/cluster_list_int.Rds"))
 ```
 
-Malaria progression in the trial cohort in each cluster is evaluated using the cohort() function, which runs the stochastic individual-based malaria model (the code for which is found in cohort.cpp in the src/ folder). Here the control group of clusters is simulated:
+Malaria progression in the trial cohort in each cluster is evaluated using the cohort() function, which runs the stochastic individual-based malaria model (the code for which is found in cohort.cpp in the src/ folder). Here the control group of clusters is simulated. [Description of settings]
 
 ```{r}
 # Simulate control clusters
-cohort_data_con <- cohort(mainpop_data=mainpop_data,cluster_data=cluster_list_con,prop_T_c = 0.9,n_patients = 100,
-                          age_start = 0.5,age_end = 10.0,flag_output = 0)
+cohort_data_con <- cohort(mainpop_data=mainpop_data,cluster_data=cluster_list_con,n_patients = 100,prop_T_c = 0.9,
+                          age_start = 0.5,age_end = 10.0,flag_output = 0, test_time_values = 14.0*c(1:10), 
+                          test_type = "RDT", flag_pre_clearing = 1, censor_period = 14.0, flag_reactive_treatment = 1)
 ```
 
-The intervention clusters are simulated in the same way:
+The intervention clusters are simulated with the same settings
 
 ```{r}
 # Simulate intervention clusters
-cohort_data_int <- cohort(mainpop_data=mainpop_data,cluster_data=cluster_list_int,prop_T_c = 0.9,n_patients = 100,
-                          age_start = 0.5,age_end = 10.0,flag_output = 0)
+cohort_data_int <- cohort(mainpop_data=mainpop_data,cluster_data=cluster_list_int,n_patients = 100,prop_T_c = 0.9,
+                          age_start = 0.5,age_end = 10.0,flag_output = 0, test_time_values = 14.0*c(1:10), 
+                          test_type = "RDT", flag_pre_clearing = 1, censor_period = 14.0, flag_reactive_treatment = 1)
 ```
 
 The results of the cohort simulations can be viewed using the plot_cohort_data() function:
 
 ```{r}
-# Display average prevalence across control clusters
-control_plot <- plot_cohort_data(cohort_data = cohort_data_con,benchmark = "slide_prev",flag_output=2)
+# Display average positive test rate across control clusters
+control_plot <- plot_cohort_data(cohort_data = cohort_data_con,benchmark = "test_inc",flag_output=2)
 ```
 ```{r}
-# Display average prevalence across intervention clusters
-int_plot <- plot_cohort_data(cohort_data = cohort_data_int,benchmark = "slide_prev",flag_output=2)
+# Display average positive test rate across intervention clusters
+int_plot <- plot_cohort_data(cohort_data = cohort_data_int,benchmark = "test_inc",flag_output=2)
 ```
 ```{r}
 # Compare prevalence progression in control and intervention clusters on same set of axes
-matplot(mainpop_data$time_values,control_plot,type="p",pch=1,col=1,xlab="time (days)",ylab="Average prevalence")
-matplot(mainpop_data$time_values,int_plot,type="p",pch=2,col=2,add=TRUE)
+matplot(cohort_data_con$test_time_values,control_plot,type="p",pch=1,col=1,xlab="time (days)",ylab="Average prevalence")
+matplot(cohort_data_int$test_time_values,int_plot,type="p",pch=2,col=2,add=TRUE)
 legend("topleft", inset=0.01, legend=c("Control","Intervention"), pch=c(1:2),col=c(1:2),
        horiz=FALSE,bg='white',cex=1.0)
 ```

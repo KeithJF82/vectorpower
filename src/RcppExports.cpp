@@ -18,19 +18,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// rcpp_cohort2
-Rcpp::List rcpp_cohort2(List params, List trial_params, List cluster_data);
-RcppExport SEXP _vectorpower_rcpp_cohort2(SEXP paramsSEXP, SEXP trial_paramsSEXP, SEXP cluster_dataSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< List >::type params(paramsSEXP);
-    Rcpp::traits::input_parameter< List >::type trial_params(trial_paramsSEXP);
-    Rcpp::traits::input_parameter< List >::type cluster_data(cluster_dataSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcpp_cohort2(params, trial_params, cluster_data));
-    return rcpp_result_gen;
-END_RCPP
-}
 // rcpp_ento
 Rcpp::List rcpp_ento(List params, List inputs, List trial_params);
 RcppExport SEXP _vectorpower_rcpp_ento(SEXP paramsSEXP, SEXP inputsSEXP, SEXP trial_paramsSEXP) {
@@ -72,7 +59,6 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_vectorpower_rcpp_cohort", (DL_FUNC) &_vectorpower_rcpp_cohort, 3},
-    {"_vectorpower_rcpp_cohort2", (DL_FUNC) &_vectorpower_rcpp_cohort2, 3},
     {"_vectorpower_rcpp_ento", (DL_FUNC) &_vectorpower_rcpp_ento, 3},
     {"_vectorpower_rcpp_mainpop", (DL_FUNC) &_vectorpower_rcpp_mainpop, 3},
     {"_vectorpower_rcpp_mainpop_ss", (DL_FUNC) &_vectorpower_rcpp_mainpop_ss, 2},

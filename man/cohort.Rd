@@ -2,7 +2,7 @@
 % Please edit documentation in R/main.R
 \name{cohort}
 \alias{cohort}
-\title{Cohort evaluation}
+\title{Cohort evaluation (alternate)}
 \usage{
 cohort(
   mainpop_data = list(),
@@ -11,7 +11,12 @@ cohort(
   prop_T_c = 0.9,
   age_start = 0.5,
   age_end = 10,
-  flag_output = 0
+  flag_output = 0,
+  test_time_values = c(),
+  test_type = "clin",
+  flag_pre_clearing = 1,
+  censor_period = 0,
+  flag_reactive_treatment = 1
 )
 }
 \arguments{
@@ -28,9 +33,24 @@ cohort(
 \item{age_end}{Maximum age of trial cohort patients}
 
 \item{flag_output}{Integer indicating whether to show progress of simulation}
+
+\item{test_time_values}{Time points at which tests are administered}
+
+\item{test_type}{Type of test administered ("clin" = clinical, "RDT" = rapid diagnostic test)}
+
+\item{flag_pre_clearing}{Integer indicating whether patients given pre-trial prophylaxis (if 1, place all patients
+into prophylaxis category at start)}
+
+\item{censor_period}{Time period after a positive test during which a patient is not counted towards incidence}
+
+\item{flag_reactive_treatment}{Integer indicating whether patients are automatically given prophylaxis after a
+positive test (shifting them into treatment category if a clinical case,
+prophylaxis category otherwise)}
 }
 \description{
 Run stochastic individual model across trial cohort individuals in one or more clusters
+             (alternate version incorporating more details of testing and reactive treatment during trial,
+             in progress)
 }
 \details{
 Takes a list of parameters, returns a list of raw data (data also saved to files as backup).

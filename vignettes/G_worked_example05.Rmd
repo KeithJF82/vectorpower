@@ -1,8 +1,8 @@
 ---
-title: "Worked Example 5 - Cohort Simulation 2"
+title: "Worked Example 6 - Power Calculations"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Worked Example 5 - Cohort Simulation 2}
+  %\VignetteIndexEntry{Worked Example 6 - Power Calculations}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -15,7 +15,7 @@ knitr::opts_chunk$set(
 knitr::opts_chunk$set(root.dir = system.file("extdata",package="vectorpower"))
 ```
 
-This is an example of how to take previously created main population and trial cluster data and and run stochastic simulations of the individuals in the cohort in each cluster, producing data suitable for power calculations (described in Worked Example 6(link)). For cohort modelling producing prevalence and incidence data, see Worked [Worked Example 4](https://keithjf82.github.io/vectorpower/articles/F_worked_example04.html)
+This is an example of how to take previously created main population data and and calculate the statistical power of a hypothetical field trial where the control and intervention clusters are drawn from said data.
 
 First load the package (install it first if necessary as shown in the [Installation article](https://keithjf82.github.io/vectorpower/articles/B_installation.html):
 
@@ -23,49 +23,38 @@ First load the package (install it first if necessary as shown in the [Installat
 library(vectorpower)
 ```
 
-In this example, the main population and cohort data sets are loaded from RDS files created by saving the results of running the mainpop() function (see [Worked Example 2](https://keithjf82.github.io/vectorpower/articles/D_worked_example02.html)) and the clusters_create() function ( see [Worked Example 3](https://keithjf82.github.io/vectorpower/articles/E_worked_example03.html)).
+In this example, the main population data set is loaded from an RDS file created by saving the results of running the mainpop() function (see [Worked Example 2](https://keithjf82.github.io/vectorpower/articles/D_worked_example02.html)).
 
 ```{r}
 # Load main population data
 mainpop_data <- readRDS(file=url("https://github.com/KeithJF82/vectorpower/raw/master/inst/extdata/mainpop_data.Rds"))
-
-# Load control and intervention cluster data
-cluster_list_con <-readRDS(file=url("https://github.com/KeithJF82/vectorpower/raw/master/inst/extdata/cluster_list_con.Rds"))
-cluster_list_int <-readRDS(file=url("https://github.com/KeithJF82/vectorpower/raw/master/inst/extdata/cluster_list_int.Rds"))
 ```
 
-Malaria progression in the trial cohort in each cluster is evaluated using the cohort2() function, which runs the stochastic individual-based malaria model (the code for which is found in cohort2.cpp in the src/ folder). Here the control group of clusters is simulated. [Description of settings]
+[Note on displaying year-round data TBA]
 
 ```{r}
-# Simulate control clusters
-cohort_data_con <- cohort2(mainpop_data=mainpop_data,cluster_data=cluster_list_con,n_patients = 100,prop_T_c = 0.9,
-                          age_start = 0.5,age_end = 10.0,flag_output = 0, test_time_values = 14.0*c(1:10), 
-                          test_type = "RDT", flag_pre_clearing = 1, censor_period = 14.0, flag_reactive_treatment = 1)
+data_view1=data.frame(n=mainpop_data$annual_data$n_mv,EIR_annual=mainpop_data$annual_data$EIRy)
+matplot(x=data_view1$n,y=data_view1$EIR_annual,type="p",pch=1,xlab="Dataset",ylab="Annual EIR")
 ```
 
-The intervention clusters are simulated with the same settings
+[Note on displaying mainpop results TBA]
 
 ```{r}
-# Simulate intervention clusters
-cohort_data_int <- cohort2(mainpop_data=mainpop_data,cluster_data=cluster_list_int,n_patients = 100,prop_T_c = 0.9,
-                          age_start = 0.5,age_end = 10.0,flag_output = 0, test_time_values = 14.0*c(1:10), 
-                          test_type = "RDT", flag_pre_clearing = 1, censor_period = 14.0, flag_reactive_treatment = 1)
+data_view2=get_mainpop_data(input_list=mainpop_data,benchmark="EIR",set_n_mv=mainpop_data$n_mv_set)
+plot_mainpop_data(data_view2)
 ```
 
-The results of the cohort simulations can be viewed using the plot_cohort_data() function:
+Power is computed using the power_compute() function. [Explanation of parameter settings TBA]
 
-```{r}
-# Display average positive test rate across control clusters
-control_plot <- plot_cohort_data(cohort_data = cohort_data_con,benchmark = "test_inc",flag_output=2)
-```
-```{r}
-# Display average positive test rate across intervention clusters
-int_plot <- plot_cohort_data(cohort_data = cohort_data_int,benchmark = "test_inc",flag_output=2)
-```
-```{r}
-# Compare prevalence progression in control and intervention clusters on same set of axes
-matplot(cohort_data_con$test_time_values,control_plot,type="p",pch=1,col=1,xlab="time (days)",ylab="Average prevalence")
-matplot(cohort_data_int$test_time_values,int_plot,type="p",pch=2,col=2,add=TRUE)
-legend("topleft", inset=0.01, legend=c("Control","Intervention"), pch=c(1:2),col=c(1:2),
-       horiz=FALSE,bg='white',cex=1.0)
+```{r, include = FALSE}
+# Run power calculation
+results<-
+power_compute(mainpop_data=mainpop_data,n_clusters=2,n_patients=25,data_level="Individual",alpha=0.05,
+              effect_size_sign="Positive",trial_type="sup",delta_eq=NULL,delta_ni=NULL,n_sims=1000,
+              benchmark="EIR_annual",age_start=0.5,age_end=10.0,test_time_values=10.0*c(1:14),
+              test_type="RDT",flag_pre_clearing=1,censor_period=14.0,flag_reactive_treatment=1,prop_T_c=0.9,
+              benchmark_mean=0.3,benchmark_stdev=0.05,int_mean=0.1,int_stdev=0.0)
+# Output result
+power = results$power_estimate
+power
 ```

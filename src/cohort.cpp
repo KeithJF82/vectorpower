@@ -5,19 +5,22 @@ using namespace std;
 
 struct patients//Structure containing individual patient data for cohort
 {
-	int status;//Infection group - 0=S, 1=T, 2=D, 3=A, 4=U, 5=P
-	int na, num_het;//Age and heterogeneity groups
-	double IB, IC, ID;//Immunities
-	int infected;//Flag indicating patient in early stage of infection
-	double delay;//Infection delay time
+	int status;				//Infection group - 0=S, 1=T, 2=D, 3=A, 4=U, 5=P
+	int na, num_het;		//Age and heterogeneity groups
+	double IB, IC, ID;		//Immunities
+	int infected;			//Flag indicating patient in early stage of infection
+	double inf_delay;		//Infection inf_delay time
+	int flag_censored;		//Flag indicating (1=yes, 0=no) if patient should be ignored when calculating test incidence
+	double censor_delay;	//Remaining censor period
 }
-patient[1000];
+patient2[200];
 
 // [[Rcpp::export]]
 Rcpp::List rcpp_cohort(List params, List trial_params, List cluster_data)
 {
-	int na_c0, na_c1, na_c2, n_c, mvn, int_num, data_num, i, j, n, nt, div, pos, ntmax, tflag, interval, infected;
-	double dt, t, EIRd, EIRt, t_mark1, t_mark2, p_multiplier, prob, cprobmax, p_inf_bite, p_inf_from_bite, p_clin_inf, IC_cur, IB_cur, ID_cur, rate_db_t, rate_dc_t, rate_dd_t, random_value;
+	int na_c0, na_c1, na_c2, n_c, mvn, int_num, data_num, i, j, n, nt, div, pos, ntmax, tflag, interval, infected, n_positive, n_eligible, flag_positive, flag_censor;
+	double dt, t, EIRd, EIRt, t_mark1, t_mark2, p_multiplier, cprobmax, p_inf_bite, p_inf_from_bite, p_clin_inf, IC_cur, IB_cur, ID_cur, rate_db_t, rate_dc_t, rate_dd_t, random_value;
+	double p_det = 0.0;
 
 	//Constants (TODO: Make global)----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	double dy = 365.0;											// Days in a year
@@ -26,16 +29,28 @@ Rcpp::List rcpp_cohort(List params, List trial_params, List cluster_data)
 
 	//Load input parameter data from R------------------------------------------------------------------------------------------------------------------------------------------
 
-	int flag_output = rcpp_to_int(trial_params["flag_output"]);
-	Rcout << "\nBeginning cluster calculations\n";
-	R_FlushConsole();
+	int flag_output = rcpp_to_int(trial_params["flag_output"]);							//Flag indicating whether progress reported
+	int flag_pre_clearing = rcpp_to_int(trial_params["flag_pre_clearing"]);				//Flag indicating whether pre-clearing applied
+	int flag_reactive_treatment = rcpp_to_int(trial_params["flag_reactive_treatment"]);	//Flag indicating whether reactive treatment applied
+	int flag_test_type = rcpp_to_int(trial_params["flag_test_type"]);					//Type of test
+	int test_list[6]= {0,0,0,0,0,0}; // Array of values indicating which status values return positive test results (0 = no, 1 = yes, 2 = based on p_det)	
 	vector<double> time_values = rcpp_to_vector_double(trial_params["time_values"]);	// Vector of time benchmark points
-	int n_divs = time_values.size();
-	vector<double> tinterval2(n_divs, 0.0);
+	vector<double> test_time_values = rcpp_to_vector_double(trial_params["test_time_values"]);	// Vector of testing time points
+	double censor_period = rcpp_to_double(trial_params["censor_period"]); //Period to censor a patient from test incidence calculations after positive test
+	if(censor_period>0.0){flag_censor=1;} else {flag_censor=0;}
+	int n_divs = test_time_values.size();
+	/*vector<double> tinterval2(n_divs, 0.0);
 	tinterval2[0] = time_values[0] = 0.0 ? 1.0 : time_values[0];
-	for (div = 1; div < n_divs; div++) { tinterval2[div] = time_values[div] - time_values[div-1]; }
+	for (div = 1; div < n_divs; div++) { tinterval2[div] = time_values[div] - time_values[div-1]; }*/
 	int tmax_i = rcpp_to_int(trial_params["tmax_i"]);
-	double tmax = tmax_i * 1.0;
+	
+	if (flag_output == 1)
+	{
+		Rcout << "\nBeginning cluster calculations\n";
+		R_FlushConsole();
+	}	
+
+	double tmax = test_time_values[n_divs-1];
 	int n_clusters = rcpp_to_int(trial_params["n_clusters"]);					// Number of lines in cluster data input file (number of clusters)
 	double prop_T_c = rcpp_to_double(trial_params["prop_T_c"]);					// Proportion of clinical cases successfully treated in cohort
 	int n_patients = rcpp_to_int(trial_params["n_patients"]);					// Number of patients in cohort
@@ -59,7 +74,7 @@ Rcpp::List rcpp_cohort(List params, List trial_params, List cluster_data)
 	vector<double> den = rcpp_to_vector_double(params["den"]);
 
 	int n_cats = na * num_het;									//Total number of age/heterogeneity categories in main population 
-	double dv_p1 = 1.0 / n_patients;
+	//double dv_p1 = 1.0 / n_patients;
 	double rho = rcpp_to_double(params["rho"]);					// Age-dependent biting parameter
 	double a0 = rcpp_to_double(params["a0"]);					// Age-dependent biting parameter
 	double sigma2 = rcpp_to_double(params["sigma2"]);			// Variance of log heterogeneity in biting
@@ -104,8 +119,6 @@ Rcpp::List rcpp_cohort(List params, List trial_params, List cluster_data)
 
 	//Constant derived values--------------------------------------------------------------------------------------------------------------------------
 
-	R_FlushConsole();
-
 	double rT = 1.0 / dur_T;			//Rate of recovery from disease and parasitaemia when treated
 	double rD = 1.0 / dur_D;			//Rate of moving from clinical disease to asymptomatic when not successfully treated
 	double rA0 = 1.0 / dur_A;			//Rate of moving from asymptomatic patent infection to sub-patent infection
@@ -145,6 +158,31 @@ Rcpp::List rcpp_cohort(List params, List trial_params, List cluster_data)
 	int na_c = na_c2 - na_c0 + 1;			//Total number of age categories within cohort
 	int n_cats_c = na_c * num_het;			//Total number of age and heterogeneity categories in cohort
 
+	switch(flag_test_type)
+	{
+		case 1: //Clinical cases test positive
+		{
+			test_list[1]=1;
+			test_list[2]=1;
+		}
+			break;
+		case 2: //Rapid diagnostic/microscope test: clinical cases test positive, asymptomatic cases test positive with p_det
+		{
+			test_list[1]=1;
+			test_list[2]=1;
+			test_list[3]=2;
+		}
+			break;
+		case 3: //PCR test: T,D,A,U test positive
+		{			
+			test_list[1]=1;
+			test_list[2]=1;
+			test_list[3]=1;
+			test_list[4]=1;
+		}
+			break;
+	}
+
 	//Calculate the proportion in each age group using discrete time, to match the equilibrium from the differential eqns
 	double* foi_age = (double*)malloc(na * sizeof(double));
 	double densum = 0.0;
@@ -164,12 +202,18 @@ Rcpp::List rcpp_cohort(List params, List trial_params, List cluster_data)
 	//Set up additional arrays-------------------------------------------------------------------------------------------------------------------------------------
 
 	double* cprob = (double*)malloc(n_cats_c * sizeof(double));						//Cumulative probability distribution used to determine age/heterogenity category to place randomly generated patients
-	double* clin_inc_values = (double*)malloc(n_divs * sizeof(double));             //Values of clinical incidence (cohort) between checkpoints
+	//double* clin_inc_values = (double*)malloc(n_divs * sizeof(double));             //Values of clinical incidence (cohort) between checkpoints
 	vector<int> patients_status_outputs(n_clusters * n_patients * n_divs, 0);		//All patient statuses across all clusters at each time point, for output to R
+	vector<int> patients_test_outputs(n_clusters * n_patients * n_divs, 0);		//All patient test flags (0=negative, 1=positive) across all clusters at each time point, for output to R
 	vector<double> p_det_outputs(n_clusters * n_patients * n_divs, 0.0);			//Probability of asymptomatic infection being detected, where relevant, for all patients across all clusters at each time point, for output to R
-	vector<double> clin_inc_outputs(n_clusters * n_divs, 0.0);						//Clinical incidence per person per day in each cluster at each time point (averaged over time up to that point from previous point), for output to R
-	vector<double> patients_age_outputs(n_clusters * n_patients, 0.0);				//Patient ages (at start of trial period) across all clusters
-	vector<double> patients_het_outputs(n_clusters * n_patients, 0.0);				//Patient heterogeneity group numbers across all clusters
+	//vector<double> clin_inc_outputs(n_clusters * n_divs, 0.0);					//Clinical incidence per person per day in each cluster at each time point (averaged over time up to that point from previous point), for output to R
+	vector<double> test_incidence_outputs(n_clusters * n_divs, 0.0);				//Incidence of patients passing designated test at each time point, for output to R, adjusted for censoring
+	//vector<double> dummy(n_clusters * n_divs, 0.0);
+	//vector<double> patients_age_list(n_clusters * n_patients, 0.0);				//Patient ages (at start of trial period) across all clusters
+	//vector<double> patients_het_list(n_clusters * n_patients, 0.0);				//Patient heterogeneity group numbers across all clusters
+
+	vector<double> patients_age_outputs(n_clusters * n_patients * n_divs, 0.0);				//Patient ages (at start of trial period) across all clusters, repeated over time points
+	vector<double> patients_het_outputs(n_clusters * n_patients * n_divs, 0.0);				//Patient heterogeneity group numbers across all clusters, repeated over time points
 
 	//Load input data------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -188,10 +232,20 @@ Rcpp::List rcpp_cohort(List params, List trial_params, List cluster_data)
 		mvn = run_mvn[n_c];
 		int_num = run_int[n_c];
 		data_num = run_data_num[n_c];
-		if (flag_output == 1) { Rcout << "Processing cluster " << n_c << ":\tmvn=" << mvn << "\tint_num=" << int_num << "\tdata_num=" << data_num; }
+		if (flag_output == 1) 
+		{ 
+			Rcout << "Processing cluster " << n_c << ":\tmvn=" << mvn << "\tint_num=" << int_num << "\tdata_num=" << data_num; 
+			//Rcout << "\nTest_list: " << test_list[0] << " " << test_list[1] << " " << test_list[2] << " " << test_list[3] << " " << test_list[4] << " " << test_list[5];
+			R_FlushConsole();
+		}
 		goto start_run;
 	run_complete:
-		if (flag_output == 1) { Rcout << "\n"; }
+		if (flag_output == 1) 
+		{ 
+			//Rcout << "\nCluster " << n_c << " complete.\n"; 
+			Rcout << "\n";
+			R_FlushConsole();
+		}
 	}
 
 	goto finish;
@@ -221,46 +275,56 @@ start_run:
 
 	for (n = 0; n < n_patients; n++)//Randomly determine patient's age and heterogeneity category using cprob
 	{
-		prob = runif1();
+		random_value = runif1();
 		for (i = na_c0; i <= na_c1; i++)
 		{
 			for (j = 0; j < num_het; j++)
 			{
-				if (prob <= cprob[((i - na_c0) * num_het) + j]) { goto found; }
+				if (random_value <= cprob[((i - na_c0) * num_het) + j]) { goto found; }
 			}
 		}
 	found:
-		patient[n].na = i;
-		patient[n].num_het = j;
+		patient2[n].na = i;
+		patient2[n].num_het = j;
 		pos = ((n_c)*n_patients) + n;
-		patients_age_outputs[pos] = age[i] * inv_dy;
-		patients_het_outputs[pos] = j;
+		//patients_age_list[pos] = age[i] * inv_dy;
+		//patients_het_list[pos] = j;
 	}
 
 restart:
-	for (div = 0; div < n_divs; div++)
+	/*for (div = 0; div < n_divs; div++)
 	{
 		clin_inc_values[div] = 0.0;
-	}
+	}*/
 
 	p_multiplier = 1.0 / dt;
-	ntmax = intdiv(tmax - 1.0, dt);
-	R_FlushConsole();
+	ntmax = intdiv(tmax, dt);
 
 	for (n = 0; n < n_patients; n++)
 	{
-		//patient[n].status = 0;	//All patients start in group S, representing pre-intervention treatment
-		patient[n].status = 5;	//All patients start in group P, representing pre-intervention prophylaxis
-		pos = ((mvn - 1) * n_cats) + (patient[n].na * num_het) + patient[n].num_het;
-		patient[n].IB = IB_input[pos];
-		patient[n].IC = IC_input[pos];
-		patient[n].ID = ID_input[pos];
-		patient[n].infected = 0;
-		patient[n].delay = 0.0;
+		patient2[n].status = 0;
+		if(flag_pre_clearing==1)
+		{
+			patient2[n].status = 5;	//All patients start in group P, representing pre-intervention prophylaxis
+		}
+		else
+		{ //TODO: Add what happens when no pre-clearing
+			Rcout << "\nError! Status setup in absence of pre-clearing not created.\n"; 
+			R_FlushConsole();
+			goto finish;
+		}
+		pos = ((mvn - 1) * n_cats) + (patient2[n].na * num_het) + patient2[n].num_het;
+		patient2[n].IB = IB_input[pos];
+		patient2[n].IC = IC_input[pos];
+		patient2[n].ID = ID_input[pos];
+		patient2[n].infected = 0;
+		patient2[n].inf_delay = 0.0;
+		patient2[n].flag_censored = 0;
+		patient2[n].censor_delay = 0.0;
 	}
 
 	t_mark1 = tinterval1;
-	t_mark2 = time_values[0];
+	t_mark2 = test_time_values[0];
 	div = 0;
 	interval = 0;
 	rate_db_t = rate_db * dt;
@@ -270,20 +334,84 @@ restart:
 	{
 		t = nt * dt;
 
-		//Output patient data and benchmarks
+		//On reaching next test time point, save patient data, and run test and output positive test result incidence adjusted for censoring
 		if (t >= t_mark2)
 		{
 			pos = (n_c * n_patients * n_divs) + div;
-			clin_inc_outputs[(n_c * n_divs) + div] = clin_inc_values[div];
+			//clin_inc_outputs[(n_c * n_divs) + div] = clin_inc_values[div];
+			n_positive = 0;
+			n_eligible = n_patients;
 			for (n = 0; n < n_patients; n++)
 			{
-				patients_status_outputs[pos] = patient[n].status;
-				if (patient[n].status == 3) { p_det_outputs[pos] = dmin + (dmin_rev / (1.0 + (fd[patient[n].na] * pow(patient[n].ID * inv_ID0, kd)))); }
+				//Save status and (if relevant) detection probability
+				patients_status_outputs[pos] = patient2[n].status;
+				patients_age_outputs[pos] = age[patient2[n].na]*inv_dy;
+				patients_het_outputs[pos] = patient2[n].num_het;
+				if (patient2[n].status == 3) 
+				{ 
+					p_det = dmin + (dmin_rev / (1.0 + (fd[patient2[n].na] * pow(patient2[n].ID * inv_ID0, kd))));
+					p_det_outputs[pos] = p_det; 
+				}
+
+				//Run test
+				if(patient2[n].flag_censored==1) //Patients being censored are not counted towards positives; incidence denominator reduced by no. censored
+				{
+					n_eligible--;
+				}
+				else
+				{
+					flag_positive = 0;
+					switch(test_list[patient2[n].status])
+					{
+						case 0: {}
+							break;
+						case 1: 
+							{ 
+								flag_positive=1;
+							}
+							break;
+						case 2: //Use p_det to determine whether asymptomatic case tests positive
+							{ 
+								if(runif1()<=p_det)
+								{
+									flag_positive=1;								
+								}
+							}
+							break;
+						default:
+						{
+							Rcout << "\nTest_list error!\n";
+							R_FlushConsole();
+							goto finish;					
+						}
+					}	
+					
+					patients_test_outputs[pos] = flag_positive;
+
+					if(flag_positive==1)
+					{						
+						n_positive++;
+						if(flag_reactive_treatment==1 && patient2[n].flag_censored == 0)
+						{ //Patients newly testing positive given prophylaxis
+							if(patient2[n].status==3){patient2[n].status=5;}
+							else{patient2[n].status=1;}
+							patient2[n].infected=0;
+							patient2[n].inf_delay=0.0;
+						}
+						if(flag_censor==1)
+						{
+							patient2[n].flag_censored = 1;
+							patient2[n].censor_delay = censor_period;						
+						}
+					}
+				}
 				pos += n_divs;
 			}
 
+			test_incidence_outputs[(n_c * n_divs) + div] = (n_positive*1.0)/n_eligible;
+			//Rcout << "\nTime=" << t << "\tIncidence=" << test_incidence_outputs[(n_c * n_divs) + div] << "\tn_positive=" << n_positive << "\tn_eligible=" << n_eligible;
 			div++;
-			if (div < n_divs) { t_mark2 = time_values[div]; }
+			if (div < n_divs) { t_mark2 = test_time_values[div]; }
 		}
 
 		EIRd = EIR_input[(data_num * tmax_i) + interval];
@@ -291,11 +419,11 @@ restart:
 		for (n = 0; n < n_patients; n++)
 		{
 			infected = 0;
-			i = patient[n].na;
-			j = patient[n].num_het;
-			IB_cur = patient[n].IB;
-			IC_cur = patient[n].IC;
-			ID_cur = patient[n].ID;
+			i = patient2[n].na;
+			j = patient2[n].num_het;
+			IB_cur = patient2[n].IB;
+			IC_cur = patient2[n].IC;
+			ID_cur = patient2[n].ID;
 			p_inf_bite = EIRt * rel_foi[j] * foi_age[i];//Probability of an infectious bite
 
 			//Check that dt has not been set too high
@@ -309,67 +437,66 @@ restart:
 			}
 			if (runif1() <= p_inf_bite)
 			{
-				patient[n].IB += IB_boost;
+				patient2[n].IB += IB_boost;
 				p_inf_from_bite = bh * (IB_cur > 0.0 ? ((bmin_rev / (1.0 + pow(IB_cur * inv_IB0, kb))) + bmin) : 1.0);	//Probability of an infection from an infectious bite
 				if (runif1() <= p_inf_from_bite)
 				{
 					infected = 1;
-					patient[n].IC += IC_boost;
-					patient[n].ID += ID_boost;
+					patient2[n].IC += IC_boost;
+					patient2[n].ID += ID_boost;
 				}
 			}
 
-			if (patient[n].infected == 1)
+			if (patient2[n].infected == 1)
 			{
-				patient[n].delay -= dt;
-				if (patient[n].delay <= 0.0)
+				patient2[n].inf_delay -= dt;
+				if (patient2[n].inf_delay <= 0.0)
 				{
-					patient[n].infected = 0;
-					patient[n].delay = 0.0;
+					patient2[n].infected = 0;
+					patient2[n].inf_delay = 0.0;
 					p_clin_inf = phi0 * ((phi1_rev / (1.0 + pow(IC_cur * inv_IC0, kc))) + phi1);//Probability of a clinical infection
 					if (runif1() <= p_clin_inf)
 					{/*clinical infection*/
-						clin_inc_values[div] += dv_p1 / tinterval2[div];
-						random_value = runif1();
-						if (random_value <= prop_T_c) {/*to T*/ patient[n].status = 1; }
-						else {/*to D*/  patient[n].status = 2; }
+						//clin_inc_values[div] += dv_p1 / tinterval2[div];
+						if (runif1() <= prop_T_c) {/*to T*/ patient2[n].status = 1; }
+						else {/*to D*/  patient2[n].status = 2; }
 					}
-					else {/*to A*/ patient[n].status = 3; }
+					else {/*to A*/ patient2[n].status = 3; }
 				}
 			}
 			else
 			{
-				switch (patient[n].status)
+				switch (patient2[n].status)
 				{
 				case 0: //S
 				{
 					if (infected == 1)
 					{
-						patient[n].infected = 1;
-						patient[n].delay = dur_E;
+						patient2[n].infected = 1;
+						patient2[n].inf_delay = dur_E;
 					}
 				}
 				break;
 				case 1: //T
 				{
-					if (runif1() * p_multiplier <= rT) {/*to P*/ patient[n].status = 5; }
+					if (runif1() * p_multiplier <= rT) {/*to P*/ patient2[n].status = 5; }
 				}
 				break;
 				case 2: //D
 				{
-					if (runif1() * p_multiplier <= rD) {/*to A*/ patient[n].status = 3; }
+					if (runif1() * p_multiplier <= rD) {/*to A*/ patient2[n].status = 3; }
 				}
 				break;
 				case 3: //A
 				{
 					if (infected == 1)
 					{
-						patient[n].infected = 1;
-						patient[n].delay = dur_E;
+						patient2[n].infected = 1;
+						patient2[n].inf_delay = dur_E;
 					}
 					else
 					{
-						if (runif1() * p_multiplier <= rA0) {/*to U*/ patient[n].status = 4; }
+						if (runif1() * p_multiplier <= rA0) {/*to U*/ patient2[n].status = 4; }
 					}
 				}
 				break;
@@ -377,27 +504,35 @@ restart:
 				{
 					if (infected == 1)
 					{
-						patient[n].infected = 1;
-						patient[n].delay = dur_E;
+						patient2[n].infected = 1;
+						patient2[n].inf_delay = dur_E;
 					}
 					else
 					{
-						if (runif1() * p_multiplier <= rU) {/*to S*/ patient[n].status = 0; }
+						if (runif1() * p_multiplier <= rU) {/*to S*/ patient2[n].status = 0; }
 					}
 				}
 				break;
 				case 5: //P
 				{
-					if (runif1() * p_multiplier <= rP) {/*to S*/ patient[n].status = 0; }
+					if (runif1() * p_multiplier <= rP) {/*to S*/ patient2[n].status = 0; }
 				}
 				break;
 				default: { Rcout << "\nError in switch 1!\n"; }
 				}
 			}
 			//Natural decrease in immunity
-			patient[n].IB -= IB_cur * rate_db_t;
-			patient[n].IC -= IC_cur * rate_dc_t;
-			patient[n].ID -= ID_cur * rate_dd_t;
+			patient2[n].IB -= IB_cur * rate_db_t;
+			patient2[n].IC -= IC_cur * rate_dc_t;
+			patient2[n].ID -= ID_cur * rate_dd_t;
+			if(patient2[n].flag_censored==1)
+			{
+				patient2[n].censor_delay-=dt;
+				if(patient2[n].censor_delay<=0.0)
+				{
+					patient2[n].flag_censored=0;
+				}
+			}
 		}
 
 		if (t >= t_mark1)
@@ -415,9 +550,15 @@ end:
 
 finish:
 
-	Rcout << "\nCluster calculations complete\n";
+	if (flag_output == 1)
+	{
+		Rcout << "\nCluster calculations complete\n";
+		R_FlushConsole();
+	}	
 
 	// Return list
-	return List::create(Named("patients_age_outputs") = patients_age_outputs, Named("patients_het_outputs") = patients_het_outputs, Named("patients_status_outputs") = patients_status_outputs, 
-						Named("p_det_outputs") = p_det_outputs, Named("clin_inc_outputs") = clin_inc_outputs);
+	return List::create(Named("patients_age_outputs") = patients_age_outputs, Named("patients_het_outputs") = patients_het_outputs, 
+						Named("patients_status_outputs") = patients_status_outputs, Named("patients_test_outputs") = patients_test_outputs, 
+						Named("p_det_outputs") = p_det_outputs, Named("test_incidence_outputs") = test_incidence_outputs);
+	//return List::create(Named("incidence") = dummy);
 }
