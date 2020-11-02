@@ -2,7 +2,7 @@
 % Please edit documentation in R/main.R
 \name{power_compute}
 \alias{power_compute}
-\title{Power calculation alt}
+\title{Power calculation}
 \usage{
 power_compute(
   mainpop_data = list(),
