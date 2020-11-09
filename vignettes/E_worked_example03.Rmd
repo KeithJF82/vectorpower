@@ -26,7 +26,7 @@ library(vectorpower)
 In this example, the main population data is loaded from an RDS file created by saving the results of running the mainpop() function, as described in [Worked Example 2](https://keithjf82.github.io/vectorpower/articles/D_worked_example02.html).
 
 ```{r}
-mainpop_data <- readRDS(file=url("https://github.com/KeithJF82/vectorpower/raw/master/inst/extdata/mainpop_data.Rds"))
+mainpop_data <- readRDS(file=url("https://github.com/KeithJF82/vectorpower/raw/master/inst/extdata/DemoFolder1/mainpop_data.Rds"))
 ```
 
 The cluster_input_setup() function is used to extract and plot a graph of a list of specific data values from the output, to use as input for cluster creation. The quantity set_n_pt refers to the time point in the results to use (the time points being specified using the time_values quantitity in mainpop()), set_n_int refers to the intervention number to use, benchmark is the output data type to use, and age_start and age_end define the age range to be used when using an age-dependent quantity as the benchmark. For more details, see the documentation for cluster_input_setup(). Here, the annual total EIR is used as the benchmark by setting benchmark = "EIR_annual". This renders the other quantities listed above unnecessary, as EIR_annual is an invariant quantity.
