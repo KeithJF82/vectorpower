@@ -48,12 +48,12 @@ The parameters defining the trial setup are then supplied to be used by mainpop(
 # Length of time to run main population model from starting date before intervention begins
 start_interval = 0.0  
 # Time points after the end of the starting interval at which benchmark data should be output
-time_values = c(0.0,28.0,56.0,84.0,112.0,140.0) 
+time_values = c(1:100) 
 # List of sets of values to load from starting data
-n_mv_set = c(1:5) 
-# Intervention parameter given variable value (0= None, 1=ATSB kill rate, 2=bednet coverage, 3=IRS coverage)
+n_mv_set = c(1:6) 
+# Intervention parameter given variable value (0 = None, 1 = ATSB mortality, 2 = bednet coverage, 3 = Interior residual spraying coverage, 4 = SET coverage)
 int_v_varied = 1 
-# List of intervention parameter values
+# List of intervention parameter values ()
 int_values = c(0.0,0.1) 
 ```
 
@@ -79,8 +79,8 @@ saveRDS(mainpop_data,file="mainpop_data.Rds")
 The get_mainpop_data() function can be used to obtain selected results, which can then be plotted as graphs using the plot_mainpop_data() function:
 
 ```{r}
-plot1 <- get_mainpop_data(input_list=mainpop_data,set_n_mv=c(1:5),set_n_int=1,benchmark="slide_prev",age_start=0.0,age_end = 65.0)
-plot2 <- get_mainpop_data(input_list=mainpop_data,set_n_mv=c(1:5),set_n_int=2,benchmark="slide_prev",age_start=0.0,age_end = 65.0)
+plot1 <- get_mainpop_data(input_list=mainpop_data,set_n_mv=c(1:6),set_n_int=1,benchmark="slide_prev",age_start=0.0,age_end = 65.0)
+plot2 <- get_mainpop_data(input_list=mainpop_data,set_n_mv=c(1:6),set_n_int=2,benchmark="slide_prev",age_start=0.0,age_end = 65.0)
 par(mfrow=c(1,2))
 plot_mainpop_data(plot1)
 plot_mainpop_data(plot2)

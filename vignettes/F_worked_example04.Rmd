@@ -1,8 +1,8 @@
 ---
-title: "Worked Example 5 - Cohort Simulation 2"
+title: "Worked Example 4 - Cohort Simulation"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Worked Example 5 - Cohort Simulation 2}
+  %\VignetteIndexEntry{Worked Example 4 - Cohort Simulation}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -38,34 +38,52 @@ Malaria progression in the trial cohort in each cluster is evaluated using the c
 
 ```{r}
 # Simulate control clusters
-cohort_data_con <- cohort(mainpop_data=mainpop_data,cluster_data=cluster_list_con,n_patients = 100,prop_T_c = 0.9,
-                          age_start = 0.5,age_end = 10.0,flag_output = 0, test_time_values = 14.0*c(1:10), 
-                          test_type = "RDT", flag_pre_clearing = 1, censor_period = 14.0, flag_reactive_treatment = 1)
+test_time_values=10.0*c(1:10) # Time points at which testing takes place
+prop_T_c = 0.9            # Proportion of clinical cases receiving treatment independent of trial-related testing
+n_patients=100            # Number of patients per cluster
+age_start=0.5             # Minimum age of cohort patients
+age_end=10.0              # Maximum age of cohort patients
+test_type="RDT"           # Type of test administered to  patients ("clin" = clinical, "RDT" = rapid diagnostic test)
+flag_pre_clearing=1       # Integer indicating whether patients given pre-trial prophylaxis (if 1, place all patients                               into prophylaxis category at start)
+censor_period=0.0         # Time period after a positive test during which a patient is not counted towards incidence
+flag_reactive_treatment=0 # Integer indicating whether patients are automatically given prophylaxis after a positive                                test (shifting them into treatment category if a clinical case, prophylaxis category                                    otherwise)
+flag_output=0             # Integer indicating whether to show progress of simulation
+cohort_data_con <- cohort(mainpop_data=mainpop_data,cluster_data=cluster_list_con,n_patients = n_patients,prop_T_c =                              prop_T_c,age_start = age_start,age_end = age_end,flag_output = flag_output, 
+                          test_time_values = test_time_values, test_type = test_type, 
+                          flag_pre_clearing =   flag_pre_clearing, censor_period = censor_period,
+                          flag_reactive_treatment = flag_reactive_treatment)
 ```
 
-The intervention clusters are simulated with the same settings
+The intervention clusters are simulated with the same settings but with the intervention cluster list.
 
 ```{r}
 # Simulate intervention clusters
-cohort_data_int <- cohort(mainpop_data=mainpop_data,cluster_data=cluster_list_int,n_patients = 100,prop_T_c = 0.9,
-                          age_start = 0.5,age_end = 10.0,flag_output = 0, test_time_values = 14.0*c(1:10), 
-                          test_type = "RDT", flag_pre_clearing = 1, censor_period = 14.0, flag_reactive_treatment = 1)
+cohort_data_int <- cohort(mainpop_data=mainpop_data,cluster_data=cluster_list_int,n_patients = n_patients,prop_T_c =                              prop_T_c,age_start = age_start,age_end = age_end,flag_output = 0, 
+                          test_time_values = test_time_values, test_type = test_type, 
+                          flag_pre_clearing =   flag_pre_clearing, censor_period = censor_period,
+                          flag_reactive_treatment = flag_reactive_treatment)
 ```
 
-The results of the cohort simulations can be viewed using the plot_cohort_data() function:
+Results of the cohort simulations can be extracted quickly from the output in specific formats and displayed using the plot_cohort_data() function. Here, the positive test incidence over time (specified using the "benchmark" variable) is extracted for each cluster (specified by setting flag_output=1)
 
 ```{r}
 # Display average positive test rate across control clusters
-control_plot <- plot_cohort_data(cohort_data = cohort_data_con,benchmark = "test_inc",flag_output=2)
+control_plot <- plot_cohort_data(cohort_data = cohort_data_con,benchmark = "test_inc",flag_output=1)
 ```
+
 ```{r}
 # Display average positive test rate across intervention clusters
-int_plot <- plot_cohort_data(cohort_data = cohort_data_int,benchmark = "test_inc",flag_output=2)
+int_plot <- plot_cohort_data(cohort_data = cohort_data_int,benchmark = "test_inc",flag_output=1)
 ```
+
+The results data extracted using plot_cohort_data can be further manipulated manually. Here the positive test incidence averaged over all the clusters in each arm is extracted (setting flag_output=2 to specify averaging over all clusters) and the resulting values plotted on one set of axes to compare the control and intervention arms directly.
+
 ```{r}
 # Compare prevalence progression in control and intervention clusters on same set of axes
-matplot(cohort_data_con$test_time_values,control_plot,type="p",pch=1,col=1,xlab="time (days)",ylab="Average prevalence")
-matplot(cohort_data_int$test_time_values,int_plot,type="p",pch=2,col=2,add=TRUE)
+control_plot <- plot_cohort_data(cohort_data = cohort_data_con,benchmark = "test_inc",flag_output=2)
+int_plot <- plot_cohort_data(cohort_data = cohort_data_int,benchmark = "test_inc",flag_output=2)
+matplot(cohort_data_con$test_time_values,control_plot,type="b",pch=1,lty=1,col=1,xlab="time (days)",ylab="Average prevalence")
+matplot(cohort_data_int$test_time_values,int_plot,type="b",pch=2,lty=1,col=2,add=TRUE)
 legend("topleft", inset=0.01, legend=c("Control","Intervention"), pch=c(1:2),col=c(1:2),
        horiz=FALSE,bg='white',cex=1.0)
 ```

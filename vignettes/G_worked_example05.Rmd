@@ -1,8 +1,8 @@
 ---
-title: "Worked Example 6 - Power Calculations"
+title: "Worked Example 5 - Combined Trial Modelling"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Worked Example 6 - Power Calculations}
+  %\VignetteIndexEntry{Worked Example 5 - Combined Trial Modelling}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -15,15 +15,15 @@ knitr::opts_chunk$set(
 knitr::opts_chunk$set(root.dir = system.file("extdata",package="vectorpower"))
 ```
 
-This is an example of how to take previously created main population data and and calculate the statistical power of a hypothetical field trial where the control and intervention clusters are drawn from said data.
+In [the previous worked example](https://keithjf82.github.io/vectorpower/articles/F_worked_example04.html), the use of the cohort() function to simulate the cluster cohorts in the control and intervention arms of a field trial after setting up the clusters using the cluster_input_setup() and clusters_create() function (as described in [example 3]((https://keithjf82.github.io/vectorpower/articles/E_worked_example03.html)) was demonstrated. This process can be simplified by using the crt_combined() function as described in the example below.
 
-First load the package (install it first if necessary as shown in the [Installation article](https://keithjf82.github.io/vectorpower/articles/B_installation.html):
+As before, first load the package (install it first if necessary as shown in the [Installation article](https://keithjf82.github.io/vectorpower/articles/B_installation.html):
 
 ```{r setup}
 library(vectorpower)
 ```
 
-In this example, the main population data set is loaded from an RDS file created by saving the results of running the mainpop() function (see [Worked Example 2](https://keithjf82.github.io/vectorpower/articles/D_worked_example02.html)).
+As in previous examples, the main population data set is loaded from an RDS file created by saving the results of running the mainpop() function (see [Worked Example 2](https://keithjf82.github.io/vectorpower/articles/D_worked_example02.html)).
 
 ```{r}
 # Load main population data
@@ -44,17 +44,48 @@ data_view2=get_mainpop_data(input_list=mainpop_data,benchmark="EIR",set_n_mv=mai
 plot_mainpop_data(data_view2)
 ```
 
-Power is computed using the power_compute() function. [Explanation of parameter settings TBA]
+The crt_combined() function takes in inputs for the cluster_input_setup(), clusters_create() and cohort() functions and runs them for the control and intervention arms
 
-```{r, include = FALSE}
-# Run power calculation
-results<-
-power_compute(mainpop_data=mainpop_data,n_clusters=2,n_patients=25,data_level="Individual",alpha=0.05,
-              effect_size_sign="Positive",trial_type="sup",delta_eq=NULL,delta_ni=NULL,n_sims=1000,
-              benchmark="EIR_annual",age_start=0.5,age_end=10.0,test_time_values=10.0*c(1:14),
-              test_type="RDT",flag_pre_clearing=1,censor_period=14.0,flag_reactive_treatment=1,prop_T_c=0.9,
-              benchmark_mean=0.3,benchmark_stdev=0.05,int_mean=0.1,int_stdev=0.0)
-# Output result
-power = results$power_estimate
-power
+```{r}
+test_time_values=10.0*c(1:10) # Time points at which testing takes place
+n_clusters=10             # Number of clusters to generate
+benchmark="EIR_annual"    # Main population data parameter to use as benchmark for generating clusters
+benchmark_mean=75.0      # Mean value of benchmark to use to create distribution
+benchmark_stdev=5.0     # Standard deviation of benchmark to use to create distribution
+int_mean=0.1              # Mean value of intervention parameter (ATSB mortality rate) in intervention clusters
+int_stdev=0.0             # Standard deviation of intervention parameter in intervention clusters
+prop_T_c = 0.9            # Proportion of clinical cases receiving treatment independent of trial-related testing
+n_patients=100            # Number of patients per cluster
+age_start=0.5             # Minimum age of cohort patients
+age_end=10.0              # Maximum age of cohort patients
+test_type="RDT"           # Type of test administered to  patients ("clin" = clinical, "RDT" = rapid diagnostic test)
+flag_pre_clearing=1       # Integer indicating whether patients given pre-trial prophylaxis (if 1, place all patients                               into prophylaxis category at start)
+censor_period=10.0         # Time period after a positive test during which a patient is not counted towards incidence
+flag_reactive_treatment=1 # Integer indicating whether patients are automatically given prophylaxis after a positive                                test (shifting them into treatment category if a clinical case, prophylaxis category                                    otherwise)
+flag_output=0             # Integer indicating whether to show progress of simulation
+data_level="Both"         # Data type to output ("Cluster", "Individual" or "Both")
+output <-
+crt_combined(mainpop_data=mainpop_data,n_clusters=n_clusters,n_patients=n_patients,benchmark=benchmark,
+             age_start=age_start,age_end=age_end,test_time_values=test_time_values,test_type=test_type,
+             flag_pre_clearing=flag_pre_clearing,censor_period=censor_period,
+             flag_reactive_treatment=flag_reactive_treatment,prop_T_c=prop_T_c,
+             benchmark_mean=benchmark_mean,benchmark_stdev=benchmark_stdev,int_mean=int_mean,int_stdev=int_stdev)
+```
+
+[Text about viewing output data]
+
+```{r}
+head(output$output_indiv)
+```
+
+[Text]
+
+```{r}
+control_plot <- plot_cohort_data(cohort_data = output$cohort_data_con,benchmark = "test_inc",flag_output=2)
+int_plot <- plot_cohort_data(cohort_data = output$cohort_data_int,benchmark = "test_inc",flag_output=2)
+matplot(test_time_values,control_plot,type="b",pch=1,lty=1,col=1,xlab="time (days)",ylab="Test incidence"
+        ,ylim=c(0,max(control_plot)))
+matplot(test_time_values,int_plot,type="b",pch=2,lty=1,col=2,add=TRUE)
+legend("topleft", inset=0.01, legend=c("Control","Intervention"), pch=c(1:2),col=c(1:2),
+       horiz=FALSE,bg='white',cex=1.0)
 ```

@@ -1,0 +1,116 @@
+---
+title: "Worked Example 6 - Power Calculations"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Worked Example 6 - Power Calculations}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+knitr::opts_chunk$set(root.dir = system.file("extdata",package="vectorpower"))
+```
+
+This is an example of how to take previously created main population data and and calculate the statistical power of a hypothetical field trial where the control and intervention clusters are drawn from said data.
+
+First load the package (install it first if necessary as shown in the [Installation article](https://keithjf82.github.io/vectorpower/articles/B_installation.html):
+
+```{r setup}
+library(vectorpower)
+```
+
+In this example, the main population data set is loaded from an RDS file created by saving the results of running the mainpop() function (see [Worked Example 2](https://keithjf82.github.io/vectorpower/articles/D_worked_example02.html)).
+
+```{r}
+# Load main population data
+mainpop_data <- readRDS(file=url("https://github.com/KeithJF82/vectorpower/raw/master/inst/extdata/mainpop_data.Rds"))
+```
+
+[Note on displaying year-round data TBA]
+
+```{r}
+data_view1=data.frame(n=mainpop_data$annual_data$n_mv,EIR_annual=mainpop_data$annual_data$EIRy)
+matplot(x=data_view1$n,y=data_view1$EIR_annual,type="p",pch=1,xlab="Dataset",ylab="Annual EIR")
+```
+
+[Note on displaying mainpop results TBA]
+
+```{r}
+data_view2=get_mainpop_data(input_list=mainpop_data,benchmark="EIR",set_n_mv=mainpop_data$n_mv_set)
+plot_mainpop_data(data_view2)
+```
+
+Power is computed using the power_compute() function. [Explanation of parameter settings TBA]
+
+```{r}
+# Set up inputs
+test_time_values=10.0*c(1:10) # Time points at which testing takes place
+n_clusters=10              # Number of clusters to generate
+n_patients=100             # Number of patients per cluster
+data_level="Individual"   # Data type to output from model and use for power calculation ("Cluster" or "Individual")
+alpha=0.05                # Significance level
+effect_size_sign="Positive" # Sign of effect to check for ("Positive" or "Negative")
+trial_type="sup"          # Trial type (superiority, equivalence, non-inferiority - "sup", "eq", "ni")
+delta_eq=NULL             # Delta for equivalence trials
+delta_ni=NULL             # Delta for non-inferiority trials
+n_sims=100               # Number of iterations
+benchmark="EIR_annual"    # Main population data parameter to use as benchmark for generating clusters
+age_start=0.5             # Minimum age of cohort patients
+age_end=10.0              # Maximum age of cohort patients
+test_type="RDT"           # Type of test administered to  patients ("clin" = clinical, "RDT" = rapid diagnostic test)
+flag_pre_clearing=1       # Integer indicating whether patients given pre-trial prophylaxis (if 1, place all patients                               into prophylaxis category at start)
+censor_period=0.0         # Time period after a positive test during which a patient is not counted towards incidence
+flag_reactive_treatment=0 # Integer indicating whether patients are automatically given prophylaxis after a positive                                test (shifting them into treatment category if a clinical case, prophylaxis category                                    otherwise)
+prop_T_c = 0.9            # Proportion of clinical cases receiving treatment independent of trial-related testing
+benchmark_mean=75.0      # Mean value of benchmark to use to create distribution
+benchmark_stdev=5.0     # Standard deviation of benchmark to use to create distribution
+int_mean=0.1              # Mean value of intervention parameter (ATSB mortality rate) in intervention clusters
+int_stdev=0.0             # Standard deviation of intervention parameter in intervention clusters
+
+# Run power calculation
+results<-
+power_compute(mainpop_data=mainpop_data,n_clusters=n_clusters,n_patients=n_patients,data_level=data_level,alpha=alpha,
+              effect_size_sign=effect_size_sign,trial_type=trial_type,delta_eq=delta_eq,delta_ni=delta_ni,n_sims=n_sims,
+              benchmark=benchmark,age_start=age_start,age_end=age_end,test_time_values=test_time_values,
+              test_type=test_type,flag_pre_clearing=flag_pre_clearing,censor_period=censor_period,
+              flag_reactive_treatment=flag_reactive_treatment,prop_T_c=prop_T_c,
+              benchmark_mean=benchmark_mean,benchmark_stdev=benchmark_stdev,int_mean=int_mean,int_stdev=int_stdev)
+```
+
+[Text about viewing cluster information]
+
+```{r}
+par(mfrow=c(1,2))
+matplot(results$cluster_list_con$CP_B,results$cluster_list_con$B,type="p",pch=1,col=3,
+        xlab="Cumulative probability",ylab=benchmark)
+matplot(results$cluster_list_con$CP_I,results$cluster_list_con$I,type="p",pch=1,col=3,
+        xlab="Cumulative probability",ylab="Intervention parameter")
+par(mfrow=c(1,1))
+```
+
+[Text about viewing cluster information 2]
+
+```{r}
+par(mfrow=c(1,2))
+matplot(results$cluster_list_int$CP_B,results$cluster_list_int$B,type="p",pch=1,col=3,
+        xlab="Cumulative probability",ylab=benchmark)
+matplot(results$cluster_list_int$CP_I,results$cluster_list_int$I,type="p",pch=1,col=3,
+        xlab="Cumulative probability",ylab="Intervention parameter")
+par(mfrow=c(1,1))
+```
+
+[Text about viewing results]
+
+```{r}
+control_plot <- plot_cohort_data(cohort_data = results$cohort_data_con,benchmark = "test_inc",flag_output=2)
+int_plot <- plot_cohort_data(cohort_data = results$cohort_data_int,benchmark = "test_inc",flag_output=2)
+matplot(test_time_values,control_plot,type="b",pch=1,lty=1,col=1,xlab="time (days)",ylab="Average test incidence"
+        ,ylim=c(0,max(control_plot)))
+matplot(test_time_values,int_plot,type="b",pch=2,lty=1,col=2,add=TRUE)
+legend("topleft", inset=0.01, legend=c("Control","Intervention"), pch=c(1:2),col=c(1:2),
+       horiz=FALSE,bg='white',cex=1.0)
+```

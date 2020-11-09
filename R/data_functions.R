@@ -565,13 +565,13 @@ plot_cohort_data <- function(cohort_data = list(), benchmark="slide_prev",flag_o
       matplot(time_values,benchmark_values[,1],type="p",pch=2,col=2,xlab="time (days)",ylab=benchmark,
               ylim=c(0,max(benchmark_values)))
       for(i in 2:n_clusters){
-        matplot(time_values,benchmark_values[,i],type="p",pch=2,col=1+i, xaxt="n",xlab="",ylab="",add=TRUE)
+        matplot(time_values,benchmark_values[,i],type="p",pch=1+i,col=1+i, xaxt="n",xlab="",ylab="",add=TRUE)
       }
     }else{
       matplot(time_values,benchmark_values,type="p",pch=2,col=2,xlab="time (days)",ylab=benchmark,
               ylim=c(0,max(benchmark_values)))
     }
-    legend("bottomleft", inset=0.01, legend=c(1:n_clusters), lwd=1.0,col=1+c(1:n_clusters),
+    legend("bottomleft", inset=0.01, legend=c(1:n_clusters),pch=1+c(1:n_clusters), col=1+c(1:n_clusters),
            horiz=FALSE,bg='white',cex=1.0)
     output=benchmark_values
   } else {

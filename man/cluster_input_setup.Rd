@@ -11,7 +11,7 @@ cluster_input_setup(
   set_n_int = 1,
   age_start = 0,
   age_end = 65,
-  plot_flag = TRUE
+  plot_flag = FALSE
 )
 }
 \arguments{

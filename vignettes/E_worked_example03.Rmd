@@ -15,7 +15,7 @@ knitr::opts_chunk$set(
 knitr::opts_chunk$set(root.dir = system.file("extdata",package="vectorpower"))
 ```
 
-This is an example of how to take data output from main population calculations and use it to set up the details of the trial cohorts across a series of trial clusters. 
+This is an example of how to take data output from main population calculations and use it to set up the details of the clusters in the control and intervention arms of a field trial. 
 
 First load the package (install it first if necessary as shown in the [Installation article](https://keithjf82.github.io/vectorpower/articles/B_installation.html):
 
@@ -47,14 +47,14 @@ Once the input list has been created, a set of clusters can be created using the
 
 ```{r}
 cluster_list_con <- clusters_create(input_list=setup_list1,n_clusters=10,
-                                    benchmark_mean=0.249, benchmark_stdev=0.085, int_mean=0.0, int_stdev=0.0)
+                                    benchmark_mean=75.0, benchmark_stdev=5.0, int_mean=0.0, int_stdev=0.0)
 ```
 
 The example below shows the creation of a set of intervention clusters where the intervention parameter is always non-zero. In this case, because only two values of the intervention parameter (0.0 and 0.1) were used in the main population calculations, int_stdev can again be set to zero. If a range of values of the intervention parameter above zero were used, a non-zero standard deviation could be used to draw a range of different values from a probability distribution as with the benchmark. (This could lead to an intervention cluster with an intervention parameter value of zero, representing one where the intervention had no effect for whatever reason.)
 
 ```{r}
 cluster_list_int <- clusters_create(input_list=setup_list1,n_clusters=10,
-                                    benchmark_mean=0.249, benchmark_stdev=0.085,int_mean=0.1, int_stdev=0.0)
+                                    benchmark_mean=75.0, benchmark_stdev=5.0,int_mean=0.1, int_stdev=0.0)
 ```
 
 As with the main population data, the cluster data can be saved to files for future use.
@@ -65,5 +65,3 @@ saveRDS(cluster_list_int,file="cluster_list_int.Rds")
 ```
 
 For the simulation of malaria progression in the cohorts in each of the clusters, see [Worked Example 4](https://keithjf82.github.io/vectorpower/articles/F_worked_example04.html).
-
-

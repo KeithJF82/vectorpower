@@ -143,7 +143,7 @@ mainpop <- function (input_data = list(),output_folder = NA,int_v_varied=0, int_
 #' @export
 
 cluster_input_setup <- function(input_list=list(), benchmark = "EIR",set_n_pt = 1,set_n_int=1,age_start = 0,
-                                age_end = 65.0,plot_flag=TRUE){
+                                age_end = 65.0,plot_flag=FALSE){
   
   # Input error checking
   assert_list(input_list)

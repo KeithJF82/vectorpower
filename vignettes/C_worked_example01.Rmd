@@ -47,7 +47,7 @@ het_file=url("https://raw.githubusercontent.com/KeithJF82/vectorpower/master/ins
 
 To load from a location on the computer where **vectorpower** is being run, give the file names and location in the hierarchy of data folders as shown below:
 
-```{r}
+```{r, eval = FALSE}
 input_folder="C:/Users/YourName/Documents/GitHub/vectorpower/inst/extdata/param_examples"
 param_file=paste(input_folder,"model_parameters_Mali.txt",sep="/")
 age_file=paste(input_folder,"age_data_145.txt",sep="/")
@@ -64,7 +64,7 @@ dataset_folder=paste(output_location,dataset_location,sep="/")
 
 To change the output, change output_location to another existing folder, e.g.:
 
-```{r}
+```{r,eval = FALSE}
 output_location = "C:/Users/YourName/Documents/VPDatasets"
 dataset_location = "Demo Folder 1"
 dataset_folder=paste(output_location,dataset_location,sep="/")
@@ -72,22 +72,22 @@ dataset_folder=paste(output_location,dataset_location,sep="/")
 
 Ensure that folder names are separated by a "/". Alternatively, substitute the entire folder name for dataset_folder, e.g.:
 
-```{r}
+```{r,eval = FALSE}
 dataset_folder="C:/Users/YourName/Documents/VPDatasets/DemoFolder1"
 ```
 
 The baseline malaria levels represented by the input data to go in the dataset are set by specifying a vector of values of steady-state annual entomological inoculation rate (EIR). These values will not exactly match the year-round EIR values represented by the data once the time-dependent model has been run; the final dataset will include a file specifying the year-round EIR at equilibrium under the time-dependent model.
 
-In this example, the EIR values are between 0.1 and 0.5 infectious bites per person per year; these represent very low baseline malaria levels. High malaria levels require longer computation times to avoid errors; the computation time increases with  approximately the square root of EIR (so an EIR of 100 requires around 10 times the computation time of an EIR of 1).
+In this example, the EIR values are between 50 and 100 infectious bites per person per year: 
 
 ```{r}
-EIR_values=0.1*c(1:5)
+EIR_values=c(50.0,60.0,70.0,80.0,90.0,100.0)
 ```
 
 Next, the integer number of years (from 1-20) for which the time-dependent model should be run to reach equilibrium must be specified. The more years for which it is run, the more stable the equilibrium; if the equilibrium is less stable, the malaria level will vary more significantly from year to year in calculations if the model is run for multiple years. For most purposes, running for at least 5 years is sufficient. In this example, nyears is set to 1 for speed.
 
 ```{r}
-nyears=1
+nyears=10
 ```
 
 With all the parameters specified, the dataset_create function is run. This will first set initial conditions using steady-state calculations, then run the time-dependent model for the specified number of years to reach equilibrium. The results will be output as the dataset's starting data. The year-round data output from the starting data (assuming no new interventions) will then be calculated and output as an aid to users of the dataset.
@@ -96,4 +96,4 @@ With all the parameters specified, the dataset_create function is run. This will
 data1 <- create_data_folder(dataset_folder=dataset_folder,param_file=param_file,age_file=age_file,het_file=het_file,EIR_values=EIR_values,nyears=nyears)
 ```
 
-[Code block above is not currently evaluated as it returns a Travis error even though it works correctly when the website is built.]
+[Code block above is not currently evaluated.]
