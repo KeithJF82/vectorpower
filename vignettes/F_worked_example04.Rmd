@@ -27,7 +27,7 @@ In this example, the main population and cohort data sets are loaded from RDS fi
 
 ```{r}
 # Load main population data
-mainpop_data <- readRDS(file=url("https://github.com/KeithJF82/vectorpower/raw/master/inst/extdata/mainpop_data.Rds"))
+mainpop_data <- readRDS(file=url("https://github.com/KeithJF82/vectorpower/raw/master/inst/extdata/DemoFolder1/mainpop_data.Rds"))
 
 # Load control and intervention cluster data
 cluster_list_con <-readRDS(file=url("https://github.com/KeithJF82/vectorpower/raw/master/inst/extdata/cluster_list_con.Rds"))
@@ -82,7 +82,7 @@ The results data extracted using plot_cohort_data can be further manipulated man
 # Compare prevalence progression in control and intervention clusters on same set of axes
 control_plot <- plot_cohort_data(cohort_data = cohort_data_con,benchmark = "test_inc",flag_output=2)
 int_plot <- plot_cohort_data(cohort_data = cohort_data_int,benchmark = "test_inc",flag_output=2)
-matplot(cohort_data_con$test_time_values,control_plot,type="b",pch=1,lty=1,col=1,xlab="time (days)",ylab="Average prevalence")
+matplot(cohort_data_con$test_time_values,control_plot,type="b",pch=1,lty=1,col=1,xlab="time (days)",ylab="Average test incidence")
 matplot(cohort_data_int$test_time_values,int_plot,type="b",pch=2,lty=1,col=2,add=TRUE)
 legend("topleft", inset=0.01, legend=c("Control","Intervention"), pch=c(1:2),col=c(1:2),
        horiz=FALSE,bg='white',cex=1.0)

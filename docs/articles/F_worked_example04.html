@@ -6,19 +6,19 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Worked Example 4 - Cohort Simulation • vectorpower</title>
-<!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script><!-- Bootstrap --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha256-916EbMg70RQy9LHiGkXzG8hSg9EdNy97GazNG/aiY1w=" crossorigin="anonymous">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.7.1/css/all.min.css" integrity="sha256-nAmazAk6vS34Xqo0BSrTb+abbtFlgsFK7NKSi6o7Y78=" crossorigin="anonymous">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.7.1/css/v4-shims.min.css" integrity="sha256-6qHlizsOWFskGlwVOKuns+D1nB6ssZrHQrNj1wGplHc=" crossorigin="anonymous">
-<!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js" integrity="sha256-FiZwavyI2V6+EXO1U+xzLG3IKldpiTFf3153ea9zikQ=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/headroom.min.js" integrity="sha256-DJFC1kqIhelURkuza0AvYal5RxMtpzLjFhsnVIeuk+U=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="../pkgdown.css" rel="stylesheet">
+<!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script><!-- Bootstrap --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha256-bZLfwXAP04zRMK2BjiO8iu9pf4FbLqX6zitd+tIvLhE=" crossorigin="anonymous">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script><!-- bootstrap-toc --><link rel="stylesheet" href="../bootstrap-toc.css">
+<script src="../bootstrap-toc.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
+<!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="../pkgdown.css" rel="stylesheet">
 <script src="../pkgdown.js"></script><meta property="og:title" content="Worked Example 4 - Cohort Simulation">
-<meta property="og:description" content="">
-<meta name="twitter:card" content="summary">
+<meta property="og:description" content="vectorpower">
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
 <![endif]-->
 </head>
-<body>
+<body data-spy="scroll" data-target="#toc">
     <div class="container template-article">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -71,6 +71,12 @@
     <li>
       <a href="../articles/F_worked_example04.html">Worked Example 4 - Cohort Simulation</a>
     </li>
+    <li>
+      <a href="../articles/G_worked_example05.html">Worked Example 5 - Combined Trial Modelling</a>
+    </li>
+    <li>
+      <a href="../articles/H_worked_example06.html">Worked Example 6 - Power Calculations</a>
+    </li>
   </ul>
 </li>
       </ul>
@@ -84,10 +90,11 @@
 
       
 
-      </header><div class="row">
+      </header><link href="F_worked_example04_files/anchor-sections-1.0/anchor-sections.css" rel="stylesheet">
+<script src="F_worked_example04_files/anchor-sections-1.0/anchor-sections.js"></script><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
-      <h1>Worked Example 4 - Cohort Simulation</h1>
+      <h1 data-toc-skip>Worked Example 4 - Cohort Simulation</h1>
             
       
       
@@ -97,48 +104,68 @@
 
     
     
-<p>This is an example of how to take previously created main population and trial cohort and and run stochastic simulations of the individuals in the cohort.</p>
+<p>This is an example of how to take previously created main population and trial cluster data and and run stochastic simulations of the individuals in the cohort in each cluster, producing data suitable for power calculations (described in Worked Example 5(link)).</p>
 <p>First load the package (install it first if necessary as shown in the <a href="https://keithjf82.github.io/vectorpower/articles/B_installation.html">Installation article</a>:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" title="1"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span>(vectorpower)</a></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">vectorpower</span><span class="op">)</span></code></pre></div>
 <p>In this example, the main population and cohort data sets are loaded from RDS files created by saving the results of running the mainpop() function (see <a href="https://keithjf82.github.io/vectorpower/articles/D_worked_example02.html">Worked Example 2</a>) and the clusters_create() function ( see <a href="https://keithjf82.github.io/vectorpower/articles/E_worked_example03.html">Worked Example 3</a>).</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" title="1"><span class="co"># Load main population data</span></a>
-<a class="sourceLine" id="cb2-2" title="2">mainpop_data &lt;-<span class="st"> </span><span class="kw"><a href="https://rdrr.io/r/base/readRDS.html">readRDS</a></span>(<span class="dt">file=</span><span class="kw"><a href="https://rdrr.io/r/base/connections.html">url</a></span>(<span class="st">"https://github.com/KeithJF82/vectorpower/raw/master/inst/extdata/mainpop_data.Rds"</span>))</a>
-<a class="sourceLine" id="cb2-3" title="3"></a>
-<a class="sourceLine" id="cb2-4" title="4"><span class="co"># Load control and intervention cluster data</span></a>
-<a class="sourceLine" id="cb2-5" title="5">cluster_list_con &lt;-<span class="kw"><a href="https://rdrr.io/r/base/readRDS.html">readRDS</a></span>(<span class="dt">file=</span><span class="kw"><a href="https://rdrr.io/r/base/connections.html">url</a></span>(<span class="st">"https://github.com/KeithJF82/vectorpower/raw/master/inst/extdata/cluster_list_con.Rds"</span>))</a>
-<a class="sourceLine" id="cb2-6" title="6">cluster_list_int &lt;-<span class="kw"><a href="https://rdrr.io/r/base/readRDS.html">readRDS</a></span>(<span class="dt">file=</span><span class="kw"><a href="https://rdrr.io/r/base/connections.html">url</a></span>(<span class="st">"https://github.com/KeithJF82/vectorpower/raw/master/inst/extdata/cluster_list_int.Rds"</span>))</a></code></pre></div>
-<p>Malaria progression in the trial cohort in each cluster is evaluated using the cohort() function, which runs the stochastic individual-based malaria model (the code for which is found in cohort.cpp in the src/ folder). Here the control group of clusters is simulated:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" title="1"><span class="co"># Simulate control clusters</span></a>
-<a class="sourceLine" id="cb3-2" title="2">cohort_data_con &lt;-<span class="st"> </span><span class="kw"><a href="../reference/cohort.html">cohort</a></span>(<span class="dt">mainpop_data=</span>mainpop_data,<span class="dt">cluster_data=</span>cluster_list_con,<span class="dt">prop_T_c =</span> <span class="fl">0.9</span>,<span class="dt">n_patients =</span> <span class="dv">100</span>,</a>
-<a class="sourceLine" id="cb3-3" title="3">                          <span class="dt">age_start =</span> <span class="fl">0.5</span>,<span class="dt">age_end =</span> <span class="fl">10.0</span>,<span class="dt">flag_output =</span> <span class="dv">0</span>)</a>
-<a class="sourceLine" id="cb3-4" title="4"><span class="co">#&gt; </span></a>
-<a class="sourceLine" id="cb3-5" title="5"><span class="co">#&gt; Beginning cluster calculations</span></a>
-<a class="sourceLine" id="cb3-6" title="6"><span class="co">#&gt; </span></a>
-<a class="sourceLine" id="cb3-7" title="7"><span class="co">#&gt; Cluster calculations complete</span></a></code></pre></div>
-<p>The intervention clusters are simulated in the same way:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb4-1" title="1"><span class="co"># Simulate intervention clusters</span></a>
-<a class="sourceLine" id="cb4-2" title="2">cohort_data_int &lt;-<span class="st"> </span><span class="kw"><a href="../reference/cohort.html">cohort</a></span>(<span class="dt">mainpop_data=</span>mainpop_data,<span class="dt">cluster_data=</span>cluster_list_int,<span class="dt">prop_T_c =</span> <span class="fl">0.9</span>,<span class="dt">n_patients =</span> <span class="dv">100</span>,</a>
-<a class="sourceLine" id="cb4-3" title="3">                          <span class="dt">age_start =</span> <span class="fl">0.5</span>,<span class="dt">age_end =</span> <span class="fl">10.0</span>,<span class="dt">flag_output =</span> <span class="dv">0</span>)</a>
-<a class="sourceLine" id="cb4-4" title="4"><span class="co">#&gt; </span></a>
-<a class="sourceLine" id="cb4-5" title="5"><span class="co">#&gt; Beginning cluster calculations</span></a>
-<a class="sourceLine" id="cb4-6" title="6"><span class="co">#&gt; </span></a>
-<a class="sourceLine" id="cb4-7" title="7"><span class="co">#&gt; Cluster calculations complete</span></a></code></pre></div>
-<p>The results of the cohort simulations can be viewed using the plot_cohort_data() function:</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" title="1"><span class="co"># Display average prevalence across control clusters</span></a>
-<a class="sourceLine" id="cb5-2" title="2">control_plot &lt;-<span class="st"> </span><span class="kw"><a href="../reference/plot_cohort_data.html">plot_cohort_data</a></span>(<span class="dt">cohort_data =</span> cohort_data_con,<span class="dt">benchmark =</span> <span class="st">"slide_prev"</span>,<span class="dt">flag_output=</span><span class="dv">2</span>)</a></code></pre></div>
-<p><img src="../../../GitHub%20repositories/vectorpower/docs/articles/F_worked_example04_files/figure-html/unnamed-chunk-5-1.png" width="700"></p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb6-1" title="1"><span class="co"># Display average prevalence across intervention clusters</span></a>
-<a class="sourceLine" id="cb6-2" title="2">int_plot &lt;-<span class="st"> </span><span class="kw"><a href="../reference/plot_cohort_data.html">plot_cohort_data</a></span>(<span class="dt">cohort_data =</span> cohort_data_int,<span class="dt">benchmark =</span> <span class="st">"slide_prev"</span>,<span class="dt">flag_output=</span><span class="dv">2</span>)</a></code></pre></div>
-<p><img src="../../../GitHub%20repositories/vectorpower/docs/articles/F_worked_example04_files/figure-html/unnamed-chunk-6-1.png" width="700"></p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" title="1"><span class="co"># Compare prevalence progression in control and intervention clusters on same set of axes</span></a>
-<a class="sourceLine" id="cb7-2" title="2"><span class="kw"><a href="https://rdrr.io/r/graphics/matplot.html">matplot</a></span>(mainpop_data<span class="op">$</span>time_values,control_plot,<span class="dt">type=</span><span class="st">"p"</span>,<span class="dt">pch=</span><span class="dv">1</span>,<span class="dt">col=</span><span class="dv">1</span>,<span class="dt">xlab=</span><span class="st">"time (days)"</span>,<span class="dt">ylab=</span><span class="st">"Average prevalence"</span>)</a>
-<a class="sourceLine" id="cb7-3" title="3"><span class="kw"><a href="https://rdrr.io/r/graphics/matplot.html">matplot</a></span>(mainpop_data<span class="op">$</span>time_values,int_plot,<span class="dt">type=</span><span class="st">"p"</span>,<span class="dt">pch=</span><span class="dv">2</span>,<span class="dt">col=</span><span class="dv">2</span>,<span class="dt">add=</span><span class="ot">TRUE</span>)</a>
-<a class="sourceLine" id="cb7-4" title="4"><span class="kw"><a href="https://rdrr.io/r/graphics/legend.html">legend</a></span>(<span class="st">"topleft"</span>, <span class="dt">inset=</span><span class="fl">0.01</span>, <span class="dt">legend=</span><span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"Control"</span>,<span class="st">"Intervention"</span>), <span class="dt">pch=</span><span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="dv">1</span><span class="op">:</span><span class="dv">2</span>),<span class="dt">col=</span><span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="dv">1</span><span class="op">:</span><span class="dv">2</span>),</a>
-<a class="sourceLine" id="cb7-5" title="5">       <span class="dt">horiz=</span><span class="ot">FALSE</span>,<span class="dt">bg=</span><span class="st">'white'</span>,<span class="dt">cex=</span><span class="fl">1.0</span>)</a></code></pre></div>
-<p><img src="../../../GitHub%20repositories/vectorpower/docs/articles/F_worked_example04_files/figure-html/unnamed-chunk-7-1.png" width="700"></p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># Load main population data</span>
+<span class="va">mainpop_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html">readRDS</a></span><span class="op">(</span>file<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/connections.html">url</a></span><span class="op">(</span><span class="st">"https://github.com/KeithJF82/vectorpower/raw/master/inst/extdata/DemoFolder1/mainpop_data.Rds"</span><span class="op">)</span><span class="op">)</span>
+
+<span class="co"># Load control and intervention cluster data</span>
+<span class="va">cluster_list_con</span> <span class="op">&lt;-</span><span class="fu"><a href="https://rdrr.io/r/base/readRDS.html">readRDS</a></span><span class="op">(</span>file<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/connections.html">url</a></span><span class="op">(</span><span class="st">"https://github.com/KeithJF82/vectorpower/raw/master/inst/extdata/cluster_list_con.Rds"</span><span class="op">)</span><span class="op">)</span>
+<span class="va">cluster_list_int</span> <span class="op">&lt;-</span><span class="fu"><a href="https://rdrr.io/r/base/readRDS.html">readRDS</a></span><span class="op">(</span>file<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/connections.html">url</a></span><span class="op">(</span><span class="st">"https://github.com/KeithJF82/vectorpower/raw/master/inst/extdata/cluster_list_int.Rds"</span><span class="op">)</span><span class="op">)</span></code></pre></div>
+<p>Malaria progression in the trial cohort in each cluster is evaluated using the cohort() function, which runs the stochastic individual-based malaria model (the code for which is found in cohort.cpp in the src/ folder). Here the control group of clusters is simulated. [Description of settings]</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># Simulate control clusters</span>
+<span class="va">test_time_values</span><span class="op">=</span><span class="fl">10.0</span><span class="op">*</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">)</span> <span class="co"># Time points at which testing takes place</span>
+<span class="va">prop_T_c</span> <span class="op">=</span> <span class="fl">0.9</span>            <span class="co"># Proportion of clinical cases receiving treatment independent of trial-related testing</span>
+<span class="va">n_patients</span><span class="op">=</span><span class="fl">100</span>            <span class="co"># Number of patients per cluster</span>
+<span class="va">age_start</span><span class="op">=</span><span class="fl">0.5</span>             <span class="co"># Minimum age of cohort patients</span>
+<span class="va">age_end</span><span class="op">=</span><span class="fl">10.0</span>              <span class="co"># Maximum age of cohort patients</span>
+<span class="va">test_type</span><span class="op">=</span><span class="st">"RDT"</span>           <span class="co"># Type of test administered to  patients ("clin" = clinical, "RDT" = rapid diagnostic test)</span>
+<span class="va">flag_pre_clearing</span><span class="op">=</span><span class="fl">1</span>       <span class="co"># Integer indicating whether patients given pre-trial prophylaxis (if 1, place all patients                               into prophylaxis category at start)</span>
+<span class="va">censor_period</span><span class="op">=</span><span class="fl">0.0</span>         <span class="co"># Time period after a positive test during which a patient is not counted towards incidence</span>
+<span class="va">flag_reactive_treatment</span><span class="op">=</span><span class="fl">0</span> <span class="co"># Integer indicating whether patients are automatically given prophylaxis after a positive                                test (shifting them into treatment category if a clinical case, prophylaxis category                                    otherwise)</span>
+<span class="va">flag_output</span><span class="op">=</span><span class="fl">0</span>             <span class="co"># Integer indicating whether to show progress of simulation</span>
+<span class="va">cohort_data_con</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cohort.html">cohort</a></span><span class="op">(</span>mainpop_data<span class="op">=</span><span class="va">mainpop_data</span>,cluster_data<span class="op">=</span><span class="va">cluster_list_con</span>,n_patients <span class="op">=</span> <span class="va">n_patients</span>,prop_T_c <span class="op">=</span>                              <span class="va">prop_T_c</span>,age_start <span class="op">=</span> <span class="va">age_start</span>,age_end <span class="op">=</span> <span class="va">age_end</span>,flag_output <span class="op">=</span> <span class="va">flag_output</span>, 
+                          test_time_values <span class="op">=</span> <span class="va">test_time_values</span>, test_type <span class="op">=</span> <span class="va">test_type</span>, 
+                          flag_pre_clearing <span class="op">=</span>   <span class="va">flag_pre_clearing</span>, censor_period <span class="op">=</span> <span class="va">censor_period</span>,
+                          flag_reactive_treatment <span class="op">=</span> <span class="va">flag_reactive_treatment</span><span class="op">)</span></code></pre></div>
+<p>The intervention clusters are simulated with the same settings but with the intervention cluster list.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># Simulate intervention clusters</span>
+<span class="va">cohort_data_int</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cohort.html">cohort</a></span><span class="op">(</span>mainpop_data<span class="op">=</span><span class="va">mainpop_data</span>,cluster_data<span class="op">=</span><span class="va">cluster_list_int</span>,n_patients <span class="op">=</span> <span class="va">n_patients</span>,prop_T_c <span class="op">=</span>                              <span class="va">prop_T_c</span>,age_start <span class="op">=</span> <span class="va">age_start</span>,age_end <span class="op">=</span> <span class="va">age_end</span>,flag_output <span class="op">=</span> <span class="fl">0</span>, 
+                          test_time_values <span class="op">=</span> <span class="va">test_time_values</span>, test_type <span class="op">=</span> <span class="va">test_type</span>, 
+                          flag_pre_clearing <span class="op">=</span>   <span class="va">flag_pre_clearing</span>, censor_period <span class="op">=</span> <span class="va">censor_period</span>,
+                          flag_reactive_treatment <span class="op">=</span> <span class="va">flag_reactive_treatment</span><span class="op">)</span></code></pre></div>
+<p>Results of the cohort simulations can be extracted quickly from the output in specific formats and displayed using the plot_cohort_data() function. Here, the positive test incidence over time (specified using the “benchmark” variable) is extracted for each cluster (specified by setting flag_output=1)</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># Display average positive test rate across control clusters</span>
+<span class="va">control_plot</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/plot_cohort_data.html">plot_cohort_data</a></span><span class="op">(</span>cohort_data <span class="op">=</span> <span class="va">cohort_data_con</span>,benchmark <span class="op">=</span> <span class="st">"test_inc"</span>,flag_output<span class="op">=</span><span class="fl">1</span><span class="op">)</span></code></pre></div>
+<p><img src="F_worked_example04_files/figure-html/unnamed-chunk-5-1.png" width="700"></p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># Display average positive test rate across intervention clusters</span>
+<span class="va">int_plot</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/plot_cohort_data.html">plot_cohort_data</a></span><span class="op">(</span>cohort_data <span class="op">=</span> <span class="va">cohort_data_int</span>,benchmark <span class="op">=</span> <span class="st">"test_inc"</span>,flag_output<span class="op">=</span><span class="fl">1</span><span class="op">)</span></code></pre></div>
+<p><img src="F_worked_example04_files/figure-html/unnamed-chunk-6-1.png" width="700"></p>
+<p>The results data extracted using plot_cohort_data can be further manipulated manually. Here the positive test incidence averaged over all the clusters in each arm is extracted (setting flag_output=2 to specify averaging over all clusters) and the resulting values plotted on one set of axes to compare the control and intervention arms directly.</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># Compare prevalence progression in control and intervention clusters on same set of axes</span>
+<span class="va">control_plot</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/plot_cohort_data.html">plot_cohort_data</a></span><span class="op">(</span>cohort_data <span class="op">=</span> <span class="va">cohort_data_con</span>,benchmark <span class="op">=</span> <span class="st">"test_inc"</span>,flag_output<span class="op">=</span><span class="fl">2</span><span class="op">)</span></code></pre></div>
+<p><img src="F_worked_example04_files/figure-html/unnamed-chunk-7-1.png" width="700"></p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">int_plot</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/plot_cohort_data.html">plot_cohort_data</a></span><span class="op">(</span>cohort_data <span class="op">=</span> <span class="va">cohort_data_int</span>,benchmark <span class="op">=</span> <span class="st">"test_inc"</span>,flag_output<span class="op">=</span><span class="fl">2</span><span class="op">)</span></code></pre></div>
+<p><img src="F_worked_example04_files/figure-html/unnamed-chunk-7-2.png" width="700"></p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/graphics/matplot.html">matplot</a></span><span class="op">(</span><span class="va">cohort_data_con</span><span class="op">$</span><span class="va">test_time_values</span>,<span class="va">control_plot</span>,type<span class="op">=</span><span class="st">"b"</span>,pch<span class="op">=</span><span class="fl">1</span>,lty<span class="op">=</span><span class="fl">1</span>,col<span class="op">=</span><span class="fl">1</span>,xlab<span class="op">=</span><span class="st">"time (days)"</span>,ylab<span class="op">=</span><span class="st">"Average test incidence"</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/graphics/matplot.html">matplot</a></span><span class="op">(</span><span class="va">cohort_data_int</span><span class="op">$</span><span class="va">test_time_values</span>,<span class="va">int_plot</span>,type<span class="op">=</span><span class="st">"b"</span>,pch<span class="op">=</span><span class="fl">2</span>,lty<span class="op">=</span><span class="fl">1</span>,col<span class="op">=</span><span class="fl">2</span>,add<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/graphics/legend.html">legend</a></span><span class="op">(</span><span class="st">"topleft"</span>, inset<span class="op">=</span><span class="fl">0.01</span>, legend<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"Control"</span>,<span class="st">"Intervention"</span><span class="op">)</span>, pch<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">)</span>,col<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">)</span>,
+       horiz<span class="op">=</span><span class="cn">FALSE</span>,bg<span class="op">=</span><span class="st">'white'</span>,cex<span class="op">=</span><span class="fl">1.0</span><span class="op">)</span></code></pre></div>
+<p><img src="F_worked_example04_files/figure-html/unnamed-chunk-7-3.png" width="700"></p>
   </div>
 
-  <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
+  <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
 
       </div>
 
@@ -151,7 +178,7 @@
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.4.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>

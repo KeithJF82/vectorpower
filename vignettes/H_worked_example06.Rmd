@@ -27,7 +27,7 @@ In this example, the main population data set is loaded from an RDS file created
 
 ```{r}
 # Load main population data
-mainpop_data <- readRDS(file=url("https://github.com/KeithJF82/vectorpower/raw/master/inst/extdata/mainpop_data.Rds"))
+mainpop_data <- readRDS(file=url("https://github.com/KeithJF82/vectorpower/raw/master/inst/extdata/DemoFolder1/mainpop_data.Rds"))
 ```
 
 [Note on displaying year-round data TBA]

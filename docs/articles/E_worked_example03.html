@@ -6,19 +6,19 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Worked Example 3 - Cohort Setup • vectorpower</title>
-<!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script><!-- Bootstrap --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha256-916EbMg70RQy9LHiGkXzG8hSg9EdNy97GazNG/aiY1w=" crossorigin="anonymous">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.7.1/css/all.min.css" integrity="sha256-nAmazAk6vS34Xqo0BSrTb+abbtFlgsFK7NKSi6o7Y78=" crossorigin="anonymous">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.7.1/css/v4-shims.min.css" integrity="sha256-6qHlizsOWFskGlwVOKuns+D1nB6ssZrHQrNj1wGplHc=" crossorigin="anonymous">
-<!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js" integrity="sha256-FiZwavyI2V6+EXO1U+xzLG3IKldpiTFf3153ea9zikQ=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/headroom.min.js" integrity="sha256-DJFC1kqIhelURkuza0AvYal5RxMtpzLjFhsnVIeuk+U=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="../pkgdown.css" rel="stylesheet">
+<!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script><!-- Bootstrap --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha256-bZLfwXAP04zRMK2BjiO8iu9pf4FbLqX6zitd+tIvLhE=" crossorigin="anonymous">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script><!-- bootstrap-toc --><link rel="stylesheet" href="../bootstrap-toc.css">
+<script src="../bootstrap-toc.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
+<!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="../pkgdown.css" rel="stylesheet">
 <script src="../pkgdown.js"></script><meta property="og:title" content="Worked Example 3 - Cohort Setup">
-<meta property="og:description" content="">
-<meta name="twitter:card" content="summary">
+<meta property="og:description" content="vectorpower">
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
 <![endif]-->
 </head>
-<body>
+<body data-spy="scroll" data-target="#toc">
     <div class="container template-article">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -71,6 +71,12 @@
     <li>
       <a href="../articles/F_worked_example04.html">Worked Example 4 - Cohort Simulation</a>
     </li>
+    <li>
+      <a href="../articles/G_worked_example05.html">Worked Example 5 - Combined Trial Modelling</a>
+    </li>
+    <li>
+      <a href="../articles/H_worked_example06.html">Worked Example 6 - Power Calculations</a>
+    </li>
   </ul>
 </li>
       </ul>
@@ -84,10 +90,11 @@
 
       
 
-      </header><div class="row">
+      </header><link href="E_worked_example03_files/anchor-sections-1.0/anchor-sections.css" rel="stylesheet">
+<script src="E_worked_example03_files/anchor-sections-1.0/anchor-sections.js"></script><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
-      <h1>Worked Example 3 - Cohort Setup</h1>
+      <h1 data-toc-skip>Worked Example 3 - Cohort Setup</h1>
             
       
       
@@ -97,34 +104,37 @@
 
     
     
-<p>This is an example of how to take data output from main population calculations and use it to set up the details of the trial cohorts across a series of trial clusters.</p>
+<p>This is an example of how to take data output from main population calculations and use it to set up the details of the clusters in the control and intervention arms of a field trial.</p>
 <p>First load the package (install it first if necessary as shown in the <a href="https://keithjf82.github.io/vectorpower/articles/B_installation.html">Installation article</a>:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" title="1"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span>(vectorpower)</a></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">vectorpower</span><span class="op">)</span></code></pre></div>
 <p>In this example, the main population data is loaded from an RDS file created by saving the results of running the mainpop() function, as described in <a href="https://keithjf82.github.io/vectorpower/articles/D_worked_example02.html">Worked Example 2</a>.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" title="1">mainpop_data &lt;-<span class="st"> </span><span class="kw"><a href="https://rdrr.io/r/base/readRDS.html">readRDS</a></span>(<span class="dt">file=</span><span class="kw"><a href="https://rdrr.io/r/base/connections.html">url</a></span>(<span class="st">"https://github.com/KeithJF82/vectorpower/raw/master/inst/extdata/mainpop_data.Rds"</span>))</a></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">mainpop_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html">readRDS</a></span><span class="op">(</span>file<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/connections.html">url</a></span><span class="op">(</span><span class="st">"https://github.com/KeithJF82/vectorpower/raw/master/inst/extdata/mainpop_data.Rds"</span><span class="op">)</span><span class="op">)</span></code></pre></div>
 <p>The cluster_input_setup() function is used to extract and plot a graph of a list of specific data values from the output, to use as input for cluster creation. The quantity set_n_pt refers to the time point in the results to use (the time points being specified using the time_values quantitity in mainpop()), set_n_int refers to the intervention number to use, benchmark is the output data type to use, and age_start and age_end define the age range to be used when using an age-dependent quantity as the benchmark. For more details, see the documentation for cluster_input_setup(). Here, the annual total EIR is used as the benchmark by setting benchmark = “EIR_annual”. This renders the other quantities listed above unnecessary, as EIR_annual is an invariant quantity.</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" title="1">setup_list1 &lt;-<span class="st"> </span><span class="kw"><a href="../reference/cluster_input_setup.html">cluster_input_setup</a></span>(<span class="dt">input_list=</span>mainpop_data, <span class="dt">set_n_pt=</span><span class="dv">1</span>, <span class="dt">set_n_int=</span><span class="dv">1</span>,</a>
-<a class="sourceLine" id="cb3-2" title="2">                                   <span class="dt">benchmark =</span> <span class="st">"EIR_annual"</span>, <span class="dt">age_start=</span><span class="fl">0.0</span>, <span class="dt">age_end=</span><span class="fl">65.0</span>)</a></code></pre></div>
-<p><img src="../../../GitHub%20repositories/vectorpower/docs/articles/E_worked_example03_files/figure-html/unnamed-chunk-3-1.png" width="700"></p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">setup_list1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cluster_input_setup.html">cluster_input_setup</a></span><span class="op">(</span>input_list<span class="op">=</span><span class="va">mainpop_data</span>, set_n_pt<span class="op">=</span><span class="fl">1</span>, set_n_int<span class="op">=</span><span class="fl">1</span>,
+                                   benchmark <span class="op">=</span> <span class="st">"EIR_annual"</span>, age_start<span class="op">=</span><span class="fl">0.0</span>, age_end<span class="op">=</span><span class="fl">65.0</span><span class="op">)</span></code></pre></div>
 <p>In the alternative example below, the prevalence across all ages at the last time point specified (set_n_pt=6) in the simulations where the intervention parameter is zero (set_n_int=1) is used.</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb4-1" title="1">setup_list2 &lt;-<span class="st"> </span><span class="kw"><a href="../reference/cluster_input_setup.html">cluster_input_setup</a></span>(<span class="dt">input_list=</span>mainpop_data, <span class="dt">set_n_pt=</span><span class="dv">1</span>, <span class="dt">set_n_int=</span><span class="dv">1</span>,</a>
-<a class="sourceLine" id="cb4-2" title="2">                                   <span class="dt">benchmark =</span> <span class="st">"slide_prev"</span>, <span class="dt">age_start=</span><span class="fl">0.0</span>, <span class="dt">age_end=</span><span class="fl">65.0</span>)</a></code></pre></div>
-<p><img src="../../../GitHub%20repositories/vectorpower/docs/articles/E_worked_example03_files/figure-html/unnamed-chunk-4-1.png" width="700"></p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">setup_list2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cluster_input_setup.html">cluster_input_setup</a></span><span class="op">(</span>input_list<span class="op">=</span><span class="va">mainpop_data</span>, set_n_pt<span class="op">=</span><span class="fl">1</span>, set_n_int<span class="op">=</span><span class="fl">1</span>,
+                                   benchmark <span class="op">=</span> <span class="st">"slide_prev"</span>, age_start<span class="op">=</span><span class="fl">0.0</span>, age_end<span class="op">=</span><span class="fl">65.0</span><span class="op">)</span></code></pre></div>
 <p>Once the input list has been created, a set of clusters can be created using the clusters_create() function. The number of clusters to be created is specified using the parameter n_clusters. The example below shows the creation of a set of clusters which are all controls, as the mean intervention parameter int_mean is set to zero with zero standard deviation int_stdev. The mean and standard deviation of the benchmark parameter must be based on the data used in the input list - this is why the setting up of the input data and the creation of the clusters are separated into two functions, so that a user can view the values in the graph produced by cluster_input_setup(). If setup_list2, where the benchmark is the prevalence rather than the annual EIR, was used instead of setup_list1, the values of benchmark_mean and benchmark_stdev would need to be different.</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" title="1">cluster_list_con &lt;-<span class="st"> </span><span class="kw"><a href="../reference/clusters_create.html">clusters_create</a></span>(<span class="dt">input_list=</span>setup_list1,<span class="dt">n_clusters=</span><span class="dv">10</span>,</a>
-<a class="sourceLine" id="cb5-2" title="2">                                    <span class="dt">benchmark_mean=</span><span class="fl">0.249</span>, <span class="dt">benchmark_stdev=</span><span class="fl">0.085</span>, <span class="dt">int_mean=</span><span class="fl">0.0</span>, <span class="dt">int_stdev=</span><span class="fl">0.0</span>)</a></code></pre></div>
-<p><img src="../../../GitHub%20repositories/vectorpower/docs/articles/E_worked_example03_files/figure-html/unnamed-chunk-5-1.png" width="700"></p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">cluster_list_con</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/clusters_create.html">clusters_create</a></span><span class="op">(</span>input_list<span class="op">=</span><span class="va">setup_list1</span>,n_clusters<span class="op">=</span><span class="fl">10</span>,
+                                    benchmark_mean<span class="op">=</span><span class="fl">75.0</span>, benchmark_stdev<span class="op">=</span><span class="fl">5.0</span>, int_mean<span class="op">=</span><span class="fl">0.0</span>, int_stdev<span class="op">=</span><span class="fl">0.0</span><span class="op">)</span></code></pre></div>
 <p>The example below shows the creation of a set of intervention clusters where the intervention parameter is always non-zero. In this case, because only two values of the intervention parameter (0.0 and 0.1) were used in the main population calculations, int_stdev can again be set to zero. If a range of values of the intervention parameter above zero were used, a non-zero standard deviation could be used to draw a range of different values from a probability distribution as with the benchmark. (This could lead to an intervention cluster with an intervention parameter value of zero, representing one where the intervention had no effect for whatever reason.)</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb6-1" title="1">cluster_list_int &lt;-<span class="st"> </span><span class="kw"><a href="../reference/clusters_create.html">clusters_create</a></span>(<span class="dt">input_list=</span>setup_list1,<span class="dt">n_clusters=</span><span class="dv">10</span>,</a>
-<a class="sourceLine" id="cb6-2" title="2">                                    <span class="dt">benchmark_mean=</span><span class="fl">0.249</span>, <span class="dt">benchmark_stdev=</span><span class="fl">0.085</span>,<span class="dt">int_mean=</span><span class="fl">0.1</span>, <span class="dt">int_stdev=</span><span class="fl">0.0</span>)</a></code></pre></div>
-<p><img src="../../../GitHub%20repositories/vectorpower/docs/articles/E_worked_example03_files/figure-html/unnamed-chunk-6-1.png" width="700"></p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">cluster_list_int</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/clusters_create.html">clusters_create</a></span><span class="op">(</span>input_list<span class="op">=</span><span class="va">setup_list1</span>,n_clusters<span class="op">=</span><span class="fl">10</span>,
+                                    benchmark_mean<span class="op">=</span><span class="fl">75.0</span>, benchmark_stdev<span class="op">=</span><span class="fl">5.0</span>,int_mean<span class="op">=</span><span class="fl">0.1</span>, int_stdev<span class="op">=</span><span class="fl">0.0</span><span class="op">)</span></code></pre></div>
 <p>As with the main population data, the cluster data can be saved to files for future use.</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" title="1"><span class="kw"><a href="https://rdrr.io/r/base/readRDS.html">saveRDS</a></span>(cluster_list_con,<span class="dt">file=</span><span class="st">"cluster_list_con.Rds"</span>)</a>
-<a class="sourceLine" id="cb7-2" title="2"><span class="kw"><a href="https://rdrr.io/r/base/readRDS.html">saveRDS</a></span>(cluster_list_int,<span class="dt">file=</span><span class="st">"cluster_list_int.Rds"</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/base/readRDS.html">saveRDS</a></span><span class="op">(</span><span class="va">cluster_list_con</span>,file<span class="op">=</span><span class="st">"cluster_list_con.Rds"</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/base/readRDS.html">saveRDS</a></span><span class="op">(</span><span class="va">cluster_list_int</span>,file<span class="op">=</span><span class="st">"cluster_list_int.Rds"</span><span class="op">)</span></code></pre></div>
 <p>For the simulation of malaria progression in the cohorts in each of the clusters, see <a href="https://keithjf82.github.io/vectorpower/articles/F_worked_example04.html">Worked Example 4</a>.</p>
   </div>
 
-  <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
+  <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
 
       </div>
 
@@ -137,7 +147,7 @@
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.4.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>
