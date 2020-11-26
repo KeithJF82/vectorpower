@@ -8,7 +8,7 @@ using namespace std;
 Rcpp::List rcpp_mainpop_ss(List params, List trial_params)
 {
 	int n_mv, i, j, pos, pos2, n_repeats;
-	double mv0, mu_net_irs, prevent_net_irs, av0, muv1, KL, Surv1, EIRd, FOIv0, FOIv1;
+	double mv0, mu_protections, r_bite_prevent, av0, muv1, KL, Surv1, EIRd, FOIv0, FOIv1;
 	double rN, rNW, dNW, rI, rIW, dIW, dIF, EL, LL, PL, Sv1, Ev1, Iv1, H, H_inv, dev, EIR_cur, FOI_cur, phi_cur, slide_prev,pcr_prev;
 	FILE* endpoint_data = NULL;
 
@@ -196,6 +196,8 @@ Rcpp::List rcpp_mainpop_ss(List params, List trial_params)
 			pos++;
 		}
 	}
+	double inv_den_het_sum = 1.0/arraysum(den_het, n_cats);
+	for(i = 0; i < n_cats; i++) { den_het[i]*=inv_den_het_sum;}
 
 	int age20u = age20i[na - 1];
 	int age20l = age20u - 1;
@@ -232,7 +234,7 @@ Rcpp::List rcpp_mainpop_ss(List params, List trial_params)
 	double term = (lambda / (mue * de)) - (1.0 / (mul * dl)) - 1.0;
 
 	//------------------------------------------------------------------------------------------------------------------------------------------------
-		
+	
 	rN = cov_nets * p_repel_net_entry;
 	rNW = cov_nets * p_repel_net_bed;
 	dNW = cov_nets * p_kill_net;
@@ -240,15 +242,13 @@ Rcpp::List rcpp_mainpop_ss(List params, List trial_params)
 	rIW = cov_irs * p_repel_irs_bed;
 	dIW = cov_irs * p_kill_irs1;
 	dIF = cov_irs * p_kill_irs2;
-	prevent_net_irs = phi_bite_house - ((phi_bite_house - phi_bite_bed) * (1.0 - rI) * (1.0 - rIW - dIW) * (1.0 - dIF)) -	// Proportion of bites prevented by bednets and/or interior residual spraying
-		(phi_bite_bed * (1.0 - rI) * (1.0 - rIW - dIW) * (1.0 - dIF) * (1.0 - rN) * (1.0 - rNW - dNW));
-	mu_net_irs = 0.3333 * Q0 * (((phi_bite_house - phi_bite_bed) * (1.0 - rI) * (dIW + ((1.0 - rIW - dIW) * dIF))) +		// Additional death rate due to bednets and/or interior residual spraying
-		(phi_bite_bed * (1.0 - rI) * (1.0 - rN) * (dIW + ((1.0 - rIW - dIW) * (dNW + ((1.0 - rNW - dNW) * dIF))))));
-	//Values set manually when situation not accommodated by model
-	//prevent_net_irs=0.707;
-	//mu_net_irs=0.0865;
-	av0 = 0.3333 * Q0 * (1.0 - prevent_net_irs);																			// Biting rate on humans / mosquito
-	muv1 = muv0 + mu_atsb + mu_net_irs;																						// Total mosquito death rate
+	r_bite_prevent = phi_bite_house - ((phi_bite_house - phi_bite_bed) * (1.0 - rI) * (1.0 - rIW - dIW) * (1.0 - dIF)) -	// Proportion of bites prevented by bednets and/or interior residual spraying
+			(phi_bite_bed * (1.0 - rI) * (1.0 - rIW - dIW) * (1.0 - dIF) * (1.0 - rN) * (1.0 - rNW - dNW));
+	mu_protections = 0.3333 * Q0 * (((phi_bite_house - phi_bite_bed) * (1.0 - rI) * (dIW + ((1.0 - rIW - dIW) * dIF))) +		// Additional death rate due to bednets and/or interior residual spraying
+			(phi_bite_bed * (1.0 - rI) * (1.0 - rN) * (dIW + ((1.0 - rIW - dIW) * (dNW + ((1.0 - rNW - dNW) * dIF))))));
+	
+	av0 = 0.3333 * Q0 * (1.0 - r_bite_prevent);																			// Biting rate on humans / mosquito
+	muv1 = muv0 + mu_atsb + mu_protections;																						// Total mosquito death rate
 	Surv1 = exp(-muv1 * latmosq); 
 	
 	for (n_mv = 0; n_mv < n_mv_values; n_mv++)
@@ -281,7 +281,7 @@ Rcpp::List rcpp_mainpop_ss(List params, List trial_params)
 			}
 		}
 		//Initial mosquito density
-		mv0 = (0.2345 * EIRy[n_mv]) + 0.1216;
+		mv0 = (EIRd * omega)/av0;
 		
 		//Calculations repeated until steady state reached
 		FOIv1 = 0.0;
@@ -304,11 +304,11 @@ Rcpp::List rcpp_mainpop_ss(List params, List trial_params)
 		FOIv1 = arraysum(FOIvij,n_cats);
 
 		// Mosquito characteristics
-		Iv1 = (mv0 * FOIv1 * Surv1) / (FOIv1 + muv1);
+		Iv1 = (EIRd * omega) / av0;
 		Sv1 = (muv1 * Iv1) / (FOIv1 * Surv1);
-		Ev1 = mv0 - Sv1 - Iv1;
-		mv0 = (omega * EIRd * (FOIv1 + muv1)) / ((FOIv1 * Surv1) * av0);
-		KL = (mv0 * (2.0 * dl * muv1 * (1.0 + (dp * mup))) * (gammal * (lambda + 1.0))) / term;
+		Ev1 = (FOIv1 * Sv1 * (1.0 - Surv1)) / muv1;
+		mv0 = (Sv1 + Ev1 + Iv1)*(muv1/muv0);
+		KL = (mv0 * 2.0 * dl * muv0 * (1.0 + (dp * mup)) * (gammal * (lambda + 1.0))) / term;
 		
 		// Larval characteristics
 		EL = KL * (lambda / (gammal * (lambda + 1.0))) * term;
@@ -382,6 +382,7 @@ Rcpp::List rcpp_mainpop_ss(List params, List trial_params)
 
 		if (FOIv1 <= 0.0) { dev = 1.0; } 
 		else { dev = abs(FOIv1 - FOIv0) / (FOIv1 + FOIv0); }
+		//Rcout << "\n\tmv0 = " << mv0 << "\tslide_prev = " << slide_prev << "\tFOIv1 = " << FOIv1 << "\tH = " << H;
 		if (dev > 1.0e-8) { goto repeat; }
 
 		//finish:

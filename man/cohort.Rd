@@ -2,7 +2,7 @@
 % Please edit documentation in R/main.R
 \name{cohort}
 \alias{cohort}
-\title{Cohort evaluation (alternate)}
+\title{Cohort evaluation}
 \usage{
 cohort(
   mainpop_data = list(),
@@ -39,7 +39,7 @@ cohort(
 \item{test_type}{Type of test administered ("clin" = clinical, "RDT" = rapid diagnostic test)}
 
 \item{flag_pre_clearing}{Integer indicating whether patients given pre-trial prophylaxis (if 1, place all patients
-into prophylaxis category at start)}
+into prophylaxis category at start) #TODO - Remove, have pre-clearing automatically}
 
 \item{censor_period}{Time period after a positive test during which a patient is not counted towards incidence}
 

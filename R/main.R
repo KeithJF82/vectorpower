@@ -9,6 +9,126 @@
 #' @import stats
 NULL
 #------------------------------------------------
+#' @title Create new data set
+#'
+#' @description Function which sets up a folder containing new data in the correct formats which can be used for
+#'              input into mainpop().
+#'
+#' @details     Takes in a folder name, designated parameter files and a vector of target values of annual entomological 
+#'              inoculation rate (EIR) under constant rainfall conditions, creates a folder containing parameter, starting data
+#'              and annual EIR data files.
+#'
+#' @param dataset_folder    Folder where new dataset to be located. Will be created if not already in existence
+#' @param EIR_values        Vector of target values of annual entomological inoculation rate under constant rainfall conditions
+#' @param param_file        File containing model parameters to use for new dataset
+#' @param age_file          File containing age distribution parameters to use for new dataset
+#' @param het_file          File containing biting heterogeneity parameters to use for new dataset
+#' @param nyears            Number of years to run model for to achieve equilibrium
+#' @param flag_dt_adjust  Integer indicating whether or not to adjust dt by mosquito density in mainpop()
+#'                        (0 = No, 1 = Yes)
+#'
+#' @export
+
+create_data_folder <- function (dataset_folder="",EIR_values=c(1.0),param_file="",age_file="",het_file="",nyears=10,
+                                flag_dt_adjust=1)
+{
+  # Error checking
+  assert_string(dataset_folder)
+  assert_numeric(EIR_values)
+  assert_single_int(nyears)
+  assert_single_bounded(nyears,1,20)
+  # TODO - Find way to check input data exists when files are identified using URLs
+  # assert_file_exists(age_file)
+  # assert_file_exists(het_file)
+  # assert_file_exists(param_file)
+  
+  if(dir.exists(dataset_folder)==FALSE){dir.create(dataset_folder)}
+  
+  # Copy parameter data to new files
+  cat("\nCreating new model_parameters.txt, het_data.txt and age_data.txt files.\n")
+  param_data=read.table(param_file,header=TRUE)
+  age_data=read.table(age_file,header=TRUE)
+  het_data=read.table(het_file,header=TRUE)
+  age_file_new=paste(dataset_folder,"age_data.txt",sep="/")
+  het_file_new=paste(dataset_folder,"het_data.txt",sep="/")
+  param_file_new=paste(dataset_folder,"model_parameters.txt",sep="/")
+  start_file_new=paste(dataset_folder,"start_data.txt",sep="/")
+  write.table(param_data,file=param_file_new,row.names=FALSE,col.names=TRUE,sep="\t",quote=FALSE)
+  write.table(age_data,file=age_file_new,col.names=TRUE,row.names=FALSE,sep="\t",quote=FALSE)
+  write.table(het_data,file=het_file_new,col.names=TRUE,row.names=FALSE,sep="\t",quote=FALSE)
+  
+  # Create new steady-state constant-rainfall data for desired EIR [TODO: or mv0] values using parameter [TODO: and age] files
+  n_mv_values=length(EIR_values)
+  age_data=age_data_setup(read.table(age_file_new,header=TRUE,sep="\t")[[1]])
+  het_data = read.table(het_file_new,header=TRUE,sep="\t")
+  params <- read.table(param_file_new, header=TRUE) 
+  na=length(age_data$age_width)
+  num_het=length(het_data$het_x)
+  params=c(na=na,num_het=num_het,params,age_data,het_data)
+  
+  cat("\nGenerating preliminary data (steady state at constant rainfall)")
+  trial_params <- list(EIRy=EIR_values,file_endpoints=start_file_new)
+  raw_data <- rcpp_mainpop_ss(params,trial_params)
+  mv_values <- raw_data$mv_values
+  
+  # Run model without interventions from steady-state data for nyears years in one go to achieve equilibrium
+  cat("\nBeginning main population calculations to equilibrium.")
+  n_mv_set=c(1:n_mv_values)
+  output_folder=paste(dataset_folder,"Temp",sep="/")
+  if(dir.exists(output_folder)==FALSE){dir.create(output_folder)}
+  input_files=list(age_file=age_file_new,het_file=het_file_new,param_file=param_file_new,
+                   start_file=start_file_new,annual_file=NA)
+  input_data <- load_inputs(input_files=input_files, n_mv_set=n_mv_set)
+  eq_data <- mainpop(input_data = input_data, output_folder = output_folder,int_v_varied = 0, 
+                     int_values=c(0.0), start_interval = 0.0, time_values=365*c(0:nyears),flag_dt_adjust=flag_dt_adjust)
+  EIR_pts <- get_mainpop_data(input_list=eq_data,set_n_int=1,benchmark = "EIR",age_start = 0,age_end = 65.0)
+  slide_prev_pts <- get_mainpop_data(input_list=eq_data,set_n_int=1,benchmark = "slide_prev",age_start = 0,age_end = 65.0)
+  pcr_prev_pts <- get_mainpop_data(input_list=eq_data,set_n_int=1,benchmark = "pcr_prev",age_start = 0,age_end = 65.0)
+  clin_inc_pts <- get_mainpop_data(input_list=eq_data,set_n_int=1,benchmark = "clin_inc",age_start = 0,age_end = 65.0)
+  
+  # Transfer endpoints as new start data
+  cat("\n\nCreating new starting_data.txt file from results.")
+  file.copy(from=paste(output_folder,"endpoints.txt",sep="/"),to=start_file_new,
+            overwrite = TRUE, copy.mode = TRUE, copy.date = FALSE)
+  
+  # Run for 1 year with daily data points to produce year-round data
+  cat("\nRunning main population model for 1 year to establish year-round values")
+  cat("\n(annual EIR and incidence, annual average prevalences).")
+  input_files=list(age_file=age_file_new,het_file=het_file_new,param_file=param_file_new,
+                   start_file=start_file_new,annual_file=NA)
+  input_data <- load_inputs(input_files=input_files, n_mv_set=n_mv_set)
+  annual_data <- mainpop(input_data = input_data, int_v_varied = 0, int_values=c(0.0),
+                         start_interval = 0.0, time_values=1.0*c(0:364),flag_dt_adjust=flag_dt_adjust)
+  
+  # Output annual data for reference
+  cat("\n\nOutputting annual data.\n")
+  annual_EIR_file=paste(dataset_folder,"annual_data.txt",sep="/")
+  EIRy_values = rep(0,n_mv_values)
+  slide_prevy_values=EIRy_values
+  clin_incy_values=EIRy_values
+  pcr_prevy_values=EIRy_values
+  cat("n_mv\tmv0\tEIRy_ss\tEIRy\tslide_prev_y\tclin_inc_y\tpcr_prev_y\n",file=annual_EIR_file)
+  for(i in n_mv_set){
+    if(i==1){cat("n_mv\tmosq_density\tEIRy_ss\tEIRy\tslide_prev_y\tclin_inc_y\tpcr_prev_y\n")}
+    EIRy_values[i]=sum(annual_data$EIR_benchmarks[,1,i])
+    slide_prevy_values[i]=sum(annual_data$slide_prev_benchmarks[,,1,i])/365
+    clin_incy_values[i]=sum(annual_data$clin_inc_benchmarks[,,1,i])
+    pcr_prevy_values[i]=sum(annual_data$pcr_prev_benchmarks[,,1,i])/365
+    cat(i,mv_values[i],EIR_values[i],EIRy_values[i],slide_prevy_values[i],clin_incy_values[i],pcr_prevy_values[i],"\n",sep="\t")
+    cat(i,mv_values[i],EIR_values[i],EIRy_values[i],slide_prevy_values[i],clin_incy_values[i],pcr_prevy_values[i],"\n",
+        file=annual_EIR_file,append=TRUE,sep="\t")
+  }
+  
+  # Delete Temp folder
+  setwd(dataset_folder)
+  unlink("Temp", recursive=TRUE,force=TRUE)
+  
+  output_data <- list(annual_data=annual_data,eq_data=list(EIR_pts=EIR_pts,slide_prev_pts=slide_prev_pts,
+                                                           pcr_prev_pts=pcr_prev_pts,clin_inc_pts=clin_inc_pts))
+  
+  return(output_data)
+}
+#------------------------------------------------
 #' @title Main population evaluation
 #'
 #' @description Function which takes in trial parameters for one or more populations, sends to C++ for computation 
@@ -31,8 +151,7 @@ NULL
 #' @export
 
 mainpop <- function (input_data = list(),output_folder = NA,int_v_varied=0, int_values= c(0.0),
-                     start_interval = 31.0, time_values=c(0.0,7.0), flag_dt_adjust=1)
-{
+                     start_interval = 31.0, time_values=c(0.0,7.0), flag_dt_adjust=1){
   # Input error checking
   assert_list(input_data)
   if(is.na(output_folder)==0){assert_string(output_folder)}
@@ -119,186 +238,7 @@ mainpop <- function (input_data = list(),output_folder = NA,int_v_varied=0, int_
 }
 
 #------------------------------------------------
-#' @title Cluster input setup
-#'
-#' @description Function for taking benchmark data output by mainpop() and selecting the desired benchmark
-#'              (EIR, slide prevalence, PCR prevalence, clinical incidence) data to use for input in
-#'              setting up clusters, plus creating list of intervention parameter values
-#'
-#' @details Takes in detailed benchmark data as a list and outputs lists of chosen 
-#'          benchmark values and intervention parameter values (as both list and files)
-#'
-#' @param input_list          List containing mainpop output data
-#' @param benchmark           Benchmark to use in choosing clusters ("EIR", "slide_prev", "pcr_prev", or "clin_inc"
-#'                            for new data, "EIR_annual", "slide_prev_annual", "pcr_prev_annual", "clin_inc_annual" 
-#'                            for pre-existing annual data in input folder)
-#' @param set_n_pt            Data point to use (1-max)
-#' @param set_n_int           Intervention number to use (1-max)
-#' @param age_start           Starting age to use when calculating prevalence or incidence over age range 
-#'                            (not used with EIR)
-#' @param age_end             End age to use when calculating prevalence or incidence over age range 
-#'                            (not used with EIR)
-#' @param plot_flag           Logical operator indicating whether or not to plot graph of read values
-#'
-#' @export
-
-cluster_input_setup <- function(input_list=list(), benchmark = "EIR",set_n_pt = 1,set_n_int=1,age_start = 0,
-                                age_end = 65.0,plot_flag=FALSE){
-  
-  # Input error checking
-  assert_list(input_list)
-  assert_in(benchmark,c("EIR","slide_prev","pcr_prev","clin_inc","EIR_annual","slide_prev_annual","pcr_prev_annual",
-                        "clin_inc_annual"))
-  assert_int(set_n_pt)
-  assert_in(set_n_pt,c(1:input_list$n_pts))
-  assert_int(set_n_int)
-  assert_in(set_n_int,c(1:input_list$n_int_values))
-  assert_bounded(age_start,0.0,65.0)
-  assert_bounded(age_end,age_start,65.0)
-  assert_logical(plot_flag)
-  
-  n_age_start = findInterval(age_start,input_list$params$age_years)
-  n_age_end = findInterval(age_end,input_list$params$age_years)
-  
-  n_EIR=switch(benchmark,"EIR"=1,"EIR_annual"=1,"slide_prev"=2,"pcr_prev"=2,"clin_inc"=2,
-               "slide_prev_annual"=2,"pcr_prev_annual"=2,"clin_inc_annual"=2)
-  n_annual=switch(benchmark,"EIR"=1,"EIR_annual"=2,"slide_prev"=1,"pcr_prev"=1,"clin_inc"=1,
-                  "slide_prev_annual"=2,"pcr_prev_annual"=2,"clin_inc_annual"=2)
-  n_AE=(10*n_EIR)+n_annual
-  
-  benchmark_values=0
-  if(n_AE==11){benchmark_values = input_list$EIR_benchmarks[set_n_pt,set_n_int,]}
-  if(n_AE==12){benchmark_values = input_list$annual_data$EIRy[input_list$n_mv_set]}
-  if(n_AE==21){
-    density_sum = 0
-    if(benchmark=="slide_prev"){ benchmark_data = input_list$slide_prev_benchmarks[,set_n_pt,set_n_int,
-                                                                                     c(1:input_list$n_mv_values)]}
-    if(benchmark=="pcr_prev"){ benchmark_data = input_list$pcr_prev_benchmarks[,set_n_pt,set_n_int,
-                                                                                 c(1:input_list$n_mv_values)]}
-    if(benchmark=="clin_inc"){ benchmark_data = input_list$clin_inc_benchmarks[,set_n_pt,set_n_int,
-                                                                                 c(1:input_list$n_mv_values)] }
-    for(i in n_age_start:n_age_end){
-      density_sum = density_sum + input_list$params$den_norm[i]
-      benchmark_values = benchmark_values + benchmark_data[i,]
-    }
-    benchmark_values = benchmark_values/density_sum
-  }
-  if(n_AE==22){
-    if(benchmark=="slide_prev_annual"){ benchmark_values = input_list$annual_data$slide_prev_y[input_list$n_mv_set] }
-    if(benchmark=="pcr_prev_annual"){ benchmark_values = input_list$annual_data$pcr_prev_y[input_list$n_mv_set] }
-    if(benchmark=="clin_inc_annual"){ benchmark_values = input_list$annual_data$clin_inc_y[input_list$n_mv_set] }
-  }
-  
-  if(plot_flag==TRUE){
-    if(n_annual==1){ 
-      matplot(c(1:input_list$n_mv_values),benchmark_values,type="p",pch=2,col=2,xlab="N_M",ylab=benchmark)}
-    else{ matplot(c(1:input_list$n_mv_values),benchmark_values,type="p",pch=2,col=2,xlab="N_M",ylab=benchmark) }
-  }
-  
-  output <- list(benchmark=benchmark,set_n_pt = set_n_pt,set_n_int=set_n_int,age_start = age_start,age_end = age_end,
-                 benchmark_values=benchmark_values,int_values=input_list$int_values,
-                 n_mv_set=c(1:input_list$n_mv_values))
-  
-  return(output)
-}
-
-#------------------------------------------------
-#' @title Create clusters
-#'
-#' @description Function for creating cumulative probability distributions and generating clusters from them
-#'
-#' @details Takes in previously generated benchmark and intervention data (currently in files) 
-#'          and outputs cluster data (currently as files)
-#'
-#' @param input_list          List containing input_data, produced by cluster_input_setup()
-#' @param n_clusters          Number of clusters to create
-#' @param benchmark_mean      Mean of benchmark value distribution
-#' @param benchmark_stdev     Standard deviation of benchmark value distribution
-#' @param int_mean            Mean of intervention parameter value distribution
-#' @param int_stdev           Standard deviation of intervention parameter value distribution
-#' @param plot_flag           True/false flag indicating whether to plot graphs of cluster data
-#'
-#' @export
-
-clusters_create <- function(input_list=list(),n_clusters=100,benchmark_mean=0.25, benchmark_stdev=0.025,
-                            int_mean=0.15, int_stdev=0.05, plot_flag=FALSE){
-  
-  # Input error checking (TODO - finish)
-  assert_list(input_list)
-  assert_single_int(n_clusters)
-  assert_single_numeric(benchmark_mean)
-  assert_single_numeric(benchmark_stdev)
-  assert_single_numeric(int_mean)
-  assert_single_numeric(int_stdev)
-  assert_logical(plot_flag)
-  
-  nv_B=length(input_list$benchmark_values)
-  nv_I=length(input_list$int_values)
-  
-  nprobs=10000
-  mid=nprobs*0.5
-  sigma0=nprobs*0.1
-  prob=rep(0,nprobs)
-  cprob=prob
-  v_bm1=prob
-  v_bm2=prob
-  v_i1=prob
-  v_i2=prob
-  mvn_index=prob
-  int_index=prob
-  for(i in 1:nprobs){
-    if(benchmark_stdev==0.0){benchmark_stdev=benchmark_mean*0.01}
-    v_bm1[i]=benchmark_mean+(((i-mid)*benchmark_stdev*10)/nprobs)
-    if(int_stdev==0.0){int_stdev=int_mean*0.01}
-    v_i1[i]=int_mean+(((i-mid)*int_stdev*10)/nprobs)
-    prob[i]=exp(-0.5*((i-mid)/sigma0)^2)
-  }
-  prob=prob/sum(prob)
-  cprob[1]=prob[1]
-  for(i in 2:nprobs){
-    cprob[i]=cprob[i-1]+prob[i]
-  }
-  
-  for(i in 1:nprobs){
-    j=findPosition(v_bm1[i],input_list$benchmark_values)
-    mvn_index[i]=j
-    v_bm2[i]=input_list$benchmark_values[j]
-    j=findPosition(v_i1[i],input_list$int_values)
-    int_index[i]=j
-    v_i2[i]=input_list$int_values[j]
-  }
-  
-  clusters <- data.frame(CP_B=runif(n_clusters,0,1),n_B=rep(0,n_clusters),B=rep(0,n_clusters),
-                         CP_I=runif(n_clusters,0,1),n_I=rep(0,n_clusters),I=rep(0,n_clusters),
-                         n_run=rep(0,n_clusters))
-  for(i in 1:n_clusters){
-    j=findPosition(clusters$CP_B[i],cprob)
-    clusters$B[i]=v_bm2[j]
-    clusters$n_B[i]=mvn_index[j]
-    j=findPosition(clusters$CP_I[i],cprob)
-    clusters$I[i]=v_i2[j]
-    clusters$n_I[i]=int_index[j]
-  }
-  clusters$n_run=((clusters$n_B-1)*nv_I)+clusters$n_I-1
-  
-  if(plot_flag==TRUE){
-    par(mfrow=c(1,2))
-    matplot(cprob,v_bm1,type="l",col=1,xlab="Cumulative probability",ylab=input_list$benchmark,
-            ylim=c(min(v_bm2),max(v_bm2)))
-    matplot(cprob,v_bm2,type="l",col=2,add=TRUE)
-    matplot(clusters$CP_B,clusters$B,type="p",pch=1,col=3,add=TRUE)
-    matplot(cprob,v_i1,type="l",col=1,xlab="Cumulative probability",ylab="Intervention parameter",
-            ylim=c(min(v_i2),max(v_i2)))
-    matplot(cprob,v_i2,type="l",col=2,add=TRUE)
-    matplot(clusters$CP_I,clusters$I,type="p",pch=1,col=3,add=TRUE)
-    par(mfrow=c(1,1))
-  }
-  
-  return(clusters)
-}
-
-#------------------------------------------------
-#' @title Cohort evaluation (alternate)
+#' @title Cohort evaluation
 #'
 #' @description Run stochastic individual model across trial cohort individuals in one or more clusters
 #'              (alternate version incorporating more details of testing and reactive treatment during trial,
@@ -316,7 +256,7 @@ clusters_create <- function(input_list=list(),n_clusters=100,benchmark_mean=0.25
 #' @param test_time_values  Time points at which tests are administered
 #' @param test_type         Type of test administered ("clin" = clinical, "RDT" = rapid diagnostic test)
 #' @param flag_pre_clearing Integer indicating whether patients given pre-trial prophylaxis (if 1, place all patients
-#'                          into prophylaxis category at start)
+#'                          into prophylaxis category at start) #TODO - Remove, have pre-clearing automatically
 #' @param censor_period     Time period after a positive test during which a patient is not counted towards incidence
 #' @param flag_reactive_treatment Integer indicating whether patients are automatically given prophylaxis after a
 #'                                positive test (shifting them into treatment category if a clinical case,
@@ -386,102 +326,6 @@ cohort <- function(mainpop_data = list(), cluster_data=list(), n_patients = 1, p
                   patients_status_outputs=patients_status_outputs,patients_test_outputs=patients_test_outputs)
   
   return(results)
-}
-#------------------------------------------------
-#' @title Entomological-only calculations
-#'
-#' @description Function which takes in trial parameters for one or more mosquito populations, sends to C++ for 
-#' computation of changes over time using deterministic continuum model, then collects and organizes results (TBA)
-#'
-#' @details Takes a list of parameters, returns a list of raw data (data also saved to files as backup). 
-#'
-#' @param input_folder    Folder containing parameter files
-#' @param output_folder   Folder to send output files (no files saved if set to NA)
-#' @param int_v_varied    Intervention parameter given variable value 
-#'                        (0= None, 1=ATSB kill rate, 2=bednet coverage, 3=IRS coverage)
-#' @param int_values      Vector of values of varied intervention parameter (will be unused if int_v_varied=0)
-#' @param n_mv_set        Vector of mosquito density number values to use (must be increasing order)
-#' @param start_interval  Period from start date before intervention starts (used to equilibrate lagged FOI data)
-#' @param time_values     Vector of time checkpoints
-#' @param flag_dt_adjust  Integer indicating whether or not to adjust dt by mosquito density in rcpp_mainpop
-#'                        (0 = No, 1 = Yes)
-#'
-#' @export
-
-ento <- function (input_folder = "",output_folder = NA,int_v_varied=0, int_values= c(0.0), n_mv_set=c(),
-                     start_interval = 31.0, time_values=c(0.0,7.0), flag_dt_adjust=1)
-{
-  # Input error checking
-  param_file=file=paste(input_folder,"model_parameters.txt",sep="/")
-  assert_file_exists(param_file)
-  start_data_file=file=paste(input_folder,"start_data_ento.txt",sep="/")
-  assert_file_exists(start_data_file)
-  if(is.na(output_folder)==0){assert_string(output_folder)}
-  assert_int(int_v_varied)
-  assert_in(int_v_varied,0:4)
-  assert_numeric(int_values)
-  assert_single_numeric(start_interval)
-  assert_numeric(time_values)
-  assert_in(flag_dt_adjust,0:1)
-  
-  n_pts=length(time_values)
-  n_days=max(time_values)+1
-  n_mv_values=length(n_mv_set)
-  n_mv_end=n_mv_set[n_mv_values]
-  if(int_v_varied==0) { int_values=c(0.0) }
-  n_int_values=length(int_values)
-  na=50 # TODO - Load from file
-  
-  params <- as.list(read.table(param_file, header=TRUE))
-  start_data1 <- read.table(start_data_file,header=TRUE,nrows=n_mv_end)
-  start_data2 <- list(mv_input=start_data1$mv0[n_mv_set], 
-                      EL_input=start_data1$EL[n_mv_set], LL_input=start_data1$LL[n_mv_set], 
-                      PL_input=start_data1$PL[n_mv_set], Sv_input=c(), Ev_input=c(), Iv_input=c())
-  for(i in 1:na){
-    start_data2$Sv_input <- append(start_data2$Sv_input,start_data1[[5+i]][n_mv_set])
-    start_data2$Ev_input <- append(start_data2$Ev_input,start_data1[[5+i+na]][n_mv_set])
-    start_data2$Iv_input <- append(start_data2$Iv_input,start_data1[[5+i+(2*na)]][n_mv_set])
-  }
-  
-  if(is.na(output_folder)==FALSE){
-    file_endpoints = paste(output_folder,"endpoints.txt",sep="/")
-    flag_file=1
-  } else {
-    file_endpoints = NA
-    flag_file=0
-  }
-  
-  # Organize trial parameters into list
-  trial_params <- list(n_mv_values=n_mv_values, int_v_varied=int_v_varied, int_values=int_values,
-                       start_interval=start_interval, time_values=time_values, n_pts=n_pts, flag_file=flag_file,
-                       file_endpoints=file_endpoints, flag_dt_adjust=flag_dt_adjust)
-  
-  # Run simulation of main population
-  raw_data <- rcpp_ento(params=params,inputs=start_data2,trial_params)
-  
-  # process raw output data
-  {
-    n_pt_names=paste("n_pt",c(1:n_pts),sep="")
-    na_names=paste("na",c(1:na),sep="")
-    n_days_names=paste("n_days",c(1:n_days),sep="")
-    n_mv_names=paste("n_mv",c(1:n_mv_values),sep="")
-    n_int_names=paste("n_int",c(1:n_int_values),sep="")
-    dimnames_list=list(na_names,n_pt_names,n_int_names,n_mv_names)
-    dimnames_list2=list(n_pt_names,n_int_names,n_mv_names)
-    M_benchmarks = array(data=raw_data$M_benchmarks,dim=c(n_pts,n_int_values,n_mv_values),
-                         dimnames=dimnames_list2)
-    M_spor_benchmarks = array(data=raw_data$M_spor_benchmarks,dim=c(n_pts,n_int_values,n_mv_values),
-                              dimnames=dimnames_list2)
-    M_3g_benchmarks = array(data=raw_data$M_3g_benchmarks,dim=c(n_pts,n_int_values,n_mv_values),
-                            dimnames=dimnames_list2)
-  }
-  
-  output_data <- list(n_mv_values=n_mv_values,n_int_values=n_int_values,n_pts=n_pts,n_mv_set=n_mv_set,
-                      time_values=time_values,int_values=int_values,
-                      M_benchmarks=M_benchmarks,M_spor_benchmarks=M_spor_benchmarks,M_3g_benchmarks=M_3g_benchmarks,
-                      params=params)
-  
-  return(output_data)
 }
 
 #------------------------------------------------
@@ -687,8 +531,8 @@ crt_combined <- function(#output_file_cluster=NA,output_file_indiv=NA,
 #' @param alpha              Significance level
 #' @param effect_size_sign   Sign of effect to check for ("Positive" or "Negative")
 #' @param trial_type         Trial type (superiority, equivalence, non-inferiority - "sup", "eq", "ni")
-#' @param delta_eq           Delta for equivalence trials
-#' @param delta_ni           Delta for non-inferiority trials
+#' @param delta_eq           Delta for equivalence trials  (only used if trial_type="eq")
+#' @param delta_ni           Delta for non-inferiority trials  (only used if trial_type="ni")
 #' @param n_sims             Number of iterations
 #' @param benchmark          Benchmark type to use in choosing clusters ("EIR", "slide_prev", "pcr_prev", or 
 #'                           "clin_inc" for new data, "EIR_annual", "slide_prev_annual", "pcr_prev_annual", 
@@ -718,8 +562,7 @@ power_compute <-
            alpha=0.05,effect_size_sign="Positive",trial_type="sup",delta_eq=NULL,delta_ni=NULL,n_sims=1,
            benchmark="EIR_annual",age_start=0.0,age_end=65.0,test_time_values=c(0.0,1.0),
            test_type="RDT",flag_pre_clearing=0,censor_period=0.0, flag_reactive_treatment=1,prop_T_c=0.9,
-           benchmark_mean=0.0,benchmark_stdev=0.0,int_mean=0.0,int_stdev=0.0)
-  {
+           benchmark_mean=0.0,benchmark_stdev=0.0,int_mean=0.0,int_stdev=0.0){
     
     assert_in(data_level,c("Cluster","Individual"))
     n_clusters_total=n_sims*n_clusters
@@ -855,3 +698,99 @@ power_compute <-
     
     return(results)
   }
+
+#------------------------------------------------
+#' @title Entomological-only calculations
+#'
+#' @description Function which takes in trial parameters for one or more mosquito populations, sends to C++ for 
+#' computation of changes over time using deterministic continuum model, then collects and organizes results (TBA)
+#'
+#' @details Takes a list of parameters, returns a list of raw data (data also saved to files as backup). 
+#'
+#' @param input_folder    Folder containing parameter files
+#' @param output_folder   Folder to send output files (no files saved if set to NA)
+#' @param int_v_varied    Intervention parameter given variable value 
+#'                        (0= None, 1=ATSB kill rate, 2=bednet coverage, 3=IRS coverage)
+#' @param int_values      Vector of values of varied intervention parameter (will be unused if int_v_varied=0)
+#' @param n_mv_set        Vector of mosquito density number values to use (must be increasing order)
+#' @param start_interval  Period from start date before intervention starts (used to equilibrate lagged FOI data)
+#' @param time_values     Vector of time checkpoints
+#' @param flag_dt_adjust  Integer indicating whether or not to adjust dt by mosquito density in rcpp_mainpop
+#'                        (0 = No, 1 = Yes)
+#'
+#' @export
+
+ento <- function (input_folder = "",output_folder = NA,int_v_varied=0, int_values= c(0.0), n_mv_set=c(),
+                  start_interval = 31.0, time_values=c(0.0,7.0), flag_dt_adjust=1){
+  # Input error checking
+  param_file=file=paste(input_folder,"model_parameters.txt",sep="/")
+  assert_file_exists(param_file)
+  start_data_file=file=paste(input_folder,"start_data_ento.txt",sep="/")
+  assert_file_exists(start_data_file)
+  if(is.na(output_folder)==0){assert_string(output_folder)}
+  assert_int(int_v_varied)
+  assert_in(int_v_varied,0:4)
+  assert_numeric(int_values)
+  assert_single_numeric(start_interval)
+  assert_numeric(time_values)
+  assert_in(flag_dt_adjust,0:1)
+  
+  n_pts=length(time_values)
+  n_days=max(time_values)+1
+  n_mv_values=length(n_mv_set)
+  n_mv_end=n_mv_set[n_mv_values]
+  if(int_v_varied==0) { int_values=c(0.0) }
+  n_int_values=length(int_values)
+  na=50 # TODO - Load from file
+  
+  params <- as.list(read.table(param_file, header=TRUE))
+  start_data1 <- read.table(start_data_file,header=TRUE,nrows=n_mv_end)
+  start_data2 <- list(mv_input=start_data1$mv0[n_mv_set], 
+                      EL_input=start_data1$EL[n_mv_set], LL_input=start_data1$LL[n_mv_set], 
+                      PL_input=start_data1$PL[n_mv_set], Sv_input=c(), Ev_input=c(), Iv_input=c())
+  for(i in 1:na){
+    start_data2$Sv_input <- append(start_data2$Sv_input,start_data1[[5+i]][n_mv_set])
+    start_data2$Ev_input <- append(start_data2$Ev_input,start_data1[[5+i+na]][n_mv_set])
+    start_data2$Iv_input <- append(start_data2$Iv_input,start_data1[[5+i+(2*na)]][n_mv_set])
+  }
+  
+  if(is.na(output_folder)==FALSE){
+    file_endpoints = paste(output_folder,"endpoints.txt",sep="/")
+    flag_file=1
+  } else {
+    file_endpoints = NA
+    flag_file=0
+  }
+  
+  # Organize trial parameters into list
+  trial_params <- list(n_mv_values=n_mv_values, int_v_varied=int_v_varied, int_values=int_values,
+                       start_interval=start_interval, time_values=time_values, n_pts=n_pts, flag_file=flag_file,
+                       file_endpoints=file_endpoints, flag_dt_adjust=flag_dt_adjust)
+  
+  # Run simulation of main population
+  raw_data <- rcpp_ento(params=params,inputs=start_data2,trial_params)
+  
+  # process raw output data
+  {
+    n_pt_names=paste("n_pt",c(1:n_pts),sep="")
+    na_names=paste("na",c(1:na),sep="")
+    n_days_names=paste("n_days",c(1:n_days),sep="")
+    n_mv_names=paste("n_mv",c(1:n_mv_values),sep="")
+    n_int_names=paste("n_int",c(1:n_int_values),sep="")
+    dimnames_list=list(na_names,n_pt_names,n_int_names,n_mv_names)
+    dimnames_list2=list(n_pt_names,n_int_names,n_mv_names)
+    M_benchmarks = array(data=raw_data$M_benchmarks,dim=c(n_pts,n_int_values,n_mv_values),
+                         dimnames=dimnames_list2)
+    M_spor_benchmarks = array(data=raw_data$M_spor_benchmarks,dim=c(n_pts,n_int_values,n_mv_values),
+                              dimnames=dimnames_list2)
+    M_3g_benchmarks = array(data=raw_data$M_3g_benchmarks,dim=c(n_pts,n_int_values,n_mv_values),
+                            dimnames=dimnames_list2)
+  }
+  
+  output_data <- list(n_mv_values=n_mv_values,n_int_values=n_int_values,n_pts=n_pts,n_mv_set=n_mv_set,
+                      time_values=time_values,int_values=int_values,
+                      M_benchmarks=M_benchmarks,M_spor_benchmarks=M_spor_benchmarks,M_3g_benchmarks=M_3g_benchmarks,
+                      params=params)
+  
+  return(output_data)
+}

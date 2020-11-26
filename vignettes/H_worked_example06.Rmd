@@ -30,34 +30,36 @@ In this example, the main population data set is loaded from an RDS file created
 mainpop_data <- readRDS(file=url("https://github.com/KeithJF82/vectorpower/raw/master/inst/extdata/DemoFolder1/mainpop_data.Rds"))
 ```
 
-[Note on displaying year-round data TBA]
+The mainpop_data list contains the parameters used to calculate the main population data, including year-round benchmark values like the annual EIR, as shown below. These can be used to generate the trial cluster population parameters, as described in [Worked Example 3](https://keithjf82.github.io/vectorpower/articles/E_worked_example03.html).
 
 ```{r}
 data_view1=data.frame(n=mainpop_data$annual_data$n_mv,EIR_annual=mainpop_data$annual_data$EIRy)
 matplot(x=data_view1$n,y=data_view1$EIR_annual,type="p",pch=1,xlab="Dataset",ylab="Annual EIR")
 ```
 
-[Note on displaying mainpop results TBA]
+Similarly, the mainpop_data list contains benchmark output values which can be viewed with the help of the get_mainpop_data and plot_mainpop_data functions as shown below and as described in [Worked Example 2](https://keithjf82.github.io/vectorpower/articles/D_worked_example02.html). These can also potentially be used as inputs for generating clusters.
 
 ```{r}
 data_view2=get_mainpop_data(input_list=mainpop_data,benchmark="EIR",set_n_mv=mainpop_data$n_mv_set)
 plot_mainpop_data(data_view2)
 ```
 
-Power is computed using the power_compute() function. [Explanation of parameter settings TBA]
+Power is computed using the power_compute() function. The majority of the parameters are the same ones used for the crt_combined() function, as described in [Worked Example 5](https://keithjf82.github.io/vectorpower/articles/G_worked_example05.html). The additional inputs shown at the top of the code section below are the parameters controlling the power calculation. The power_compute() function can be used for superiority, equivalence and non-inferiority tests(Link) by changing the trial_type parameter.
 
 ```{r}
-# Set up inputs
+# Set up power calculation inputs
+trial_type="sup"          # Trial type (superiority, equivalence, non-inferiority - "sup", "eq", "ni")
+effect_size_sign="Positive" # Sign of effect to check for ("Positive" or "Negative")
+alpha=0.05                # Significance level
+delta_eq=NULL             # Delta for equivalence trials (only used if trial_type="eq")
+delta_ni=NULL             # Delta for non-inferiority trials (only used if trial_type="ni")
+n_sims=100                # Number of iterations
+
+# Set up inputs for cohort modelling
 test_time_values=10.0*c(1:10) # Time points at which testing takes place
 n_clusters=10              # Number of clusters to generate
 n_patients=100             # Number of patients per cluster
 data_level="Individual"   # Data type to output from model and use for power calculation ("Cluster" or "Individual")
-alpha=0.05                # Significance level
-effect_size_sign="Positive" # Sign of effect to check for ("Positive" or "Negative")
-trial_type="sup"          # Trial type (superiority, equivalence, non-inferiority - "sup", "eq", "ni")
-delta_eq=NULL             # Delta for equivalence trials
-delta_ni=NULL             # Delta for non-inferiority trials
-n_sims=100               # Number of iterations
 benchmark="EIR_annual"    # Main population data parameter to use as benchmark for generating clusters
 age_start=0.5             # Minimum age of cohort patients
 age_end=10.0              # Maximum age of cohort patients
@@ -70,7 +72,11 @@ benchmark_mean=75.0      # Mean value of benchmark to use to create distribution
 benchmark_stdev=5.0     # Standard deviation of benchmark to use to create distribution
 int_mean=0.1              # Mean value of intervention parameter (ATSB mortality rate) in intervention clusters
 int_stdev=0.0             # Standard deviation of intervention parameter in intervention clusters
+```
 
+The power_compute() function uses the crt_combined to run n_sims.n_clusters control clusters (all drawn from the control cluster parameter distribution given by benchmark_mean and benchmark_stdev, with the intervention parameter equal to zero) and n_sims.n_clusters intervention clusters (generated using benchmark_mean, benchmark_stdev, int_mean and int_stdev).
+
+```{r}
 # Run power calculation
 results<-
 power_compute(mainpop_data=mainpop_data,n_clusters=n_clusters,n_patients=n_patients,data_level=data_level,alpha=alpha,
@@ -81,7 +87,9 @@ power_compute(mainpop_data=mainpop_data,n_clusters=n_clusters,n_patients=n_patie
               benchmark_mean=benchmark_mean,benchmark_stdev=benchmark_stdev,int_mean=int_mean,int_stdev=int_stdev)
 ```
 
-[Text about viewing cluster information]
+In the case of the example used here, power_compute() returns a power value very close to 1 because the intervention parameter (ATSB mortality rate) has the same relatively high value in all intervention clusters and there is relatively little spread in the benchmark parameter between clusters, meaning that the vast majority of simulated intervention clusters show a drop in incidence of positive test cases relative to control clusters.
+
+The output of power_compute() contains information on the clusters it generated for the purposes of the power calculation, which can be viewed as shown below for the control clusters:
 
 ```{r}
 par(mfrow=c(1,2))
@@ -92,7 +100,7 @@ matplot(results$cluster_list_con$CP_I,results$cluster_list_con$I,type="p",pch=1,
 par(mfrow=c(1,1))
 ```
 
-[Text about viewing cluster information 2]
+Similarly for the intervention clusters:
 
 ```{r}
 par(mfrow=c(1,2))
@@ -103,7 +111,7 @@ matplot(results$cluster_list_int$CP_I,results$cluster_list_int$I,type="p",pch=1,
 par(mfrow=c(1,1))
 ```
 
-[Text about viewing results]
+Likewise, the output of the cohort modelling across all clusters can be viewed using plot_cohort_data() as shown below:
 
 ```{r}
 control_plot <- plot_cohort_data(cohort_data = results$cohort_data_con,benchmark = "test_inc",flag_output=2)

@@ -33,14 +33,14 @@ The cluster_input_setup() function is used to extract and plot a graph of a list
 
 ```{r}
 setup_list1 <- cluster_input_setup(input_list=mainpop_data, set_n_pt=1, set_n_int=1,
-                                   benchmark = "EIR_annual", age_start=0.0, age_end=65.0)
+                                   benchmark = "EIR_annual", age_start=0.0, age_end=65.0,plot_flag=TRUE)
 ```
 
 In the alternative example below, the prevalence across all ages at the last time point specified (set_n_pt=6) in the simulations where the intervention parameter is zero (set_n_int=1) is used.
 
 ```{r}
 setup_list2 <- cluster_input_setup(input_list=mainpop_data, set_n_pt=1, set_n_int=1,
-                                   benchmark = "slide_prev", age_start=0.0, age_end=65.0)
+                                   benchmark = "slide_prev", age_start=0.0, age_end=65.0,plot_flag=TRUE)
 ```
 
 Once the input list has been created, a set of clusters can be created using the clusters_create() function. The number of clusters to be created is specified using the parameter n_clusters. The example below shows the creation of a set of clusters which are all controls, as the mean intervention parameter int_mean is set to zero with zero standard deviation int_stdev. The mean and standard deviation of the benchmark parameter must be based on the data used in the input list - this is why the setting up of the input data and the creation of the clusters are separated into two functions, so that a user can view the values in the graph produced by cluster_input_setup(). If setup_list2, where the benchmark is the prevalence rather than the annual EIR, was used instead of setup_list1, the values of benchmark_mean and benchmark_stdev would need to be different.

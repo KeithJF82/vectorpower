@@ -107,126 +107,158 @@ load_inputs <- function (input_files="",n_mv_set=c())
   return(inputs)
   
 }
+
 #------------------------------------------------
-#' @title Create new data set
+#' @title Set up age data from age distribution data
 #'
-#' @description Function which sets up a folder containing new data in the correct formats which can be used for
-#'              input into mainpop().
+#' @description Function which uses the age distribution data (width of each age category in years) from an age_data.txt file
+#'              to set up all static age-related parameter values
 #'
-#' @details     Takes in a folder name, designated parameter files and a vector of target values of annual entomological 
-#'              inoculation rate (EIR) under constant rainfall conditions, creates a folder containing parameter, starting data
-#'              and annual EIR data files.
+#' @details     Takes in a vector of age width data and outputs a list of vectors of age parameter values
 #'
-#' @param dataset_folder    Folder where new dataset to be located. Will be created if not already in existence
-#' @param EIR_values        Vector of target values of annual entomological inoculation rate under constant rainfall conditions
-#' @param param_file        File containing model parameters to use for new dataset
-#' @param age_file          File containing age distribution parameters to use for new dataset
-#' @param het_file          File containing biting heterogeneity parameters to use for new dataset
-#' @param nyears            Number of years to run model for to achieve equilibrium
-#' @param flag_dt_adjust  Integer indicating whether or not to adjust dt by mosquito density in mainpop()
-#'                        (0 = No, 1 = Yes)
+#' @param age_width_years    Vector of age width data in years
 #'
 #' @export
 
-create_data_folder <- function (dataset_folder="",EIR_values=c(1.0),param_file="",age_file="",het_file="",nyears=10,
-                                flag_dt_adjust=1)
-{
-  # Error checking
-  assert_string(dataset_folder)
-  assert_numeric(EIR_values)
-  assert_single_int(nyears)
-  assert_single_bounded(nyears,1,20)
-  # TODO - Find way to check input data exists when files are identified using URLs
-  # assert_file_exists(age_file)
-  # assert_file_exists(het_file)
-  # assert_file_exists(param_file)
+age_data_setup <- function(age_width_years=c()){
   
-  if(dir.exists(dataset_folder)==FALSE){dir.create(dataset_folder)}
+  assert_numeric(age_width_years)
+  assert_vector(age_width_years)
   
-  # Copy parameter data to new files
-  cat("\nCreating new model_parameters.txt, het_data.txt and age_data.txt files.\n")
-  param_data=read.table(param_file,header=TRUE)
-  age_data=read.table(age_file,header=TRUE)
-  het_data=read.table(het_file,header=TRUE)
-  age_file_new=paste(dataset_folder,"age_data.txt",sep="/")
-  het_file_new=paste(dataset_folder,"het_data.txt",sep="/")
-  param_file_new=paste(dataset_folder,"model_parameters.txt",sep="/")
-  start_file_new=paste(dataset_folder,"start_data.txt",sep="/")
-  write.table(param_data,file=param_file_new,row.names=FALSE,col.names=TRUE,sep="\t",quote=FALSE)
-  write.table(age_data,file=age_file_new,col.names=TRUE,row.names=FALSE,sep="\t",quote=FALSE)
-  write.table(het_data,file=het_file_new,col.names=TRUE,row.names=FALSE,sep="\t",quote=FALSE)
+  dy = 365.0
+  eta = 1.0/(21.0*dy)
+  age_width=age_width_years*dy
   
-  # Create new steady-state constant-rainfall data for desired EIR [TODO: or mv0] values using parameter [TODO: and age] files
-  n_mv_values=length(EIR_values)
-  age_data=age_data_setup(read.table(age_file_new,header=TRUE,sep="\t")[[1]])
-  het_data = read.table(het_file_new,header=TRUE,sep="\t")
-  params <- read.table(param_file_new, header=TRUE) 
-  na=length(age_data$age_width)
-  num_het=length(het_data$het_x)
-  params=c(na=na,num_het=num_het,params,age_data,het_data)
-  
-  cat("\nGenerating preliminary data (steady state at constant rainfall)")
-  trial_params <- list(EIRy=EIR_values,file_endpoints=start_file_new)
-  raw_data <- rcpp_mainpop_ss(params,trial_params)
-  mv_values <- raw_data$mv_values
-  
-  # Run model without interventions from steady-state data for nyears years in one go to achieve equilibrium
-  cat("\nBeginning main population calculations to equilibrium.")
-  n_mv_set=c(1:n_mv_values)
-  output_folder=paste(dataset_folder,"Temp",sep="/")
-  if(dir.exists(output_folder)==FALSE){dir.create(output_folder)}
-  input_files=list(age_file=age_file_new,het_file=het_file_new,param_file=param_file_new,
-                   start_file=start_file_new,annual_file=NA)
-  input_data <- load_inputs(input_files=input_files, n_mv_set=n_mv_set)
-  eq_data <- mainpop(input_data = input_data, output_folder = output_folder,int_v_varied = 0, 
-                     int_values=c(0.0), start_interval = 0.0, time_values=365*c(0:nyears),flag_dt_adjust=flag_dt_adjust)
-  EIR_pts <- get_mainpop_data(input_list=eq_data,set_n_int=1,benchmark = "EIR",age_start = 0,age_end = 65.0)
-  slide_prev_pts <- get_mainpop_data(input_list=eq_data,set_n_int=1,benchmark = "slide_prev",age_start = 0,age_end = 65.0)
-  pcr_prev_pts <- get_mainpop_data(input_list=eq_data,set_n_int=1,benchmark = "pcr_prev",age_start = 0,age_end = 65.0)
-  clin_inc_pts <- get_mainpop_data(input_list=eq_data,set_n_int=1,benchmark = "clin_inc",age_start = 0,age_end = 65.0)
-  
-  # Transfer endpoints as new start data
-  cat("\n\nCreating new starting_data.txt file from results.")
-  file.copy(from=paste(output_folder,"endpoints.txt",sep="/"),to=start_file_new,
-            overwrite = TRUE, copy.mode = TRUE, copy.date = FALSE)
-  
-  # Run for 1 year with daily data points to produce year-round data
-  cat("\nRunning main population model for 1 year to establish year-round values")
-  cat("\n(annual EIR and incidence, annual average prevalences).")
-  input_files=list(age_file=age_file_new,het_file=het_file_new,param_file=param_file_new,
-                   start_file=start_file_new,annual_file=NA)
-  input_data <- load_inputs(input_files=input_files, n_mv_set=n_mv_set)
-  annual_data <- mainpop(input_data = input_data, int_v_varied = 0, int_values=c(0.0),
-                         start_interval = 0.0, time_values=1.0*c(0:364),flag_dt_adjust=flag_dt_adjust)
-  
-  # Output annual data for reference
-  cat("\n\nOutputting annual data.\n")
-  annual_EIR_file=paste(dataset_folder,"annual_data.txt",sep="/")
-  EIRy_values = rep(0,n_mv_values)
-  slide_prevy_values=EIRy_values
-  clin_incy_values=EIRy_values
-  pcr_prevy_values=EIRy_values
-  cat("n_mv\tmv0\tEIRy_ss\tEIRy\tslide_prev_y\tclin_inc_y\tpcr_prev_y\n",file=annual_EIR_file)
-  for(i in n_mv_set){
-    if(i==1){cat("n_mv\tmosq_density\tEIRy_ss\tEIRy\tslide_prev_y\tclin_inc_y\tpcr_prev_y\n")}
-    EIRy_values[i]=sum(annual_data$EIR_benchmarks[,1,i])
-    slide_prevy_values[i]=sum(annual_data$slide_prev_benchmarks[,,1,i])/365
-    clin_incy_values[i]=sum(annual_data$clin_inc_benchmarks[,,1,i])
-    pcr_prevy_values[i]=sum(annual_data$pcr_prev_benchmarks[,,1,i])/365
-    cat(i,mv_values[i],EIR_values[i],EIRy_values[i],slide_prevy_values[i],clin_incy_values[i],pcr_prevy_values[i],"\n",sep="\t")
-    cat(i,mv_values[i],EIR_values[i],EIRy_values[i],slide_prevy_values[i],clin_incy_values[i],pcr_prevy_values[i],"\n",
-        file=annual_EIR_file,append=TRUE,sep="\t")
+  na=length(age_width)
+  age=rep(0,na)
+  age_years=age
+  age[1] = 0.0
+  age_years[1]=0.0
+  for(i in 2:na){
+    age[i] = age[i-1]+age_width[i-1]
+    age_years[i] = age_years[i-1]+age_width_years[i-1]
   }
   
-  # Delete Temp folder
-  setwd(dataset_folder)
-  unlink("Temp", recursive=TRUE,force=TRUE)
+  age_rate = 1.0/age_width
+  rem_rate = age_rate+eta
+  den=rep(0,na)
+  den[1] = 1.0 / (1.0 + (age_rate[1] / eta))
+  for(i in 2:na){
+    den[i] = (age_rate[i - 1]*den[i - 1]) / rem_rate[i]
+  }
+  den_norm=den/sum(den)
   
-  output_data <- list(annual_data=annual_data,eq_data=list(EIR_pts=EIR_pts,slide_prev_pts=slide_prev_pts,
-                                                           pcr_prev_pts=pcr_prev_pts,clin_inc_pts=clin_inc_pts))
+  age_data <- list(age_width=age_width,eta=eta,age=age,age_years=age_years,
+                   age_rate=age_rate,rem_rate=rem_rate,den=den,den_norm=den_norm)
   
-  return(annual_data)
+  return(age_data)
 }
+
+#------------------------------------------------
+#' @title Plot year-round rainfall based on parameter file
+#'
+#' @description Function for displaying year-round rainfall data based on parameter values in input file
+#'
+#' @details Reads data from model_parameters.txt in dataset folder, calculates rainfall on each day of the year
+#'          and outputs resulting values as a graph
+#'
+#' @param dataset_folder      Dataset folder
+#' 
+#' @export
+
+plot_rainfall <- function(dataset_folder=""){
+  
+  assert_string(dataset_folder)
+  
+  if(dir.exists(dataset_folder)==FALSE){ cat("\nFolder does not exist.\n")} else {
+    params <- read.table(paste(dataset_folder,"model_parameters.txt",sep="/"), header=TRUE) 
+    
+    Rnorm=params$Rnorm
+    rconst=params$rconst
+    Re0=params$Re0
+    Re1=params$Re1
+    Re2=params$Re2
+    Re3=params$Re3
+    Re4=params$Re4
+    Im0=params$Im0
+    Im1=params$Im1
+    Im2=params$Im2
+    Im3=params$Im3
+    Im4=params$Im4 
+    rain_coeff=((Rnorm) / (14.0*8.0*64.0*365.0));
+    trig_coeff1 = (2.0*3.1415926536)/365; 
+    trig_coeff2 = trig_coeff1*2.0;
+    trig_coeff3 = trig_coeff1*3.0;
+    trig_coeff4 = trig_coeff1*4.0;
+    trig_coeff5 = trig_coeff1*5.0;
+    
+    days=c(1:365)
+    rainfall=rep(0,365)
+    
+    for(i in days){
+      rainfall[i]=rain_coeff*(rconst + (2.0*(
+        (Re0*cos(trig_coeff1*i)) + (Im0*sin(trig_coeff1*i)) +
+          (Re1*cos(trig_coeff2*i)) + (Im1*sin(trig_coeff2*i)) +
+          (Re2*cos(trig_coeff3*i)) + (Im2*sin(trig_coeff3*i)) +
+          (Re3*cos(trig_coeff4*i)) + (Im3*sin(trig_coeff4*i)) +
+          (Re4*cos(trig_coeff5*i)) + (Im4*sin(trig_coeff5*i))
+      )));
+    }
+    
+    matplot(days,rainfall,type="l",col=1,lwd=1.5,xlab="Day",ylab="Rainfall (a.u.)")
+    #matplot(params$date_start,rainfall[params$date_start],type="p",pch=2,col=2,add=TRUE)
+    #legend("topright", inset=0.01, legend=c("Rainfall","Start date"),lwd=1.0,col=c(1:2),horiz=FALSE,bg='white',cex=1.0)
+    return(rainfall)
+  }
+  
+}
+
+#------------------------------------------------
+#' @title Plot pre-calculated data from dataset folder
+#'
+#' @description Function for displaying pre-calculated annual data or mosquito density parameter values from dataset folder
+#'
+#' @details Reads data from annual_data.txt in dataset folder and outputs chosen benchmark values as a graph if desired; 
+#'          returns list of x and y values as a list
+#'
+#' @param input_folder      Dataset folder
+#' @param xvalues           Data to display on x-axis ("N_M" for line number, "M" for mosquito density parameter)
+#' @param yvalues           Data to display on y-axis ("M", "EIR", "slide_prev", "pcr_prev", or "clin_inc")
+#'                          EIR represents annual total, prevalences and incidence represent year-round averages
+#' @param plot_flag         Logical operator indicating whether or not to plot graph of read values
+#' 
+#' @export
+
+get_folder_data <- function(input_folder="",xvalues="N_M",yvalues = "M", plot_flag = TRUE){
+  
+  # Input error checking (TODO - finish)
+  assert_in(xvalues,c("N_M","M"))
+  assert_in(yvalues,c("M","EIR","EIR_ss","slide_prev","pcr_prev","clin_inc"))
+  assert_logical(plot_flag)
+  
+  annual_data <- as.list(read.table(paste(input_folder,"annual_data.txt",sep="/"), header=TRUE))   # Read in annual data
+  n_mv_values=length(annual_data$n_mv)
+  
+  if(xvalues=="N_M"){ xdata = annual_data$n_mv } else { xdata = annual_data$mv0 }
+  
+  if(yvalues=="M"){ydata = annual_data$mv0}
+  if(yvalues=="EIR"){ydata = annual_data$EIRy}
+  if(yvalues=="EIR_ss"){ydata = annual_data$EIRy_ss}
+  if(yvalues=="slide_prev"){ydata = annual_data$slide_prev_y}
+  if(yvalues=="clin_inc"){ydata = annual_data$clin_inc_y}
+  if(yvalues=="pcr_prev"){ydata = annual_data$pcr_prev_y}
+  
+  if(plot_flag==TRUE){
+    matplot(xdata,ydata,type="p",pch=2,col=2,xlab=xvalues,ylab=yvalues,ylim=c(0,max(ydata)))
+  }
+  
+  output <- list(xdata,ydata)
+  names(output)[[1]]=xvalues
+  names(output)[[2]]=yvalues
+  
+  return(output)
+}
+
 #------------------------------------------------
 #' @title Get selected main population output data as a function of time
 #'
@@ -286,7 +318,6 @@ get_mainpop_data <- function(input_list=list(),benchmark = "EIR", set_n_mv=1, se
   
   return(output)
 }
-
 
 #------------------------------------------------
 #' @title Plot graph of main population data
@@ -354,156 +385,186 @@ plot_mainpop_data <- function(input_list=list()){
     legend("bottomright", inset=0.01, legend=titles, pch=points,col=rep(colours,n_int_values), horiz=FALSE,bg='white',cex=1.0)
   }
   
+  return(NULL)
 }
 
 #------------------------------------------------
-#' @title Plot year-round rainfall based on parameter file
+#' @title Cluster input setup
 #'
-#' @description Function for displaying year-round rainfall data based on parameter values in input file
+#' @description Function for taking benchmark data output by mainpop() and selecting the desired benchmark
+#'              (EIR, slide prevalence, PCR prevalence, clinical incidence) data to use for input in
+#'              setting up clusters, plus creating list of intervention parameter values
 #'
-#' @details Reads data from model_parameters.txt in dataset folder, calculates rainfall on each day of the year
-#'          and outputs resulting values as a graph
+#' @details Takes in detailed benchmark data as a list and outputs lists of chosen 
+#'          benchmark values and intervention parameter values (as both list and files)
 #'
-#' @param dataset_folder      Dataset folder
-#' 
+#' @param input_list          List containing mainpop output data
+#' @param benchmark           Benchmark to use in choosing clusters ("EIR", "slide_prev", "pcr_prev", or "clin_inc"
+#'                            for new data, "EIR_annual", "slide_prev_annual", "pcr_prev_annual", "clin_inc_annual" 
+#'                            for pre-existing annual data in input folder)
+#' @param set_n_pt            Data point to use (1-max) if using new data
+#' @param set_n_int           Intervention number to use (1-max) if using new data
+#' @param age_start           Starting age to use when calculating prevalence or incidence over age range 
+#'                            (not used with EIR)
+#' @param age_end             End age to use when calculating prevalence or incidence over age range 
+#'                            (not used with EIR)
+#' @param plot_flag           Logical operator indicating whether or not to plot graph of read values
+#'
 #' @export
 
-plot_rainfall <- function(dataset_folder=""){
+cluster_input_setup <- function(input_list=list(), benchmark = "EIR",set_n_pt = 1,set_n_int=1,age_start = 0,
+                                age_end = 65.0,plot_flag=FALSE){
   
-  assert_string(dataset_folder)
-  
-  if(dir.exists(dataset_folder)==FALSE){ cat("\nFolder does not exist.\n")} else {
-    params <- read.table(paste(dataset_folder,"model_parameters.txt",sep="/"), header=TRUE) 
-    
-    Rnorm=params$Rnorm
-    rconst=params$rconst
-    Re0=params$Re0
-    Re1=params$Re1
-    Re2=params$Re2
-    Re3=params$Re3
-    Re4=params$Re4
-    Im0=params$Im0
-    Im1=params$Im1
-    Im2=params$Im2
-    Im3=params$Im3
-    Im4=params$Im4 
-    rain_coeff=((Rnorm) / (14.0*8.0*64.0*365.0));
-    trig_coeff1 = (2.0*3.1415926536)/365; 
-    trig_coeff2 = trig_coeff1*2.0;
-    trig_coeff3 = trig_coeff1*3.0;
-    trig_coeff4 = trig_coeff1*4.0;
-    trig_coeff5 = trig_coeff1*5.0;
-    
-    days=c(1:365)
-    rainfall=rep(0,365)
-    
-    for(i in days){
-      rainfall[i]=rain_coeff*(rconst + (2.0*(
-        (Re0*cos(trig_coeff1*i)) + (Im0*sin(trig_coeff1*i)) +
-          (Re1*cos(trig_coeff2*i)) + (Im1*sin(trig_coeff2*i)) +
-          (Re2*cos(trig_coeff3*i)) + (Im2*sin(trig_coeff3*i)) +
-          (Re3*cos(trig_coeff4*i)) + (Im3*sin(trig_coeff4*i)) +
-          (Re4*cos(trig_coeff5*i)) + (Im4*sin(trig_coeff5*i))
-      )));
-    }
-    
-    matplot(days,rainfall,type="l",col=1,lwd=1.5,xlab="Day",ylab="Rainfall (a.u.)")
-    #matplot(params$date_start,rainfall[params$date_start],type="p",pch=2,col=2,add=TRUE)
-    #legend("topright", inset=0.01, legend=c("Rainfall","Start date"),lwd=1.0,col=c(1:2),horiz=FALSE,bg='white',cex=1.0)
-    return(rainfall)
-  }
-  
-}
-#------------------------------------------------
-#' @title Plot pre-calculated data from dataset folder
-#'
-#' @description Function for displaying pre-calculated annual data or mosquito density parameter values from dataset folder
-#'
-#' @details Reads data from annual_data.txt in dataset folder and outputs chosen benchmark values as a graph if desired; 
-#'          returns list of x and y values as a list
-#'
-#' @param input_folder      Dataset folder
-#' @param xvalues           Data to display on x-axis ("N_M" for line number, "M" for mosquito density parameter)
-#' @param yvalues           Data to display on y-axis ("M", "EIR", "slide_prev", "pcr_prev", or "clin_inc")
-#'                          EIR represents annual total, prevalences and incidence represent year-round averages
-#' @param plot_flag         Logical operator indicating whether or not to plot graph of read values
-#' 
-#' @export
-
-get_folder_data <- function(input_folder="",xvalues="N_M",yvalues = "M", plot_flag = TRUE){
-  
-  # Input error checking (TODO - finish)
-  assert_in(xvalues,c("N_M","M"))
-  assert_in(yvalues,c("M","EIR","EIR_ss","slide_prev","pcr_prev","clin_inc"))
+  # Input error checking
+  assert_list(input_list)
+  assert_in(benchmark,c("EIR","slide_prev","pcr_prev","clin_inc","EIR_annual","slide_prev_annual","pcr_prev_annual",
+                        "clin_inc_annual"))
+  assert_int(set_n_pt)
+  assert_in(set_n_pt,c(1:input_list$n_pts))
+  assert_int(set_n_int)
+  assert_in(set_n_int,c(1:input_list$n_int_values))
+  assert_bounded(age_start,0.0,65.0)
+  assert_bounded(age_end,age_start,65.0)
   assert_logical(plot_flag)
   
-  annual_data <- as.list(read.table(paste(input_folder,"annual_data.txt",sep="/"), header=TRUE))   # Read in annual data
-  n_mv_values=length(annual_data$n_mv)
+  n_age_start = findInterval(age_start,input_list$params$age_years)
+  n_age_end = findInterval(age_end,input_list$params$age_years)
   
-  if(xvalues=="N_M"){ xdata = annual_data$n_mv } else { xdata = annual_data$mv0 }
+  n_EIR=switch(benchmark,"EIR"=1,"EIR_annual"=1,"slide_prev"=2,"pcr_prev"=2,"clin_inc"=2,
+               "slide_prev_annual"=2,"pcr_prev_annual"=2,"clin_inc_annual"=2)
+  n_annual=switch(benchmark,"EIR"=1,"EIR_annual"=2,"slide_prev"=1,"pcr_prev"=1,"clin_inc"=1,
+                  "slide_prev_annual"=2,"pcr_prev_annual"=2,"clin_inc_annual"=2)
+  n_AE=(10*n_EIR)+n_annual
   
-  if(yvalues=="M"){ydata = annual_data$mv0}
-  if(yvalues=="EIR"){ydata = annual_data$EIRy}
-  if(yvalues=="EIR_ss"){ydata = annual_data$EIRy_ss}
-  if(yvalues=="slide_prev"){ydata = annual_data$slide_prev_y}
-  if(yvalues=="clin_inc"){ydata = annual_data$clin_inc_y}
-  if(yvalues=="pcr_prev"){ydata = annual_data$pcr_prev_y}
-  
-  if(plot_flag==TRUE){
-    matplot(xdata,ydata,type="p",pch=2,col=2,xlab=xvalues,ylab=yvalues,ylim=c(0,max(ydata)))
+  benchmark_values=0
+  if(n_AE==11){benchmark_values = input_list$EIR_benchmarks[set_n_pt,set_n_int,]}
+  if(n_AE==12){benchmark_values = input_list$annual_data$EIRy[input_list$n_mv_set]}
+  if(n_AE==21){
+    density_sum = 0
+    if(benchmark=="slide_prev"){ benchmark_data = input_list$slide_prev_benchmarks[,set_n_pt,set_n_int,
+                                                                                   c(1:input_list$n_mv_values)]}
+    if(benchmark=="pcr_prev"){ benchmark_data = input_list$pcr_prev_benchmarks[,set_n_pt,set_n_int,
+                                                                               c(1:input_list$n_mv_values)]}
+    if(benchmark=="clin_inc"){ benchmark_data = input_list$clin_inc_benchmarks[,set_n_pt,set_n_int,
+                                                                               c(1:input_list$n_mv_values)] }
+    for(i in n_age_start:n_age_end){
+      density_sum = density_sum + input_list$params$den_norm[i]
+      benchmark_values = benchmark_values + benchmark_data[i,]
+    }
+    benchmark_values = benchmark_values/density_sum
+  }
+  if(n_AE==22){
+    if(benchmark=="slide_prev_annual"){ benchmark_values = input_list$annual_data$slide_prev_y[input_list$n_mv_set] }
+    if(benchmark=="pcr_prev_annual"){ benchmark_values = input_list$annual_data$pcr_prev_y[input_list$n_mv_set] }
+    if(benchmark=="clin_inc_annual"){ benchmark_values = input_list$annual_data$clin_inc_y[input_list$n_mv_set] }
   }
   
-  output <- list(xdata,ydata)
-  names(output)[[1]]=xvalues
-  names(output)[[2]]=yvalues
+  if(plot_flag==TRUE){
+    if(n_annual==1){ 
+      matplot(c(1:input_list$n_mv_values),benchmark_values,type="p",pch=2,col=2,xlab="N_M",ylab=benchmark)}
+    else{ matplot(c(1:input_list$n_mv_values),benchmark_values,type="p",pch=2,col=2,xlab="N_M",ylab=benchmark) }
+  }
+  
+  output <- list(benchmark=benchmark,set_n_pt = set_n_pt,set_n_int=set_n_int,age_start = age_start,age_end = age_end,
+                 benchmark_values=benchmark_values,int_values=input_list$int_values,
+                 n_mv_set=c(1:input_list$n_mv_values))
   
   return(output)
 }
 
 #------------------------------------------------
-#' @title Set up age data from age distribution data
+#' @title Create clusters
 #'
-#' @description Function which uses the age distribution data (width of each age category in years) from an age_data.txt file
-#'              to set up all static age-related parameter values
+#' @description Function for creating cumulative probability distributions and generating clusters from them
 #'
-#' @details     Takes in a vector of age width data and outputs a list of vectors of age parameter values
+#' @details Takes in previously generated benchmark and intervention data (currently in files) 
+#'          and outputs cluster data (currently as files)
 #'
-#' @param age_width_years    Vector of age width data in years
+#' @param input_list          List containing input_data, produced by cluster_input_setup()
+#' @param n_clusters          Number of clusters to create
+#' @param benchmark_mean      Mean of benchmark value distribution
+#' @param benchmark_stdev     Standard deviation of benchmark value distribution
+#' @param int_mean            Mean of intervention parameter value distribution
+#' @param int_stdev           Standard deviation of intervention parameter value distribution
+#' @param plot_flag           True/false flag indicating whether to plot graphs of cluster data
 #'
 #' @export
 
-age_data_setup <- function(age_width_years=c()){
+clusters_create <- function(input_list=list(),n_clusters=100,benchmark_mean=0.25, benchmark_stdev=0.025,
+                            int_mean=0.15, int_stdev=0.05, plot_flag=FALSE){
   
-  assert_numeric(age_width_years)
-  assert_vector(age_width_years)
+  # Input error checking (TODO - finish)
+  assert_list(input_list)
+  assert_single_int(n_clusters)
+  assert_single_numeric(benchmark_mean)
+  assert_single_numeric(benchmark_stdev)
+  assert_single_numeric(int_mean)
+  assert_single_numeric(int_stdev)
+  assert_logical(plot_flag)
   
-  dy = 365.0
-  eta = 1.0/(21.0*dy)
-  age_width=age_width_years*dy
+  nv_B=length(input_list$benchmark_values)
+  nv_I=length(input_list$int_values)
   
-  na=length(age_width)
-  age=rep(0,na)
-  age_years=age
-  age[1] = 0.0
-  age_years[1]=0.0
-  for(i in 2:na){
-    age[i] = age[i-1]+age_width[i-1]
-    age_years[i] = age_years[i-1]+age_width_years[i-1]
+  nprobs=10000
+  mid=nprobs*0.5
+  sigma0=nprobs*0.1
+  prob=rep(0,nprobs)
+  cprob=prob
+  v_bm1=prob
+  v_bm2=prob
+  v_i1=prob
+  v_i2=prob
+  mvn_index=prob
+  int_index=prob
+  for(i in 1:nprobs){
+    if(benchmark_stdev==0.0){benchmark_stdev=benchmark_mean*0.01}
+    v_bm1[i]=benchmark_mean+(((i-mid)*benchmark_stdev*10)/nprobs)
+    if(int_stdev==0.0){int_stdev=int_mean*0.01}
+    v_i1[i]=int_mean+(((i-mid)*int_stdev*10)/nprobs)
+    prob[i]=exp(-0.5*((i-mid)/sigma0)^2)
+  }
+  prob=prob/sum(prob)
+  cprob[1]=prob[1]
+  for(i in 2:nprobs){
+    cprob[i]=cprob[i-1]+prob[i]
   }
   
-  age_rate = 1.0/age_width
-  rem_rate = age_rate+eta
-  den=rep(0,na)
-  den[1] = 1.0 / (1.0 + (age_rate[1] / eta))
-  for(i in 2:na){
-    den[i] = (age_rate[i - 1]*den[i - 1]) / rem_rate[i]
+  for(i in 1:nprobs){
+    j=findPosition(v_bm1[i],input_list$benchmark_values)
+    mvn_index[i]=j
+    v_bm2[i]=input_list$benchmark_values[j]
+    j=findPosition(v_i1[i],input_list$int_values)
+    int_index[i]=j
+    v_i2[i]=input_list$int_values[j]
   }
-  den_norm=den/sum(den)
   
-  age_data <- list(age_width=age_width,eta=eta,age=age,age_years=age_years,
-                   age_rate=age_rate,rem_rate=rem_rate,den=den,den_norm=den_norm)
+  clusters <- data.frame(CP_B=runif(n_clusters,0,1),n_B=rep(0,n_clusters),B=rep(0,n_clusters),
+                         CP_I=runif(n_clusters,0,1),n_I=rep(0,n_clusters),I=rep(0,n_clusters),
+                         n_run=rep(0,n_clusters))
+  for(i in 1:n_clusters){
+    j=findPosition(clusters$CP_B[i],cprob)
+    clusters$B[i]=v_bm2[j]
+    clusters$n_B[i]=mvn_index[j]
+    j=findPosition(clusters$CP_I[i],cprob)
+    clusters$I[i]=v_i2[j]
+    clusters$n_I[i]=int_index[j]
+  }
+  clusters$n_run=((clusters$n_B-1)*nv_I)+clusters$n_I-1
   
-  return(age_data)
+  if(plot_flag==TRUE){
+    par(mfrow=c(1,2))
+    matplot(cprob,v_bm1,type="l",col=1,xlab="Cumulative probability",ylab=input_list$benchmark,
+            ylim=c(min(v_bm2),max(v_bm2)))
+    matplot(cprob,v_bm2,type="l",col=2,add=TRUE)
+    matplot(clusters$CP_B,clusters$B,type="p",pch=1,col=3,add=TRUE)
+    matplot(cprob,v_i1,type="l",col=1,xlab="Cumulative probability",ylab="Intervention parameter",
+            ylim=c(min(v_i2),max(v_i2)))
+    matplot(cprob,v_i2,type="l",col=2,add=TRUE)
+    matplot(clusters$CP_I,clusters$I,type="p",pch=1,col=3,add=TRUE)
+    par(mfrow=c(1,1))
+  }
+  
+  return(clusters)
 }
 
 #------------------------------------------------
@@ -593,72 +654,6 @@ plot_cohort_data <- function(cohort_data = list(), benchmark="slide_prev",flag_o
 }
 
 #------------------------------------------------
-#' @title Tabulate results of cohort simulations
-#'
-#' @description Function which takes the output of the cohort() function and tabulates results
-#'
-#' @details Takes the output of the cohort() function and tabulates results by cluster, patient and time point for 
-#'          processing using statistical models. Each patient across all clusters will have a unique ID number
-#'          (patient_ID = (patient's number in their cluster) + (patient's cluster number - 1)*(number of patients per cluster))
-#'
-#' @param cohort_data List of form output by cohort() function
-#' @param file        Location/name of file to send results
-#'
-#' @export
-
-tabulate_cohort_data <- function(cohort_data = list(), file="dummy.txt"){
-  assert_list(cohort_data)
-  
-  # Set up data frame
-  npts_time=length(cohort_data$time_values)
-  n_patients=cohort_data$n_patients
-  n_clusters=cohort_data$n_clusters
-  n_lines=n_clusters*npts_time*n_patients
-  cluster_output=data.frame(n_cluster=rep(0,n_lines),n_patient=rep(0,n_lines),patient_ID=rep(0,n_lines),time=rep(0,n_lines),
-                            age=rep(0,n_lines),het_category=rep(0,n_lines),S=rep(0,n_lines),T=rep(0,n_lines),D=rep(0,n_lines),
-                            A=rep(0,n_lines),U=rep(0,n_lines),P=rep(0,n_lines),p_det=rep(0,n_lines))
-  
-  # Transfer cohort results data to data frame
-  line=0
-  for(n_c in 1:n_clusters){
-    for(i in 1:n_patients){
-      patient_ID=((n_c-1)*n_patients)+i
-      for(j in 1:npts_time){
-        line=line+1
-        cluster_output$patient_ID[line]=patient_ID
-        cluster_output$time[line]=cohort_data$time_values[j]
-        state=cohort_data$patients_status_outputs[j,i,n_c]
-        if(state==0){cluster_output$S[line]=1}
-        else{
-          if(state==1){cluster_output$T[line]=1}
-          else{
-            if(state==2){cluster_output$D[line]=1}
-            else{
-              if(state==3){
-                cluster_output$A[line]=1
-                cluster_output$p_det[line]=cohort_data$p_det_outputs[j,i,n_c]
-              }
-              else{
-                if(state==4){cluster_output$U[line]=1}
-                else{cluster_output$P[line]=1}
-              }
-            }
-          }
-        }
-        cluster_output$n_cluster[line]=n_c
-        cluster_output$n_patient[line]=i
-        cluster_output$age[line]=cohort_data$patients_age_outputs[i,n_c]
-        cluster_output$het_category[line]=cohort_data$patients_het_outputs[i,n_c]
-      }
-    }
-  }
-  
-  # Write data frame to file
-  write.table(cluster_output,row.names=FALSE,file=file)
-  
-  return(NULL)
-}
-#------------------------------------------------
 #' @title Add entomological start data file to existing data folder
 #'
 #' @description Function which creates a starting data file for entomological modelling in existing data folder
@@ -671,8 +666,7 @@ tabulate_cohort_data <- function(cohort_data = list(), file="dummy.txt"){
 #' 
 #' @export
 
-create_ento_start_data <- function (dataset_folder="")
-{
+create_ento_start_data <- function (dataset_folder=""){
   assert_file_exists(paste(dataset_folder,"model_parameters.txt",sep="/"))
   start_data_file=paste(dataset_folder,"start_data.txt",sep="/")
   assert_file_exists(start_data_file)

@@ -45,9 +45,9 @@ power_compute(
 
 \item{trial_type}{Trial type (superiority, equivalence, non-inferiority - "sup", "eq", "ni")}
 
-\item{delta_eq}{Delta for equivalence trials}
+\item{delta_eq}{Delta for equivalence trials  (only used if trial_type="eq")}
 
-\item{delta_ni}{Delta for non-inferiority trials}
+\item{delta_ni}{Delta for non-inferiority trials  (only used if trial_type="ni")}
 
 \item{n_sims}{Number of iterations}
 

@@ -373,9 +373,7 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 			(phi_bite_bed * (1.0 - rI) * (1.0 - rIW - dIW) * (1.0 - dIF) * (1.0 - rN) * (1.0 - rNW - dNW));
 	mu_protections = 0.3333 * Q0 * (((phi_bite_house - phi_bite_bed) * (1.0 - rI) * (dIW + ((1.0 - rIW - dIW) * dIF))) +		// Additional death rate due to bednets and/or interior residual spraying
 			(phi_bite_bed * (1.0 - rI) * (1.0 - rN) * (dIW + ((1.0 - rIW - dIW) * (dNW + ((1.0 - rNW - dNW) * dIF))))));
-	//Values set manually when situation not accommodated by model
-	//r_bite_prevent=0.707;
-	//mu_protections=0.0865;
+
 	av0 = 0.3333 * Q0 * (1.0 - r_bite_prevent);																			// Biting rate on humans / mosquito
 	muv1 = muv0 + mu_atsb + mu_protections;																						// Total mosquito death rate
 
@@ -472,10 +470,6 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 					break;
 				case 1:
 				{
-					/*cov_nets=0.6;
-					rN = cov_nets * p_repel_net_entry;
-					rNW = cov_nets * p_repel_net_bed;
-					dNW = cov_nets * p_kill_net;*/
 					mu_atsb = param_int;
 					Rcout << "\nIntervention begun. ATSB kill rate=" << mu_atsb;
 				}
@@ -521,9 +515,6 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 								(phi_bite_bed * (1.0 - rI) * (1.0 - rIW - dIW) * (1.0 - dIF) * (1.0 - rN) * (1.0 - rNW - dNW));
 				mu_protections = 0.3333 * Q0 * (((phi_bite_house - phi_bite_bed) * (1.0 - rI) * (dIW + ((1.0 - rIW - dIW) * dIF))) +
 								(phi_bite_bed * (1.0 - rI) * (1.0 - rN) * (dIW + ((1.0 - rIW - dIW) * (dNW + ((1.0 - rNW - dNW) * dIF))))));
-				//Values set manually when situation not accommodated by model
-				//r_bite_prevent=0.707;
-				//mu_protections=0.0865;
 			}
 			av0 = 0.3333 * Q0 * (1.0 - r_bite_prevent);
 			muv1 = muv0 + mu_atsb + mu_protections;
