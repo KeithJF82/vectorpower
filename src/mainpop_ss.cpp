@@ -228,9 +228,9 @@ Rcpp::List rcpp_mainpop_ss(List params, List trial_params)
 		fd[i] = 1.0 - ((1.0 - fd0) / (1.0 + pow(age[i] / ad0, gammad)));
 	}
 
-	double beta_larval = (eov * muv0 * exp(-muv0 * dgon)) / (1.0 - exp(-muv0 * dgon));
+	double beta_larval0 = (eov * muv0 * exp(-muv0 * dgon)) / (1.0 - exp(-muv0 * dgon));
 	double b_lambda = ((gammal * mul) / mue) - (de / dl) + ((gammal - 1.0) * mul * de);
-	double lambda = (-0.5 * b_lambda) + pow((0.25 * pow(b_lambda, 2.0)) + ((gammal * beta_larval * mul * de) / (2.0 * mue * muv0 * dl * (1.0 + (dp * mup)))), 0.5);
+	double lambda = (-0.5 * b_lambda) + pow((0.25 * pow(b_lambda, 2.0)) + ((gammal * beta_larval0 * mul * de) / (2.0 * mue * muv0 * dl * (1.0 + (dp * mup)))), 0.5);
 	double term = (lambda / (mue * de)) - (1.0 / (mul * dl)) - 1.0;
 
 	//------------------------------------------------------------------------------------------------------------------------------------------------
@@ -307,7 +307,7 @@ Rcpp::List rcpp_mainpop_ss(List params, List trial_params)
 		Iv1 = (EIRd * omega) / av0;
 		Sv1 = (muv1 * Iv1) / (FOIv1 * Surv1);
 		Ev1 = (FOIv1 * Sv1 * (1.0 - Surv1)) / muv1;
-		mv0 = (Sv1 + Ev1 + Iv1)*(muv1/muv0);
+		mv0 = (Sv1 + Ev1 + Iv1);
 		KL = (mv0 * 2.0 * dl * muv0 * (1.0 + (dp * mup)) * (gammal * (lambda + 1.0))) / term;
 		
 		// Larval characteristics

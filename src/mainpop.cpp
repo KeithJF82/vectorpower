@@ -8,7 +8,8 @@ using namespace std;
 Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 {
 	int n_run, n_mv, n_int, i, j, ij, nt, nt_E, div, nt_latgam, nt_latmosq, pos, pos2, ntmax, dur_Ei, latgami, latmosqi, tflag, interval, increment, data_saved, flag_int, np;
-	double mv0, param_int, t, t_int, mu_protections, r_bite_prevent, prop_T_rev, av0, muv1, K0, year_day, rain, KL, beta, Surv1, EIRd, mv, incv, incv0, FOIv, FOIv0, age0, age1, t_mark1, t_mark2, EIR_sum, dt2;
+	double mv0, param_int, t, t_int, mu_protections, r_bite_prevent, prop_T_rev, av0, K0, year_day, rain, KL, beta, EIRd, mv, incv, incv0, FOIv, FOIv0, age0, age1, t_mark1, t_mark2, EIR_sum, dt2;
+	double muv1, Surv1, beta_larval1;
 	double mu_atsb, cov_nets, cov_irs, cov_set, prop_T, rN, rNW, dNW, rI, rIW, dIW, dIF, EL, LL, PL, Sv1, Ev1, Iv1, H, /*H_inv, */delS, delT, delD, delA1, delA2, delP, delU1, delU2, inv_x, inv_KL;
 	double S_cur, T_cur, D_cur, A_cur, U_cur, P_cur, FOI_cur, foi_age_cur, clin_inc_cur, ICA_cur, ICM_cur, IB_cur, ID_cur, EIR_cur, delSv1, EL_cur, LL_cur, PL_cur, dEL, dLL, Sv_cur, Ev_cur, Iv_cur;
 	FILE* benchmarks_by_age = NULL;
@@ -232,9 +233,9 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 
 	double rnyears = 8.0;
 	double ppyear = 64.0;
-	double beta_larval = (eov * muv0 * exp(-muv0 * dgon)) / (1.0 - exp(-muv0 * dgon));
+	double beta_larval0 = (eov * muv0 * exp(-muv0 * dgon)) / (1.0 - exp(-muv0 * dgon));
 	double b_lambda = ((gammal * mul) / mue) - (de / dl) + ((gammal - 1.0) * mul * de);
-	double lambda = (-0.5 * b_lambda) + pow((0.25 * pow(b_lambda, 2.0)) + ((gammal * beta_larval * mul * de) / (2.0 * mue * muv0 * dl * (1.0 + (dp * mup)))), 0.5);
+	double lambda = (-0.5 * b_lambda) + pow((0.25 * pow(b_lambda, 2.0)) + ((gammal * beta_larval0 * mul * de) / (2.0 * mue * muv0 * dl * (1.0 + (dp * mup)))), 0.5);
 	double term = (lambda / (mue * de)) - (1.0 / (mul * dl)) - 1.0;
 	double dt = 0.1;												// Time increment (default initial value)
 	double rain_coeff = ((dy * Rnorm) / (14.0 * rnyears * ppyear));	// Rainfall coefficient
@@ -644,6 +645,7 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 		FOIv_lag[nt_latgam] = arraysum(FOIvij, n_cats);
 		incv = t > latmosq ? incv_lag[nt_latmosq] : incv0;
 		Surv1 = exp(-muv1 * latmosq);
+		beta_larval1 = (eov * muv1 * exp(-muv1 * dgon)) / (1.0 - exp(-muv1 * dgon));
 		incv_lag[nt_latmosq] = FOIv * Sv1 * Surv1;
 		inv_KL = 1.0 / KL;
 
@@ -655,7 +657,7 @@ Rcpp::List rcpp_mainpop(List params, List inputs, List trial_params)
 			PL_cur = PL;
 			dEL = EL * rate_de;
 			dLL = LL * rate_dl;
-			EL += dt2 * ((beta_larval * mv) - (mue * (1.0 + ((EL_cur + LL_cur) * inv_KL)) * EL_cur) - dEL);
+			EL += dt2 * ((beta_larval1 * mv) - (mue * (1.0 + ((EL_cur + LL_cur) * inv_KL)) * EL_cur) - dEL);
 			LL += dt2 * (dEL - (mul * (1.0 + ((gammal * (EL_cur + LL_cur)) * inv_KL)) * LL_cur) - dLL);
 			PL += dt2 * (dLL - (mup * PL_cur) - (PL_cur / dp));
 		}
