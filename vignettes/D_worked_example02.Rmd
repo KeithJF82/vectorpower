@@ -39,7 +39,7 @@ If using a dataset folder created using dataset_create(), this can be done autom
 
 ```{r,eval=FALSE}
 dataset_folder=system.file("extdata/DemoFolder1/",package="vectorpower")
-input_files <- load_dataset(dataset_folder)
+input_files <- load_dataset_folder(dataset_folder)
 ```
 
 The parameters defining the trial setup are then supplied to be used by mainpop():
